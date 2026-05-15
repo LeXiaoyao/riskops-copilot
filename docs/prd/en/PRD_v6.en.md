@@ -4,7 +4,7 @@
 >
 > v5 had solid business depth but scattered sections, missing priorities, missing technical constraints, missing acceptance criteria. v6 locks down **all "things to do and requirements"** with one scope matrix + one milestone table + one decision log, as the non-drifting baseline going forward.
 >
-> **Current status**: skeleton complete + key new sections written + business-deep sections (data foundation / metric assets / engines) pending chapter-by-chapter migration from v5.
+> **Current status**: **all chapters complete** — §5 Data Foundation (5-layer table inventory + privacy details + PK ER + synthetic data spec + DQ rules), §6 Metric Assets (26 post-loan metrics with formulas), §7 Engines (6 engines with algorithm / acceptance / examples), §11 Roadmap (Phases 1–6 fully expanded). Next work shifts to metadata YAML-ization and code implementation (see §14.4).
 >
 > **Note**: This is the English version. For the authoritative Chinese version, see [`../PRD_v6.md`](../PRD_v6.md). When the two versions diverge, **the Chinese version is the source of truth**.
 
@@ -190,42 +190,321 @@ Inherits Chinese §2.4: **the terminal gives orders, the web and documents prese
 
 ## 5. Data Foundation Spec
 
-> Skeleton only. See Chinese version §5 for full text. Pending migration of v5 §8.1 + §15 + §15A + §22 contents.
+This chapter defines Phase 1 data foundation: **layering rules, privacy boundaries, primary-key relationships, table inventory, synthetic data requirements, data-quality rules**. All engines, metrics, and agents are built on top of this chapter.
 
-Layers: DIM (10 tables) → ODS (14 tables) → DWD (5 tables) → DWS (5 + 3 profile/tag tables) → ADS (6 tables).
+> **Authoritative source**: `metadata/tables.yaml` + `metadata/columns.yaml` (M1 deliverable). This chapter keeps only **purpose / grain / PK / key-field summary**. For full content with examples, see the Chinese version §5.
 
-Privacy grading P0–P4: P4 raw PII never enters DWD/DWS/ADS, reports, or LLM context.
+### 5.1 Data Layering
 
-Core PK relationships: `customer_id (1:N) loan_id (1:N) plan_id (1:N) repay_id`; `customer_id (1:N) case_id (1:N) action_id / note_id / decision_id`; `case_id (M:N) loan_id` via `dim_case_loan_mapping`.
+| Layer | Purpose | Privacy | Production Rule |
+|---|---|---|---|
+| **DIM** | Master dimensions (customer / loan / case / product / channel / vendor / line / collector / strategy) | P1-P4 coexist, **P4 only in raw_secure** | Slowly-changing, daily/weekly refresh |
+| **ODS** | Simulated production-system raw streams (repayment / collection actions / notes / recordings / complaints / discounts / assignment decisions) | P4 simulatable but only in raw_secure | Mimics production, granular |
+| **DWD** | Cleansed deduplicated fact tables | **No P4** | Cleansed from ODS, unified semantics |
+| **DWS** | Wide topic tables (loan/case/customer snapshots, process wide, vendor-line capacity, profiles, tags) | No P4 | Aggregated by theme, analysis-ready |
+| **ADS** | Application metric tables (dashboards, attribution, vendor / collector performance, discount ROI, compliance QA) | **No P4, no row-level by default** | Direct serving for dashboards & agents |
 
-Synthetic data: ≥18 months, scale `small`/`medium`/`large`, last-30-day anomaly injections, strict no-label-leakage.
+### 5.2 Privacy Grading (P0–P4)
 
-**Authoritative source**: `metadata/tables.yaml` + `metadata/columns.yaml` (M1 deliverable). The Markdown only references, never re-transcribes.
+| Level | Meaning | Typical Fields | DWD/DWS/ADS | Reports | LLM Context |
+|---|---|---|---|---|---|
+| **P0** | Non-sensitive public | product_code, province, city, dpd_bucket | ✓ | ✓ | ✓ |
+| **P1** | Internal business keys | customer_id, loan_id, case_id, vendor_id | ✓ | ✓ | ✓ |
+| **P2** | Masked personal | mobile_masked (e.g. 138****1234), customer_id_hash | ✓ | ✓ | ✓ |
+| **P3** | Hash / ciphertext | id_no_hash, mobile_hash, bank_card_hash | ✓ | Not shown | **Not sent directly** |
+| **P4** | Raw PII | id_no, mobile_no, customer_name, address | **✗** | **✗** | **✗** |
+
+LLM context admission (**hard rule**): Orchestrator must scan field metadata before sending; P3 hashed only with masking note; **P4 never sent**.
+
+### 5.3 Core Primary-Key Relationships
+
+```
+customer_id ──┬─── 1:N ─── loan_id ─── 1:N ─── plan_id ─── 1:N ─── repay_id
+              │
+              └─── 1:N ─── case_id ──┬── 1:N ─── action_id
+                                     ├── 1:N ─── note_id
+                                     ├── 1:N ─── decision_id
+                                     └── M:N ─── loan_id (via dim_case_loan_mapping)
+
+vendor_id ─── 1:N ─── line_id ─── 1:N ─── collector_id
+```
+
+### 5.4 Table Inventory
+
+**DIM Layer (10 tables)**: `dim_customer`, `dim_loan`, `dim_case`, `dim_case_loan_mapping`, `dim_product`, `dim_channel`, `dim_vendor`, `dim_collection_line`, `dim_collector`, `dim_strategy`.
+
+**ODS Layer (14 tables)**: `ods_repayment_plan` (period repayment plans), `ods_repayment_detail` (actual repayment stream), `ods_loan_daily_snapshot`, `ods_case_daily_snapshot`, `ods_customer_daily_snapshot`, `ods_case_flow`, `ods_assignment_decision_log`, `ods_postloan_c_score`, `ods_collection_note`, `ods_collection_action`, `ods_call_record`, `ods_sms_send_log`, `ods_reduction_application`, `ods_complaint`.
+
+**DWD Layer (5 tables)**: `dwd_due_plan_detail_di`, `dwd_repayment_detail_di`, `dwd_collection_action_detail_di`, `dwd_case_flow_detail_di`, `dwd_complaint_detail_di`.
+
+**DWS Layer (5 wide + 3 profile/tag tables)**:
+- Wide: `dws_loan_status_snapshot_di`, `dws_case_status_snapshot_di`, `dws_customer_status_snapshot_di`, `dws_collection_process_wide_di`, `dws_vendor_line_capacity_di`.
+- Profile/Tag: `dws_customer_profile_di`, `dws_collector_profile_di`, `dws_customer_postloan_tag_di`.
+
+**ADS Layer (6 tables)**: `ads_postloan_dashboard_di`, `ads_recovery_attribution_di`, `ads_vendor_performance_di`, `ads_collector_performance_di`, `ads_reduction_roi_di`, `ads_compliance_qc_di`.
+
+> Field-level details: see Chinese §5.4 and (when ready) `metadata/tables.yaml`.
+
+### 5.5 Synthetic Data Spec
+
+**Timeline**:
+
+| Range | Use | Notes |
+|---|---|---|
+| T-18M to T-12M | Historical baseline | Long-window customer behavior, vintage |
+| T-12M to T-6M | Model training window (Phase 2+) | Sufficient sample |
+| T-6M to T-3M | Validation window | Strategy stability |
+| T-3M to T-1M | OOT testing | PSI, cross-period stability |
+| Last 90 days | Business analysis window | Dashboards, operations |
+| **Last 30 days** | **Demo anomaly window** | **7 injected storyline anomalies** |
+
+**Scale tiers**:
+
+| Tier | Customers | Loans | Cases | Actions | Use |
+|---|---:|---:|---:|---:|---|
+| `small` | 20K | ~30K | ~10K | ~200K | Local fast-iteration |
+| `medium` | 80K | ~150K | ~50K | ~1.5M | Demo & analysis (**default**) |
+| `large` | 150K+ | ~300K | ~100K | ~5M | Modeling & stress test |
+
+**Seven injected anomalies (last 30 days)**:
+1. M1 D7 recovery rate drops from 18.6% to 15.2% (core story)
+2. East-China line per-collector caseload up 25% (capacity)
+3. Vendor B connect rate down 6pct (execution)
+4. High-balance customer share up 8pct (structure)
+5. AI dialer coverage down 12pct (resource)
+6. Discount usage down 4pct + PTP keep rate down 5pct (strategy)
+7. One SMS template's complaint rate 2× the mean (compliance)
+
+**No label leakage**: features only from before observation date; labels only from after; train / valid / OOT windows non-overlapping. CI-enforced.
+
+### 5.6 Data Quality Rules
+
+**Hard rules (CI must pass)**:
+
+| ID | Rule |
+|---|---|
+| DQ-001 | DIM primary keys unique |
+| DQ-002 | Foreign keys resolvable (e.g. `ods_repayment_detail.plan_id` → `ods_repayment_plan.plan_id`) |
+| DQ-003 | Amounts non-negative (due / repaid / outstanding / reduction) |
+| DQ-004 | No date leakage (`repay_time >= disburse_time`; label_date > feature_date) |
+| DQ-005 | P4 isolation (no P4 fields in DWD/DWS/ADS, by name scan) |
+| DQ-006 | Ratio range [0, 1] for rate metrics |
+| DQ-007 | Case-loan mapping completeness (every case_id maps ≥ 1 loan_id) |
+| DQ-008 | Time-series completeness (daily snapshot row count not dropping to zero) |
+
+**Soft rules (warning, non-blocking)**: DQ-101 day-over-day metric volatility, DQ-102 imbalanced sample ratio, DQ-103 null-rate spike.
+
+Implementation: `tests/test_data_quality.py` + `riskops/data/quality/`.
+
+### 5.7 Data Asset Deliverables
+
+- **Authoritative YAML**: `metadata/tables.yaml`, `metadata/columns.yaml`, `metadata/key_relationships.yaml`, `metadata/privacy_policy.yaml`, `metadata/metric_lineage.yaml`.
+- **Human-readable docs** (rendered from YAML): `docs/data_dictionary.md`, `docs/key_relationships.md`, `docs/privacy_policy.md`, `docs/data_lineage.md`.
+- **SQL & scripts**: `schemas/{dim,ods,dwd,dws,ads}.sql`, `scripts/generate_synthetic_data.py`, `scripts/build_warehouse.py`, `scripts/render_docs.py`, `tests/test_data_quality.py`.
 
 ---
 
 ## 6. Metric Asset Spec
 
-> Skeleton only. See Chinese version §6 for full text. Pending migration of v5 §8.2 + §15B contents.
+The metric dictionary is **the language system of RiskOps Copilot** — all engines and agents call by `metric_code`, never re-implement.
 
-**Authoritative source**: `metadata/metric_dictionary.yaml` (M2 deliverable). Each metric has: `metric_code`, `metric_name_cn`, `business_domain`, `numerator`, `denominator`, `formula`, `grain`, `source_tables`, `filter_condition`, `owner`, `refresh_frequency`, `version`, `change_log`.
+> **Authoritative source**: `metadata/metric_dictionary.yaml` (M2 deliverable). This chapter lists codes + formulas; full YAML fields (owner / change_log / grain / source_tables) live in the file.
 
-Phase 1 priority: Post-loan result (8 P0) + process (7 P0 + 3 P1) + compliance (3 P0 + 2 P1) + discount ROI (2 P0 + 1 P1). Pre-loan / in-life / model metrics are placeholders (Phase 2+).
+### 6.1 Dictionary Schema
+
+Each metric must include: `metric_code`, `metric_name_cn`, `business_domain`, `metric_type`, `numerator`, `denominator`, `formula`, `grain`, `source_tables`, `filter_condition`, `owner`, `refresh_frequency`, `version`, `priority`, `notes`, `change_log`. See Chinese §6.1 for full YAML example.
+
+### 6.2 Phase 1 Metric Overview
+
+| Domain | Count | P0 | P1 | Phase 1 |
+|---|---:|---:|---:|---|
+| Pre-loan | 5 | 0 | 0 | Placeholder (Phase 2) |
+| In-life | 4 | 0 | 0 | Placeholder (Phase 2) |
+| **Post-loan result** | **8** | **8** | **0** | **All implemented** |
+| **Collection process** | **10** | **7** | **3** | **All implemented** |
+| **Compliance QA** | **5** | **3** | **2** | **All implemented** |
+| **Discount ROI** | **3** | **2** | **1** | **All implemented** |
+| Model | 4 | 0 | 0 | Placeholder (Phase 2) |
+| **Total (Phase 1)** | **26** | **20** | **6** | — |
+
+### 6.3 Post-Loan Result Metrics (8, all P0)
+
+| metric_code | English | Formula |
+|---|---|---|
+| `due_account_count` | Due account count | `count(distinct customer_id where due_date in window)` |
+| `due_loan_count` | Due loan count | `count(distinct loan_id where due_date in window)` |
+| `due_total_amount` | Total due amount | `sum(due_total_amount)` |
+| `collection_entry_rate` | Collection entry rate | `collection_entry_count / due_account_count` |
+| `recovery_rate_d7` | D7 recovery rate | `repay_amount_within_7d / initial_outstanding_amount` |
+| `recovery_rate_d15` | D15 recovery rate | `repay_amount_within_15d / initial_outstanding_amount` |
+| `recovery_rate_d30` | D30 recovery rate | `repay_amount_within_30d / initial_outstanding_amount` |
+| `m1_recovery_rate` | M1 recovery rate | `m1_repay_amount / m1_initial_outstanding_amount` |
+
+Convention: amount-based by default (no discount); count-based version named `recovery_case_rate_*`. Roll rate / vintage bad rate deferred to Phase 2.
+
+### 6.4 Collection Process Metrics (10: 7 P0 + 3 P1)
+
+| metric_code | English | Formula | Priority |
+|---|---|---|---|
+| `call_coverage_rate` | Call coverage rate | `called_case_count / assigned_case_count` | P0 |
+| `valid_coverage_rate` | Valid coverage rate | `valid_contact_case_count / assigned_case_count` | P0 |
+| `connect_rate` | Connect rate | `connect_count / call_count` | P0 |
+| `valid_contact_rate` | Valid contact rate | `valid_contact_count / connect_count` | P0 |
+| `first_contact_hours` | First contact latency | `avg(first_contact_time - assign_time)` hours | P0 |
+| `ptp_rate` | PTP rate | `ptp_count / valid_contact_count` | P0 |
+| `ptp_keep_rate` | PTP keep rate | `kept_ptp_count / matured_ptp_count` | P0 |
+| `avg_call_duration_per_call` | Avg call duration | `sum(duration_sec where connect=1) / connect_count` | P1 |
+| `avg_call_duration_per_collector` | Daily duration per collector | `sum(duration_sec) / active_collector_count / work_days` | P1 |
+| `collector_productivity` | Collector productivity | `repay_amount / active_collector_count` | P1 |
+
+### 6.5 Compliance & Complaint Metrics (5: 3 P0 + 2 P1)
+
+| metric_code | English | Formula | Priority |
+|---|---|---|---|
+| `complaint_rate` | Complaint rate | `complaint_case_count / active_case_count` | P0 |
+| `complaint_per_10k_cases` | Complaint per 10k cases | `complaint_count / active_case_count * 10000` | P0 |
+| `risk_phrase_hit_rate` | Risk phrase hit rate | `risk_phrase_hit_count / qa_checked_count` | P0 |
+| `qa_fail_rate` | QA fail rate | `qa_fail_call_count / qa_checked_call_count` | P1 |
+| `over_frequency_contact_rate` | Over-frequency rate | `over_frequency_case_count / contacted_case_count` | P1 |
+
+### 6.6 Discount ROI Metrics (3: 2 P0 + 1 P1)
+
+| metric_code | English | Formula | Priority |
+|---|---|---|---|
+| `reduction_usage_rate` | Discount usage rate | `reduction_case_count / eligible_case_count` | P0 |
+| `reduction_recovery_rate` | Recovery rate after discount | `repay_amount_after_reduction / reduction_case_outstanding_amount` | P0 |
+| `reduction_roi` | Discount ROI | `(actual_repay - expected_without_reduction) / approved_reduction_amount` | P1 |
+
+`reduction_roi` uses historical-cohort means as counterfactual baseline in Phase 1; causal-inference / control-group method deferred to Phase 3.
+
+### 6.7 Placeholders (Phase 2+)
+
+- **Pre-loan**: `approval_rate`, `disbursement_conversion_rate`, `fpd_rate`, `bad_rate`, `vintage_bad_rate`
+- **In-life**: `credit_utilization_rate`, `post_limit_increase_overdue_rate`, `transaction_reject_rate`, `risk_migration_rate`
+- **Model**: `auc`, `ks`, `psi`, `lift`
+
+### 6.8 Single-Source-of-Truth Principle
+
+- Definitions only in YAML; this chapter is a reading aid.
+- One file per metric in `riskops/metrics/calculators/<metric_code>.py`; function name = `metric_code`.
+- Changes: edit YAML first (with change_log entry), CI validates, md auto-renders via `scripts/render_docs.py metrics`.
+
+### 6.9 Maintenance (CI Validation)
+
+- `metric_code` globally unique (snake_case)
+- Required fields: `metric_code`, `metric_name_cn`, `business_domain`, `formula`, `grain`, `source_tables`, `owner`, `version`, `priority`
+- `change_log` mandatory per change
+- Enum: `business_domain` ∈ {preloan, midloan, postloan, collection, compliance, roi, model}; `priority` ∈ {P0, P1, P2, P3}
+
+Lineage in `metadata/metric_lineage.yaml`: `metric_code → ADS → DWS → DWD → ODS`.
 
 ---
 
 ## 7. Engine Capabilities
 
-> Skeleton only. See Chinese version §7 for full text.
+Six core engines for Phase 1. Each engine follows the unified template: **Goal / Input / Output / Algorithm / Config / Acceptance / Example**. For full pseudocode and worked examples, see Chinese version §7.
 
-Six engines, each with unified template (Goal / Input / Output / Algorithm / Acceptance):
+Engine relationships: Anomaly Detection → Attribution → Reporting / Visualization. Collection QA + Script Recommendation form an independent sub-chain serving the Collection Copilot.
 
-1. **Anomaly Detection** — statistical rules (z-score, sequential drops, process-vs-result divergence). Acceptance: detect all 7 injected anomalies in demo data.
-2. **Attribution** — group comparison + contribution ranking + structural decomposition + Top-N drill-down. Acceptance: M1 D7 drop attribution produces analyst-grade conclusion text.
-3. **Visualization** — 10 charts × 2 themes (`dark_dashboard` + `consulting_report`). Plotly + Jinja2.
-4. **Reporting** — 11-section standard structure, conclusion-first principle, 5 formats (HTML/MD/Excel/PPT/Word).
-5. **Collection QA** — Phase 1: text only (11 dimensions + red-line detection). Phase 2+: audio ASR.
-6. **Script Recommendation** — gen → compliance scan → frequency check → human approval → mock send → audit log.
+### 7.1 Anomaly Detection
+
+**Goal**: detect trend / sudden-change / structural / process anomalies on result and process metrics.
+
+**Algorithm (Phase 1, statistical rules — no ML)**:
+
+| Type | Rule | Default |
+|---|---|---|
+| Day-over-day | `abs(today - yesterday) / yesterday > threshold` | ±15% |
+| Week-over-week | `abs(today - 7d_ago) / 7d_ago > threshold` | ±20% |
+| Mean deviation | Off by N standard deviations from 28-day mean | 2σ |
+| Sequential | N consecutive days of unidirectional movement | 5 days |
+| Process-result divergence | Process metric deteriorates while result hasn't reflected yet | ≥ 3 days |
+| Structural | A dimension's share changes beyond threshold | ±5pct |
+
+**Severity**: `critical` (≥3σ or 7-day decline) / `high` (≥2σ or 25% MoM) / `medium` (≥1.5σ or 15%) / `low` (≥1σ).
+
+**Acceptance**: recall 100% on the 7 injected anomalies, ≤ 3 false positives.
+
+### 7.2 Attribution
+
+**Goal**: decompose metric movement across the **six-layer framework**:
+
+1. **Asset structure** — balance segment / DPD / risk level / channel / product mix changes
+2. **Customer mix** — high-risk share, lost-contact share, willingness changes
+3. **Strategy actions** — assignment / discount / AI dialer / SMS / protection policy changes
+4. **Resource allocation** — vendor / line / collector capacity, per-collector caseload
+5. **Process execution** — call coverage, connect rate, PTP, keep rate, first-contact latency
+6. **Compliance constraints** — complaint guardrails, sensitive-customer protection, no-call rules
+
+**Output**: Top-N contributors (default N=5), waterfall data (baseline → contributors → current), analyst-style conclusion text.
+
+**Algorithm**: group-by comparison + contribution decomposition + structural-vs-within-group split + process-result correlation + Top-N recursive drill-down (depth ≤ 2).
+
+**Acceptance**: for the M1 D7 drop, conclusion must include ≥ 4 layers and identify a primary cause (contribution > 30%).
+
+### 7.3 Visualization
+
+**Goal**: produce consulting-grade charts.
+
+**Phase 1 must-do 10 charts**: operations overview cards, M1 recovery trend, collection process funnel, attribution waterfall, vendor performance matrix, line capacity heatmap, DPD/balance-segment structure, discount ROI, complaint risk map, script QA radar.
+
+**Dual themes**: `dark_dashboard` (TUI/dashboard) + `consulting_report` (PDF/PPT/résumé).
+
+**Tech**: Plotly (HTML/SVG/PNG) + Jinja2 templates per chart at `templates/html/charts/<chart>.json.j2`.
+
+**Acceptance**: 10 charts × 2 themes all generate; 1920×1080 screenshots fit for README and résumé; ≥ 2 of 3 reviewers rate as "consulting-grade."
+
+### 7.4 Reporting
+
+**Goal**: assemble metrics + anomalies + attribution + visuals into multi-format reports.
+
+**Report types**: daily / weekly / attribution / vendor review / discount ROI / collection QA / Feishu draft.
+
+**11-section standard structure**: Conclusions → Metrics overview → Anomaly detection → Multi-dim attribution → Process metrics → Vendor / line → ROI → Compliance & complaints → Recommendations → Follow-ups → Appendix.
+
+**Principles**: conclusion-first; data-grounded (traceable to table + filter); explicit about missing data; never fabricate; `--audience exec|analyst` switch for length.
+
+**Acceptance**: `/report weekly` outputs 5 formats; HTML renders cleanly; PPT outline ≥ 9 pages each with title + conclusion + chart suggestion + speaker notes; Excel has detail + pivot.
+
+### 7.5 Collection QA
+
+**Goal**: score text (Phase 1) / audio (Phase 2+) for compliance, intensity, complaint risk; locate high-risk phrases.
+
+**11 QA dimensions**: identity disclosure / fact statement / amount-date statement / objection handling / solution guidance / emotion control / collection intensity / red-line compliance / complaint risk / PTP confirmation / closing protocol.
+
+**Red-line clauses (any hit → critical)**: threats / abuse / insinuation of illegal consequences / impersonating law enforcement / inducing new borrowing / privacy exposure to third parties / harassment of unrelated contacts / forbidden hours (21:00–08:00) / coercive vague phrasing.
+
+**Algorithm (Phase 1)**: rule-based red-line matching → LLM scoring across 11 dimensions → fused output (red-line hit forces `compliance_score ≤ 30`).
+
+**Acceptance**: on 100 hand-labeled samples — red-line recall ≥ 95%, false positives ≤ 10%; 11-dimension coverage 100%; supervisor-review flag accuracy ≥ 80%.
+
+### 7.6 Script Recommendation
+
+**Goal**: generate compliant script drafts based on case context; **never auto-send** — all sends require human approval.
+
+**10 script types**: first-overdue reminder, D1 gentle reminder, D3 factual reminder, D7 solution guidance, D15 discount notice, PTP-due reminder, lost-contact recovery, low-pressure reminder for complaint-sensitive customers, supervisor-review notice for high-risk cases, missed-PTP follow-up.
+
+**Approval flow**:
+```
+1. Agent generates draft (context + prompt template)
+2. Compliance scan (same rule library as 7.5)
+3. Frequency check (recent 7-day SMS ≤ 3, calls ≤ 5, etc.)
+4. Show risk level + warnings
+5. Collector confirmation
+6. Supervisor review (mandatory for complaint-sensitive / high-risk)
+7. Mock send (writes to ods_sms_send_log, no real outbound)
+8. Audit trail (who / when / case / content / approval / result)
+```
+
+**Frequency defaults**:
+
+| Channel | Daily cap | 7-day cap | Forbidden hours |
+|---|---|---|---|
+| SMS | 2 | 5 | 21:00–08:00 |
+| AI dialer | 3 | 10 | 21:00–08:00 |
+| Human call | 5 | 20 | 21:00–08:00 |
+
+**Acceptance**: 7 script types all generate; compliance scan intercepts red-line drafts at generation; mock-send log fully auditable; demo flow `/script case_10086 --channel sms` runs end-to-end.
 
 ---
 
@@ -333,14 +612,73 @@ See Chinese §10.3 (README, demo script, interview pitch, screenshots, demo vide
 
 ## 11. Roadmap
 
-| Phase | Theme | Migration Source |
-|---|---|---|
-| Phase 1 | Post-loan show-room (current) | §10 |
-| Phase 2 | Pre-loan + in-life risk operations copilot | v5 §16.2 |
-| Phase 3 | Model & strategy closed loop | v5 §16.3 |
-| Phase 4 | ASR & QA enhancement | v5 §16.4 |
-| Phase 5 | Office automation enhancement | v5 §16.5 |
-| Phase 6 | Remote data sources & enterprise foundation | v5 §16.6 |
+From Phase 1 post-loan show-room to Phase 6 enterprise foundation. For each Phase below: **goal, scope, key features, typical questions, exit criteria**.
+
+> Phase 2-6 are **vision planning** — no committed timeline. After Phase 1, priorities decided based on feedback and resources.
+
+### 11.1 Phase 1: Post-Loan Show-Room (Current)
+
+See §10 for full delivery plan.
+
+**Goal**: tell a complete story on synthetic post-loan data to prove product shape, business value, technical feasibility, AI differentiation.
+
+**Core demo story**: M1 D7 recovery rate drops → auto-attribute to 6 contributors → produce weekly business report and collector script suggestions.
+
+### 11.2 Phase 2: Pre-Loan + In-Life Risk Operations Copilot
+
+**Goal**: extend product from post-loan single scenario to **full-lifecycle risk operations copilot** — prove the direction is not just a post-loan tool but a complete risk operations platform.
+
+**Pre-loan scope**: application-to-disbursement funnel, FPD7/FPD30, MOB1/2/3 overdue, Vintage curves, score-band bad-rate, scorecard / LightGBM / XGBoost training with AUC/KS/PSI/Lift, SHAP explainability, Champion/Challenger comparison, threshold / limit / pricing simulator.
+
+**In-life scope**: limit utilization, transaction success/reject/risk-hit rates, post-limit-increase overdue performance, customer risk migration (Sankey), behavior anomaly detection, intervention recommendations (limit increase / decrease / freeze / block / outreach).
+
+**Typical questions**: why is approval rate down — channel quality vs rule tightening? Which decline rules are over-firing? Is the model drifting? Which features matter most? What's the regime-shift point on the volume-vs-bad-rate trade-off? Which customers are deteriorating and should be intervened on?
+
+**Exit criteria**: pre-loan dictionary ≥ 15 metrics, in-life ≥ 10, fully YAML-ized; ≥ 1 scorecard + 1 XGBoost model trained / evaluated / explained / PSI-monitored; strategy simulator produces "threshold → volume/bad-rate/profit" sensitivity tables; second demo story (approval-rate anomaly attribution) runs.
+
+### 11.3 Phase 3: Model & Strategy Closed Loop
+
+**Goal**: stitch pre-loan / in-life / post-loan analytics into a **strategy closed loop** — discover risk → auto-attribute → suggest strategy → simulate ROI → human approval → monitor → auto-postmortem → distill Playbook.
+
+**Scope**: unified customer risk profile, unified metric dictionary upgrade (cross-domain), strategy action library (historical strategies in one place), pre-launch simulation (counterfactual + risk-return + sensitivity), post-launch monitoring, Champion/Challenger, auto-postmortem reports, Playbook accumulation ("if X happens, suggest Y").
+
+**Typical questions**: did this strategy genuinely lift recovery or just bring forward repayments? Which of Champion vs Challenger wins, and in which cohorts? What did we do in similar past situations? What's the suggested Playbook for the current issue?
+
+**Exit criteria**: strategy library ≥ 30 historical strategies; ≥ 3 full closed-loop cycles complete; ≥ 1 Champion/Challenger comparison report.
+
+### 11.4 Phase 4: ASR & QA Enhancement
+
+**Goal**: extend QA from text to audio, lifting compliance coverage and training capability.
+
+**Scope**: audio transcription (Mandarin, Cantonese, etc.), speaker diarization (agent vs customer vs third-party), risk-phrase localization on timeline, QA scoring expanded from 11 → 20+ dimensions, individualized training plans per collector, vendor-level QA dashboard, complaint case retrospectives (link recording → specific phrase), agent-training simulator (LLM role-plays customer types).
+
+**Tech selection**: Whisper (local) vs Alibaba/Tencent/Volcano ASR — deferred to Phase 4 kickoff (per ADR-009).
+
+**Exit criteria**: ASR accuracy ≥ 90% (Mandarin) / ≥ 85% (accented); red-line recall ≥ 95%; training simulator supports ≥ 5 customer archetypes.
+
+### 11.5 Phase 5: Office Automation Enhancement
+
+**Goal**: serve PMs, supervisors, and managers — not just analysts.
+
+**Scope**: Word report enhancement (formal / consulting-style / exec-summary), PPT auto-generation (not just outline — full deliverable), Feishu API integration (real writes to docs / bitable / wiki), Excel template automation, historical-report knowledge base, meeting-note generation (from audio / transcript), PRD generation from requirement discussions, management-pitch material generation (style-adapted).
+
+**Typical questions**: turn this week's analysis into a 30-slide consulting-style deck for Wednesday's exec review. Find all strategy docs mentioning "AI dialer" in the past six months. Convert this meeting recording into structured notes with action items. Give me the 5-minute version for the CEO.
+
+**Exit criteria**: Feishu API real writes work; PPT auto-generation rated "directly usable" by ≥ 2 of 3 reviewers; knowledge base indexes ≥ 100 local docs with sub-2-second search.
+
+### 11.6 Phase 6: Remote Data Sources & Enterprise Foundation
+
+**Goal**: move from single-machine local demo to **small-team internal tool** — connect remote DBs, RBAC, audit, web dashboard, scheduling.
+
+**Scope**: remote data sources (MySQL/PostgreSQL/Hive/MaxCompute/TBase), basic RBAC (admin / analyst / supervisor / collector), audit logging, enhanced masking for real-data ingestion, lightweight web dashboard (alternative to TUI), REST API service, Feishu / WeCom approval push, multi-user knowledge base, task scheduling.
+
+**Boundary**: **NOT** full SaaS, multi-tenancy, or regulatory reporting — those are a different magnitude. **Enterprise-ready = 5–20-person team usable**, not high concurrency.
+
+**Exit criteria**: at least 1 real remote data source connected (sandbox or masked); web dashboard works on Chrome/Safari; one 3–5-person team trial completed with feedback loop.
+
+### 11.7 Cross-Phase Continuous Work
+
+Spans all phases: documentation maintenance (PRD / dictionaries / ADRs), test coverage (DQ / metric calc / engine logic / agent behavior), demo asset refresh (screenshots / scripts / pitches per phase), performance (DuckDB tuning / LLM caching / template rendering), user feedback loop (via Issues → next-phase priorities).
 
 ---
 
