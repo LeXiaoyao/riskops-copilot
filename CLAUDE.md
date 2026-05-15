@@ -26,6 +26,14 @@
 
 ## 核心协作规范
 
+## Claude / Codex Collaboration Rules
+
+- 本仓库的 Agent 协作边界以 [AGENTS.md](AGENTS.md) 为准。
+- Claude owns judgment-heavy decisions, including product, architecture, ADR, PRD, README narrative, privacy, metric, and business-risk review.
+- Codex owns execution-heavy implementation, including metadata YAML, SQL schemas, Python scripts, tests, documentation rendering, and local git commits.
+- Codex must read `AGENTS.md` before starting implementation.
+- Any architecture, privacy, or metric ambiguity must be escalated before implementation continues.
+
 ### 1. 范围控制（最重要）
 
 - **任何新需求先回 PRD v6 §2.1 范围矩阵对号入座**。
