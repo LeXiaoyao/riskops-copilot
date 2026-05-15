@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 邮件联系作者 / Email the author
+    url: mailto:xiaoyao201207@gmail.com
+    about: 业务合作、深度讨论、私下沟通请走邮件
+  - name: 阅读 PRD v6 / Read PRD v6
+    url: https://github.com/LeXiaoyao/riskops-copilot/blob/main/docs/prd/PRD_v6.md
+    about: 提 Issue 前请先看需求总纲

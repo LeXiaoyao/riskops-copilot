@@ -1,0 +1,126 @@
+# ============================================
+# RiskOps Copilot - .gitignore
+# ============================================
+
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+.eggs/
+build/
+dist/
+*.whl
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+.installed.cfg
+MANIFEST
+
+# ---------- Virtual envs ----------
+.venv/
+venv/
+env/
+ENV/
+.python-version
+
+# ---------- uv / poetry ----------
+uv.lock
+poetry.lock
+.uv/
+
+# ---------- Testing & coverage ----------
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+
+# ---------- Jupyter ----------
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# ---------- IDE ----------
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+
+# ---------- OS ----------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------- Project: data ----------
+# 合成数据本体不入库（量大、易变；只入元数据和生成脚本）
+synthetic_data/dim/*.csv
+synthetic_data/dim/*.parquet
+synthetic_data/ods/*.csv
+synthetic_data/ods/*.parquet
+synthetic_data/dwd/*.csv
+synthetic_data/dwd/*.parquet
+synthetic_data/dws/*.csv
+synthetic_data/dws/*.parquet
+synthetic_data/ads/*.csv
+synthetic_data/ads/*.parquet
+
+# 但保留每层的 .gitkeep
+!**/.gitkeep
+
+# raw_secure：模拟 P4 明文字段，绝不入库
+synthetic_data/raw_secure/
+**/raw_secure/
+
+# DuckDB / SQLite 数据库文件
+*.duckdb
+*.duckdb.wal
+*.db
+*.sqlite
+*.sqlite3
+
+# ---------- Project: outputs ----------
+# 生成的报告/导出不入库（每次跑都会重生成）
+reports/*.html
+reports/*.pdf
+reports/*.md
+exports/*.xlsx
+exports/*.pptx
+exports/*.docx
+!reports/.gitkeep
+!exports/.gitkeep
+
+# 截图样例可以入库（README 用），但放在 docs/screenshots/
+# 这里只忽略临时截图
+*.tmp.png
+*.tmp.jpg
+
+# ---------- Secrets ----------
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+secrets/
+credentials.json
+
+# ---------- Logs ----------
+logs/
+*.log
+
+# ---------- AI / Claude Code 本地状态 ----------
+.claude/
+.aider*
+
+# ---------- 其他临时文件 ----------
+*.bak
+*.tmp
+.cache/
+tmp/
