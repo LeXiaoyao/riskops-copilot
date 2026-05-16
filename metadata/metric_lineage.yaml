@@ -1,33 +1,159 @@
-phase: M1
-scope: lineage placeholders only; metric calculation lands in M2
+phase: M2
+scope: Phase 1 metric lineage from ADS to DWS, DWD, and ODS
 metrics:
-- metric_code: m1_recovery_rate_d7
-  metric_name_cn: M1 D7 回收率
-  ads_table: ads_postloan_dashboard_di
-  dws_tables:
-  - dws_loan_status_snapshot_di
-  dwd_tables:
-  - dwd_due_plan_detail_di
-  - dwd_repayment_detail_di
-  ods_tables:
-  - ods_repayment_plan
-  - ods_repayment_detail
-- metric_code: connect_rate
-  metric_name_cn: 接通率
-  ads_table: ads_vendor_performance_di
-  dws_tables:
-  - dws_collection_process_wide_di
-  dwd_tables:
-  - dwd_collection_action_detail_di
-  ods_tables:
-  - ods_collection_action
-- metric_code: complaint_rate
-  metric_name_cn: 投诉率
-  ads_table: ads_compliance_qc_di
-  dws_tables:
-  - dws_collection_process_wide_di
-  dwd_tables:
-  - dwd_complaint_detail_di
-  ods_tables:
-  - ods_complaint
-  - ods_sms_send_log
+  - metric_code: due_account_count
+    metric_name_cn: 到期账户数
+    ads_table: ads_postloan_dashboard_di
+    dws_tables: [dws_customer_status_snapshot_di]
+    dwd_tables: [dwd_due_plan_detail_di]
+    ods_tables: [ods_repayment_plan]
+  - metric_code: due_loan_count
+    metric_name_cn: 到期借据数
+    ads_table: ads_postloan_dashboard_di
+    dws_tables: [dws_loan_status_snapshot_di]
+    dwd_tables: [dwd_due_plan_detail_di]
+    ods_tables: [ods_repayment_plan]
+  - metric_code: due_total_amount
+    metric_name_cn: 到期应还金额
+    ads_table: ads_postloan_dashboard_di
+    dws_tables: [dws_loan_status_snapshot_di]
+    dwd_tables: [dwd_due_plan_detail_di]
+    ods_tables: [ods_repayment_plan]
+  - metric_code: collection_entry_rate
+    metric_name_cn: 入催率
+    ads_table: ads_postloan_dashboard_di
+    dws_tables: [dws_case_status_snapshot_di]
+    dwd_tables: [dwd_due_plan_detail_di]
+    ods_tables: [ods_repayment_plan, ods_case_daily_snapshot]
+  - metric_code: recovery_rate_d7
+    metric_name_cn: D7 回收率
+    ads_table: ads_postloan_dashboard_di
+    dws_tables: [dws_loan_status_snapshot_di]
+    dwd_tables: [dwd_due_plan_detail_di, dwd_repayment_detail_di]
+    ods_tables: [ods_repayment_plan, ods_repayment_detail]
+  - metric_code: recovery_rate_d15
+    metric_name_cn: D15 回收率
+    ads_table: ads_postloan_dashboard_di
+    dws_tables: [dws_loan_status_snapshot_di]
+    dwd_tables: [dwd_due_plan_detail_di, dwd_repayment_detail_di]
+    ods_tables: [ods_repayment_plan, ods_repayment_detail]
+  - metric_code: recovery_rate_d30
+    metric_name_cn: D30 回收率
+    ads_table: ads_postloan_dashboard_di
+    dws_tables: [dws_loan_status_snapshot_di]
+    dwd_tables: [dwd_due_plan_detail_di, dwd_repayment_detail_di]
+    ods_tables: [ods_repayment_plan, ods_repayment_detail]
+  - metric_code: m1_recovery_rate
+    metric_name_cn: M1 回收率
+    ads_table: ads_postloan_dashboard_di
+    dws_tables: [dws_loan_status_snapshot_di]
+    dwd_tables: [dwd_due_plan_detail_di, dwd_repayment_detail_di]
+    ods_tables: [ods_repayment_plan, ods_repayment_detail]
+  - metric_code: call_coverage_rate
+    metric_name_cn: 拨打覆盖率
+    ads_table: ads_vendor_performance_di
+    dws_tables: [dws_collection_process_wide_di, dws_case_status_snapshot_di]
+    dwd_tables: [dwd_collection_action_detail_di]
+    ods_tables: [ods_collection_action, ods_case_daily_snapshot]
+  - metric_code: valid_coverage_rate
+    metric_name_cn: 有效覆盖率
+    ads_table: ads_vendor_performance_di
+    dws_tables: [dws_collection_process_wide_di, dws_case_status_snapshot_di]
+    dwd_tables: [dwd_collection_action_detail_di]
+    ods_tables: [ods_collection_action, ods_call_record]
+  - metric_code: connect_rate
+    metric_name_cn: 接通率
+    ads_table: ads_vendor_performance_di
+    dws_tables: [dws_collection_process_wide_di]
+    dwd_tables: [dwd_collection_action_detail_di]
+    ods_tables: [ods_collection_action]
+  - metric_code: valid_contact_rate
+    metric_name_cn: 有效沟通率
+    ads_table: ads_vendor_performance_di
+    dws_tables: [dws_collection_process_wide_di]
+    dwd_tables: [dwd_collection_action_detail_di]
+    ods_tables: [ods_collection_action, ods_call_record]
+  - metric_code: first_contact_hours
+    metric_name_cn: 首触达时效
+    ads_table: ads_collector_performance_di
+    dws_tables: [dws_collection_process_wide_di]
+    dwd_tables: [dwd_collection_action_detail_di]
+    ods_tables: [ods_collection_action, ods_assignment_decision_log]
+  - metric_code: ptp_rate
+    metric_name_cn: PTP 率
+    ads_table: ads_vendor_performance_di
+    dws_tables: [dws_collection_process_wide_di]
+    dwd_tables: [dwd_collection_action_detail_di]
+    ods_tables: [ods_collection_action]
+  - metric_code: ptp_keep_rate
+    metric_name_cn: PTP 履约率
+    ads_table: ads_vendor_performance_di
+    dws_tables: [dws_collection_process_wide_di]
+    dwd_tables: [dwd_collection_action_detail_di]
+    ods_tables: [ods_collection_action]
+  - metric_code: avg_call_duration_per_call
+    metric_name_cn: 单通平均时长
+    ads_table: ads_collector_performance_di
+    dws_tables: [dws_collection_process_wide_di]
+    dwd_tables: [dwd_collection_action_detail_di]
+    ods_tables: [ods_call_record]
+  - metric_code: avg_call_duration_per_collector
+    metric_name_cn: 人均日通话时长
+    ads_table: ads_collector_performance_di
+    dws_tables: [dws_collection_process_wide_di]
+    dwd_tables: [dwd_collection_action_detail_di]
+    ods_tables: [ods_call_record]
+  - metric_code: collector_productivity
+    metric_name_cn: 作业人效
+    ads_table: ads_collector_performance_di
+    dws_tables: [dws_case_status_snapshot_di]
+    dwd_tables: [dwd_repayment_detail_di]
+    ods_tables: [ods_repayment_detail]
+  - metric_code: complaint_rate
+    metric_name_cn: 投诉率
+    ads_table: ads_compliance_qc_di
+    dws_tables: [dws_case_status_snapshot_di]
+    dwd_tables: [dwd_complaint_detail_di]
+    ods_tables: [ods_complaint]
+  - metric_code: complaint_per_10k_cases
+    metric_name_cn: 万案投诉率
+    ads_table: ads_compliance_qc_di
+    dws_tables: [dws_case_status_snapshot_di]
+    dwd_tables: [dwd_complaint_detail_di]
+    ods_tables: [ods_complaint]
+  - metric_code: risk_phrase_hit_rate
+    metric_name_cn: 高风险话术命中率
+    ads_table: ads_compliance_qc_di
+    dws_tables: [dws_collection_process_wide_di]
+    dwd_tables: [dwd_collection_action_detail_di]
+    ods_tables: [ods_collection_action]
+  - metric_code: qa_fail_rate
+    metric_name_cn: 质检不合格率
+    ads_table: ads_compliance_qc_di
+    dws_tables: [dws_collection_process_wide_di]
+    dwd_tables: [dwd_complaint_detail_di, dwd_collection_action_detail_di]
+    ods_tables: [ods_complaint, ods_collection_action]
+  - metric_code: over_frequency_contact_rate
+    metric_name_cn: 超频触达率
+    ads_table: ads_compliance_qc_di
+    dws_tables: [dws_collection_process_wide_di]
+    dwd_tables: [dwd_collection_action_detail_di]
+    ods_tables: [ods_collection_action]
+  - metric_code: reduction_usage_rate
+    metric_name_cn: 减免使用率
+    ads_table: ads_reduction_roi_di
+    dws_tables: [dws_case_status_snapshot_di]
+    dwd_tables: []
+    ods_tables: [ods_reduction_application]
+  - metric_code: reduction_recovery_rate
+    metric_name_cn: 减免回收率
+    ads_table: ads_reduction_roi_di
+    dws_tables: [dws_case_status_snapshot_di]
+    dwd_tables: [dwd_repayment_detail_di]
+    ods_tables: [ods_reduction_application, ods_repayment_detail]
+  - metric_code: reduction_roi
+    metric_name_cn: 减免 ROI
+    ads_table: ads_reduction_roi_di
+    dws_tables: [dws_case_status_snapshot_di]
+    dwd_tables: [dwd_repayment_detail_di]
+    ods_tables: [ods_reduction_application, ods_repayment_detail]

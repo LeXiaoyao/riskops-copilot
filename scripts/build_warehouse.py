@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from riskops.data.m1_spec import sync_metadata_and_schemas
+from riskops.metrics.dictionary import calculate_metric
 
 
 DATA_ROOT = ROOT / "synthetic_data"
@@ -297,40 +298,47 @@ def build_dws(root: Path, dwd: dict[str, pd.DataFrame]) -> dict[str, pd.DataFram
 
 
 def build_ads(root: Path, dws: dict[str, pd.DataFrame], dwd: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
-    loan_status = dws["dws_loan_status_snapshot_di"]
     process = dws["dws_collection_process_wide_di"]
     case_status = dws["dws_case_status_snapshot_di"]
-    case = read_table(root, "dim", "dim_case")
     reduction = read_table(root, "ods", "ods_reduction_application")
-    sms = read_table(root, "ods", "ods_sms_send_log")
     complaint = dwd["dwd_complaint_detail_di"]
+    case = read_table(root, "dim", "dim_case")
+    max_stat_date = pd.to_datetime(case_status["stat_date"]).dt.date.max()
 
-    m1 = loan_status[loan_status["dpd_bucket"].eq("M1")]
-    dashboard = (
-        m1.groupby("stat_date", as_index=False)
-        .agg(m1_due_amount=("due_amount", "sum"), m1_repaid_amount_d7=("repaid_amount_d7", "sum"))
-        .sort_values("stat_date")
-    )
-    dashboard["m1_recovery_rate_d7"] = safe_rate(dashboard["m1_repaid_amount_d7"], dashboard["m1_due_amount"]).to_numpy()
-    proc_daily = process.groupby("stat_date", as_index=False).agg(
-        action_count=("action_count", "sum"),
-        connected_count=("connected_count", "sum"),
-        ai_action_count=("ai_action_count", "sum"),
-        ptp_count=("ptp_count", "sum"),
-        ptp_fulfilled_count=("ptp_fulfilled_count", "sum"),
-    )
-    proc_daily["connect_rate"] = safe_rate(proc_daily["connected_count"], proc_daily["action_count"]).to_numpy()
-    proc_daily["ai_coverage_rate"] = safe_rate(proc_daily["ai_action_count"], proc_daily["action_count"]).to_numpy()
-    proc_daily["ptp_fulfillment_rate"] = safe_rate(proc_daily["ptp_fulfilled_count"], proc_daily["ptp_count"]).to_numpy()
-    case["stat_date"] = pd.to_datetime(case["case_create_time"]).dt.date
-    high_share = case.groupby("stat_date", as_index=False).agg(
-        high_cases=("balance_segment", lambda x: (x == "HIGH").sum()), cases=("case_id", "nunique")
-    )
-    high_share["high_balance_case_share"] = safe_rate(high_share["high_cases"], high_share["cases"]).to_numpy()
-    dashboard = dashboard.merge(
-        proc_daily[["stat_date", "connect_rate", "ai_coverage_rate", "ptp_fulfillment_rate"]], on="stat_date", how="left"
-    ).merge(high_share[["stat_date", "high_balance_case_share"]], on="stat_date", how="left")
-    dashboard = dashboard.fillna(0)
+    metric_codes = [
+        "due_account_count",
+        "due_loan_count",
+        "due_total_amount",
+        "collection_entry_rate",
+        "recovery_rate_d7",
+        "recovery_rate_d15",
+        "recovery_rate_d30",
+        "m1_recovery_rate",
+        "call_coverage_rate",
+        "valid_coverage_rate",
+        "connect_rate",
+        "valid_contact_rate",
+        "first_contact_hours",
+        "ptp_rate",
+        "ptp_keep_rate",
+        "avg_call_duration_per_call",
+        "avg_call_duration_per_collector",
+        "collector_productivity",
+        "complaint_rate",
+        "complaint_per_10k_cases",
+        "risk_phrase_hit_rate",
+        "qa_fail_rate",
+        "over_frequency_contact_rate",
+        "reduction_usage_rate",
+        "reduction_recovery_rate",
+        "reduction_roi",
+    ]
+    daily_metrics = [calculate_metric(metric_code, root) for metric_code in metric_codes]
+    dashboard = daily_metrics[0]
+    for frame in daily_metrics[1:]:
+        dashboard = dashboard.merge(frame, on="stat_date", how="outer")
+    dashboard = dashboard.sort_values("stat_date").fillna(0)
+    dashboard = dashboard[pd.to_datetime(dashboard["stat_date"]).dt.date <= max_stat_date]
 
     factors = [
         ("CAPACITY_EAST", "华东线路人均案量"),
@@ -356,14 +364,22 @@ def build_ads(root: Path, dws: dict[str, pd.DataFrame], dwd: dict[str, pd.DataFr
 
     vendor_perf = process.groupby(["stat_date", "vendor_id"], as_index=False).agg(
         action_count=("action_count", "sum"),
+        called_case_count=("case_id", "nunique"),
         connected_count=("connected_count", "sum"),
         ptp_count=("ptp_count", "sum"),
+        ptp_fulfilled_count=("ptp_fulfilled_count", "sum"),
         complaint_count=("complaint_count", "sum"),
     )
+    assigned = case_status.groupby(["stat_date", "vendor_id"], as_index=False).agg(assigned_case_count=("case_id", "nunique"))
+    vendor_perf = vendor_perf.merge(assigned, on=["stat_date", "vendor_id"], how="left")
     vendor_perf["connect_rate"] = safe_rate(vendor_perf["connected_count"], vendor_perf["action_count"]).to_numpy()
-    vendor_perf["ptp_rate"] = safe_rate(vendor_perf["ptp_count"], vendor_perf["action_count"]).to_numpy()
-    vendor_perf["complaint_rate"] = safe_rate(vendor_perf["complaint_count"], vendor_perf["action_count"]).to_numpy()
-    vendor_perf = vendor_perf[["stat_date", "vendor_id", "action_count", "connect_rate", "ptp_rate", "complaint_rate"]]
+    vendor_perf["ptp_rate"] = safe_rate(vendor_perf["ptp_count"], vendor_perf["connected_count"]).to_numpy()
+    vendor_perf["ptp_keep_rate"] = safe_rate(vendor_perf["ptp_fulfilled_count"], vendor_perf["ptp_count"]).to_numpy()
+    vendor_perf["complaint_rate"] = safe_rate(vendor_perf["complaint_count"], vendor_perf["assigned_case_count"]).to_numpy()
+    vendor_perf["call_coverage_rate"] = safe_rate(vendor_perf["called_case_count"], vendor_perf["assigned_case_count"]).to_numpy()
+    vendor_perf = vendor_perf[
+        ["stat_date", "vendor_id", "action_count", "call_coverage_rate", "connect_rate", "ptp_rate", "ptp_keep_rate", "complaint_rate"]
+    ]
 
     collector_perf = process.groupby(["stat_date", "collector_id"], as_index=False).agg(
         vendor_id=("vendor_id", "first"),
@@ -374,41 +390,84 @@ def build_ads(root: Path, dws: dict[str, pd.DataFrame], dwd: dict[str, pd.DataFr
         complaint_count=("complaint_count", "sum"),
     )
     collector_perf["connect_rate"] = safe_rate(collector_perf["connected_count"], collector_perf["action_count"]).to_numpy()
-    collector_perf["ptp_fulfillment_rate"] = safe_rate(collector_perf["ptp_fulfilled_count"], collector_perf["ptp_count"]).to_numpy()
+    collector_perf["ptp_keep_rate"] = safe_rate(collector_perf["ptp_fulfilled_count"], collector_perf["ptp_count"]).to_numpy()
+    collector_daily = dashboard[
+        ["stat_date", "first_contact_hours", "avg_call_duration_per_call", "avg_call_duration_per_collector", "collector_productivity"]
+    ]
+    collector_perf = collector_perf.merge(collector_daily, on="stat_date", how="left").fillna(0)
     collector_perf = collector_perf[
-        ["stat_date", "collector_id", "vendor_id", "action_count", "connect_rate", "ptp_fulfillment_rate", "complaint_count"]
+        [
+            "stat_date",
+            "collector_id",
+            "vendor_id",
+            "action_count",
+            "connect_rate",
+            "ptp_keep_rate",
+            "first_contact_hours",
+            "avg_call_duration_per_call",
+            "avg_call_duration_per_collector",
+            "collector_productivity",
+            "complaint_count",
+        ]
     ]
 
     reduction["apply_time"] = pd.to_datetime(reduction["apply_time"])
     reduction["stat_date"] = reduction["apply_time"].dt.date
+    reduction = reduction[reduction["stat_date"] <= max_stat_date]
     red = reduction.groupby("stat_date", as_index=False).agg(
         reduction_case_count=("case_id", "nunique"),
         approved_reduction_amount=("approved_amount", "sum"),
     )
-    repay_daily = dwd["dwd_repayment_detail_di"].groupby("repay_date", as_index=False)["repay_amount"].sum().rename(
-        columns={"repay_date": "stat_date", "repay_amount": "repaid_amount"}
+    reduction_roi = dashboard[["stat_date", "reduction_usage_rate", "reduction_recovery_rate", "reduction_roi"]].merge(
+        red, on="stat_date", how="left"
     )
-    case_daily = case.groupby("stat_date", as_index=False)["case_id"].nunique().rename(columns={"case_id": "case_count"})
-    reduction_roi = red.merge(repay_daily, on="stat_date", how="outer").merge(case_daily, on="stat_date", how="left").fillna(0)
-    reduction_roi["reduction_usage_rate"] = safe_rate(reduction_roi["reduction_case_count"], reduction_roi["case_count"]).to_numpy()
-    reduction_roi["reduction_roi"] = np.where(
-        reduction_roi["approved_reduction_amount"] > 0,
-        reduction_roi["repaid_amount"] / reduction_roi["approved_reduction_amount"],
-        0.0,
-    ).round(6)
+    reduction_roi = reduction_roi.fillna({"reduction_case_count": 0, "approved_reduction_amount": 0})
+    reduction_roi["reduction_case_count"] = reduction_roi["reduction_case_count"].astype(int)
     reduction_roi = reduction_roi[
-        ["stat_date", "reduction_case_count", "approved_reduction_amount", "repaid_amount", "reduction_usage_rate", "reduction_roi"]
+        [
+            "stat_date",
+            "reduction_case_count",
+            "approved_reduction_amount",
+            "reduction_usage_rate",
+            "reduction_recovery_rate",
+            "reduction_roi",
+        ]
     ]
 
-    sms["send_time"] = pd.to_datetime(sms["send_time"])
-    sms["stat_date"] = sms["send_time"].dt.date
-    send = sms.groupby(["stat_date", "template_id"], as_index=False)["message_id"].count().rename(columns={"message_id": "send_count"})
-    comp = complaint.groupby(["complaint_date", "template_id"], as_index=False)["complaint_id"].count().rename(
+    complaint["complaint_date"] = pd.to_datetime(complaint["complaint_date"]).dt.date
+    complaint_counts = complaint.groupby("complaint_date", as_index=False)["complaint_id"].count().rename(
         columns={"complaint_date": "stat_date", "complaint_id": "complaint_count"}
     )
-    compliance = send.merge(comp, on=["stat_date", "template_id"], how="left").fillna({"complaint_count": 0})
+    active_cases = case_status.groupby("stat_date", as_index=False)["case_id"].nunique().rename(
+        columns={"case_id": "active_case_count"}
+    )
+    compliance = dashboard[
+        [
+            "stat_date",
+            "complaint_rate",
+            "complaint_per_10k_cases",
+            "risk_phrase_hit_rate",
+            "qa_fail_rate",
+            "over_frequency_contact_rate",
+        ]
+    ].merge(active_cases, on="stat_date", how="left").merge(complaint_counts, on="stat_date", how="left")
+    compliance["template_id"] = "ALL"
+    compliance = compliance.fillna({"active_case_count": 0, "complaint_count": 0})
+    compliance["active_case_count"] = compliance["active_case_count"].astype(int)
     compliance["complaint_count"] = compliance["complaint_count"].astype(int)
-    compliance["complaint_rate"] = safe_rate(compliance["complaint_count"], compliance["send_count"]).to_numpy()
+    compliance = compliance[
+        [
+            "stat_date",
+            "template_id",
+            "active_case_count",
+            "complaint_count",
+            "complaint_rate",
+            "complaint_per_10k_cases",
+            "risk_phrase_hit_rate",
+            "qa_fail_rate",
+            "over_frequency_contact_rate",
+        ]
+    ]
 
     return {
         "ads_postloan_dashboard_di": dashboard,

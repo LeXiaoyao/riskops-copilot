@@ -396,7 +396,7 @@ def make_other_ods(
     base_cases = cases.loc[~recent_cases]
     current_cases = cases.loc[recent_cases]
     base_n = int(len(base_cases) * 0.08)
-    recent_n = int(len(current_cases) * 0.07)
+    recent_n = int(len(current_cases) * 0.03)
     reduction_cases = pd.concat(
         [
             base_cases.sample(n=max(1, base_n), random_state=int(rng.integers(0, 1_000_000))),

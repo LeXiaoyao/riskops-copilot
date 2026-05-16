@@ -522,13 +522,32 @@ DWS_COLUMNS: dict[str, list[dict[str, Any]]] = {
 ADS_COLUMNS: dict[str, list[dict[str, Any]]] = {
     "ads_postloan_dashboard_di": [
         c("stat_date", "统计日期", "DATE", pk=True),
-        c("m1_due_amount", "M1 应还金额", "DOUBLE"),
-        c("m1_repaid_amount_d7", "M1 D7 回款金额", "DOUBLE"),
-        c("m1_recovery_rate_d7", "M1 D7 回收率", "DOUBLE"),
+        c("due_account_count", "到期账户数", "INTEGER"),
+        c("due_loan_count", "到期借据数", "INTEGER"),
+        c("due_total_amount", "到期应还金额", "DOUBLE"),
+        c("collection_entry_rate", "入催率", "DOUBLE"),
+        c("recovery_rate_d7", "D7 回收率", "DOUBLE"),
+        c("recovery_rate_d15", "D15 回收率", "DOUBLE"),
+        c("recovery_rate_d30", "D30 回收率", "DOUBLE"),
+        c("m1_recovery_rate", "M1 回收率", "DOUBLE"),
+        c("call_coverage_rate", "拨打覆盖率", "DOUBLE"),
+        c("valid_coverage_rate", "有效覆盖率", "DOUBLE"),
         c("connect_rate", "接通率", "DOUBLE"),
-        c("ai_coverage_rate", "AI 外呼覆盖率", "DOUBLE"),
-        c("ptp_fulfillment_rate", "PTP 履约率", "DOUBLE"),
-        c("high_balance_case_share", "高余额案件占比", "DOUBLE"),
+        c("valid_contact_rate", "有效沟通率", "DOUBLE"),
+        c("first_contact_hours", "首触达时效", "DOUBLE"),
+        c("ptp_rate", "PTP 率", "DOUBLE"),
+        c("ptp_keep_rate", "PTP 履约率", "DOUBLE"),
+        c("avg_call_duration_per_call", "单通平均时长", "DOUBLE"),
+        c("avg_call_duration_per_collector", "人均日通话时长", "DOUBLE"),
+        c("collector_productivity", "作业人效", "DOUBLE"),
+        c("complaint_rate", "投诉率", "DOUBLE"),
+        c("complaint_per_10k_cases", "万案投诉率", "DOUBLE"),
+        c("risk_phrase_hit_rate", "高风险话术命中率", "DOUBLE"),
+        c("qa_fail_rate", "质检不合格率", "DOUBLE"),
+        c("over_frequency_contact_rate", "超频触达率", "DOUBLE"),
+        c("reduction_usage_rate", "减免使用率", "DOUBLE"),
+        c("reduction_recovery_rate", "减免回收率", "DOUBLE"),
+        c("reduction_roi", "减免 ROI", "DOUBLE"),
     ],
     "ads_recovery_attribution_di": [
         c("stat_date", "统计日期", "DATE", pk=True),
@@ -541,8 +560,10 @@ ADS_COLUMNS: dict[str, list[dict[str, Any]]] = {
         c("stat_date", "统计日期", "DATE", pk=True),
         c("vendor_id", "供应商编号", "VARCHAR", "P1", pk=True),
         c("action_count", "动作数", "INTEGER"),
+        c("call_coverage_rate", "拨打覆盖率", "DOUBLE"),
         c("connect_rate", "接通率", "DOUBLE"),
         c("ptp_rate", "PTP 率", "DOUBLE"),
+        c("ptp_keep_rate", "PTP 履约率", "DOUBLE"),
         c("complaint_rate", "投诉率", "DOUBLE"),
     ],
     "ads_collector_performance_di": [
@@ -551,23 +572,31 @@ ADS_COLUMNS: dict[str, list[dict[str, Any]]] = {
         c("vendor_id", "供应商编号", "VARCHAR", "P1"),
         c("action_count", "动作数", "INTEGER"),
         c("connect_rate", "接通率", "DOUBLE"),
-        c("ptp_fulfillment_rate", "PTP 履约率", "DOUBLE"),
+        c("ptp_keep_rate", "PTP 履约率", "DOUBLE"),
+        c("first_contact_hours", "首触达时效", "DOUBLE"),
+        c("avg_call_duration_per_call", "单通平均时长", "DOUBLE"),
+        c("avg_call_duration_per_collector", "人均日通话时长", "DOUBLE"),
+        c("collector_productivity", "作业人效", "DOUBLE"),
         c("complaint_count", "投诉数", "INTEGER"),
     ],
     "ads_reduction_roi_di": [
         c("stat_date", "统计日期", "DATE", pk=True),
         c("reduction_case_count", "减免案件数", "INTEGER"),
         c("approved_reduction_amount", "审批减免金额", "DOUBLE"),
-        c("repaid_amount", "回款金额", "DOUBLE"),
         c("reduction_usage_rate", "减免使用率", "DOUBLE"),
+        c("reduction_recovery_rate", "减免回收率", "DOUBLE"),
         c("reduction_roi", "减免 ROI", "DOUBLE"),
     ],
     "ads_compliance_qc_di": [
         c("stat_date", "统计日期", "DATE", pk=True),
         c("template_id", "模板 ID", "VARCHAR", "P1", pk=True),
-        c("send_count", "发送数", "INTEGER"),
+        c("active_case_count", "在催案件数", "INTEGER"),
         c("complaint_count", "投诉数", "INTEGER"),
         c("complaint_rate", "投诉率", "DOUBLE"),
+        c("complaint_per_10k_cases", "万案投诉率", "DOUBLE"),
+        c("risk_phrase_hit_rate", "高风险话术命中率", "DOUBLE"),
+        c("qa_fail_rate", "质检不合格率", "DOUBLE"),
+        c("over_frequency_contact_rate", "超频触达率", "DOUBLE"),
     ],
 }
 
@@ -721,7 +750,8 @@ def sync_metadata_and_schemas() -> None:
     write_yaml(ROOT / "metadata/columns.yaml", column_rows())
     write_yaml(ROOT / "metadata/privacy_policy.yaml", PRIVACY_POLICY)
     write_yaml(ROOT / "metadata/key_relationships.yaml", KEY_RELATIONSHIPS)
-    write_yaml(ROOT / "metadata/metric_lineage.yaml", METRIC_LINEAGE)
+    if not (ROOT / "metadata/metric_lineage.yaml").exists():
+        write_yaml(ROOT / "metadata/metric_lineage.yaml", METRIC_LINEAGE)
     for layer in ["DIM", "ODS", "DWD", "DWS", "ADS"]:
         (ROOT / f"schemas/{layer.lower()}.sql").write_text(create_sql_for_layer(layer), encoding="utf-8")
 

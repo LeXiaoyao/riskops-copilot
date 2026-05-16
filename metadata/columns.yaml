@@ -2534,29 +2534,85 @@
   privacy_level: P0
   description: 统计日期
   table_name: ads_postloan_dashboard_di
-- column_name: m1_due_amount
-  column_name_cn: M1 应还金额
-  data_type: DOUBLE
+- column_name: due_account_count
+  column_name_cn: 到期账户数
+  data_type: INTEGER
   nullable: false
   is_primary_key: false
   privacy_level: P0
-  description: M1 应还金额
+  description: 到期账户数
   table_name: ads_postloan_dashboard_di
-- column_name: m1_repaid_amount_d7
-  column_name_cn: M1 D7 回款金额
-  data_type: DOUBLE
+- column_name: due_loan_count
+  column_name_cn: 到期借据数
+  data_type: INTEGER
   nullable: false
   is_primary_key: false
   privacy_level: P0
-  description: M1 D7 回款金额
+  description: 到期借据数
   table_name: ads_postloan_dashboard_di
-- column_name: m1_recovery_rate_d7
-  column_name_cn: M1 D7 回收率
+- column_name: due_total_amount
+  column_name_cn: 到期应还金额
   data_type: DOUBLE
   nullable: false
   is_primary_key: false
   privacy_level: P0
-  description: M1 D7 回收率
+  description: 到期应还金额
+  table_name: ads_postloan_dashboard_di
+- column_name: collection_entry_rate
+  column_name_cn: 入催率
+  data_type: DOUBLE
+  nullable: false
+  is_primary_key: false
+  privacy_level: P0
+  description: 入催率
+  table_name: ads_postloan_dashboard_di
+- column_name: recovery_rate_d7
+  column_name_cn: D7 回收率
+  data_type: DOUBLE
+  nullable: false
+  is_primary_key: false
+  privacy_level: P0
+  description: D7 回收率
+  table_name: ads_postloan_dashboard_di
+- column_name: recovery_rate_d15
+  column_name_cn: D15 回收率
+  data_type: DOUBLE
+  nullable: false
+  is_primary_key: false
+  privacy_level: P0
+  description: D15 回收率
+  table_name: ads_postloan_dashboard_di
+- column_name: recovery_rate_d30
+  column_name_cn: D30 回收率
+  data_type: DOUBLE
+  nullable: false
+  is_primary_key: false
+  privacy_level: P0
+  description: D30 回收率
+  table_name: ads_postloan_dashboard_di
+- column_name: m1_recovery_rate
+  column_name_cn: M1 回收率
+  data_type: DOUBLE
+  nullable: false
+  is_primary_key: false
+  privacy_level: P0
+  description: M1 回收率
+  table_name: ads_postloan_dashboard_di
+- column_name: call_coverage_rate
+  column_name_cn: 拨打覆盖率
+  data_type: DOUBLE
+  nullable: false
+  is_primary_key: false
+  privacy_level: P0
+  description: 拨打覆盖率
+  table_name: ads_postloan_dashboard_di
+- column_name: valid_coverage_rate
+  column_name_cn: 有效覆盖率
+  data_type: DOUBLE
+  nullable: false
+  is_primary_key: false
+  privacy_level: P0
+  description: 有效覆盖率
   table_name: ads_postloan_dashboard_di
 - column_name: connect_rate
   column_name_cn: 接通率
@@ -2566,15 +2622,31 @@
   privacy_level: P0
   description: 接通率
   table_name: ads_postloan_dashboard_di
-- column_name: ai_coverage_rate
-  column_name_cn: AI 外呼覆盖率
+- column_name: valid_contact_rate
+  column_name_cn: 有效沟通率
   data_type: DOUBLE
   nullable: false
   is_primary_key: false
   privacy_level: P0
-  description: AI 外呼覆盖率
+  description: 有效沟通率
   table_name: ads_postloan_dashboard_di
-- column_name: ptp_fulfillment_rate
+- column_name: first_contact_hours
+  column_name_cn: 首触达时效
+  data_type: DOUBLE
+  nullable: false
+  is_primary_key: false
+  privacy_level: P0
+  description: 首触达时效
+  table_name: ads_postloan_dashboard_di
+- column_name: ptp_rate
+  column_name_cn: PTP 率
+  data_type: DOUBLE
+  nullable: false
+  is_primary_key: false
+  privacy_level: P0
+  description: PTP 率
+  table_name: ads_postloan_dashboard_di
+- column_name: ptp_keep_rate
   column_name_cn: PTP 履约率
   data_type: DOUBLE
   nullable: false
@@ -2582,13 +2654,93 @@
   privacy_level: P0
   description: PTP 履约率
   table_name: ads_postloan_dashboard_di
-- column_name: high_balance_case_share
-  column_name_cn: 高余额案件占比
+- column_name: avg_call_duration_per_call
+  column_name_cn: 单通平均时长
   data_type: DOUBLE
   nullable: false
   is_primary_key: false
   privacy_level: P0
-  description: 高余额案件占比
+  description: 单通平均时长
+  table_name: ads_postloan_dashboard_di
+- column_name: avg_call_duration_per_collector
+  column_name_cn: 人均日通话时长
+  data_type: DOUBLE
+  nullable: false
+  is_primary_key: false
+  privacy_level: P0
+  description: 人均日通话时长
+  table_name: ads_postloan_dashboard_di
+- column_name: collector_productivity
+  column_name_cn: 作业人效
+  data_type: DOUBLE
+  nullable: false
+  is_primary_key: false
+  privacy_level: P0
+  description: 作业人效
+  table_name: ads_postloan_dashboard_di
+- column_name: complaint_rate
+  column_name_cn: 投诉率
+  data_type: DOUBLE
+  nullable: false
+  is_primary_key: false
+  privacy_level: P0
+  description: 投诉率
+  table_name: ads_postloan_dashboard_di
+- column_name: complaint_per_10k_cases
+  column_name_cn: 万案投诉率
+  data_type: DOUBLE
+  nullable: false
+  is_primary_key: false
+  privacy_level: P0
+  description: 万案投诉率
+  table_name: ads_postloan_dashboard_di
+- column_name: risk_phrase_hit_rate
+  column_name_cn: 高风险话术命中率
+  data_type: DOUBLE
+  nullable: false
+  is_primary_key: false
+  privacy_level: P0
+  description: 高风险话术命中率
+  table_name: ads_postloan_dashboard_di
+- column_name: qa_fail_rate
+  column_name_cn: 质检不合格率
+  data_type: DOUBLE
+  nullable: false
+  is_primary_key: false
+  privacy_level: P0
+  description: 质检不合格率
+  table_name: ads_postloan_dashboard_di
+- column_name: over_frequency_contact_rate
+  column_name_cn: 超频触达率
+  data_type: DOUBLE
+  nullable: false
+  is_primary_key: false
+  privacy_level: P0
+  description: 超频触达率
+  table_name: ads_postloan_dashboard_di
+- column_name: reduction_usage_rate
+  column_name_cn: 减免使用率
+  data_type: DOUBLE
+  nullable: false
+  is_primary_key: false
+  privacy_level: P0
+  description: 减免使用率
+  table_name: ads_postloan_dashboard_di
+- column_name: reduction_recovery_rate
+  column_name_cn: 减免回收率
+  data_type: DOUBLE
+  nullable: false
+  is_primary_key: false
+  privacy_level: P0
+  description: 减免回收率
+  table_name: ads_postloan_dashboard_di
+- column_name: reduction_roi
+  column_name_cn: 减免 ROI
+  data_type: DOUBLE
+  nullable: false
+  is_primary_key: false
+  privacy_level: P0
+  description: 减免 ROI
   table_name: ads_postloan_dashboard_di
 - column_name: stat_date
   column_name_cn: 统计日期
@@ -2654,6 +2806,14 @@
   privacy_level: P0
   description: 动作数
   table_name: ads_vendor_performance_di
+- column_name: call_coverage_rate
+  column_name_cn: 拨打覆盖率
+  data_type: DOUBLE
+  nullable: false
+  is_primary_key: false
+  privacy_level: P0
+  description: 拨打覆盖率
+  table_name: ads_vendor_performance_di
 - column_name: connect_rate
   column_name_cn: 接通率
   data_type: DOUBLE
@@ -2669,6 +2829,14 @@
   is_primary_key: false
   privacy_level: P0
   description: PTP 率
+  table_name: ads_vendor_performance_di
+- column_name: ptp_keep_rate
+  column_name_cn: PTP 履约率
+  data_type: DOUBLE
+  nullable: false
+  is_primary_key: false
+  privacy_level: P0
+  description: PTP 履约率
   table_name: ads_vendor_performance_di
 - column_name: complaint_rate
   column_name_cn: 投诉率
@@ -2718,13 +2886,45 @@
   privacy_level: P0
   description: 接通率
   table_name: ads_collector_performance_di
-- column_name: ptp_fulfillment_rate
+- column_name: ptp_keep_rate
   column_name_cn: PTP 履约率
   data_type: DOUBLE
   nullable: false
   is_primary_key: false
   privacy_level: P0
   description: PTP 履约率
+  table_name: ads_collector_performance_di
+- column_name: first_contact_hours
+  column_name_cn: 首触达时效
+  data_type: DOUBLE
+  nullable: false
+  is_primary_key: false
+  privacy_level: P0
+  description: 首触达时效
+  table_name: ads_collector_performance_di
+- column_name: avg_call_duration_per_call
+  column_name_cn: 单通平均时长
+  data_type: DOUBLE
+  nullable: false
+  is_primary_key: false
+  privacy_level: P0
+  description: 单通平均时长
+  table_name: ads_collector_performance_di
+- column_name: avg_call_duration_per_collector
+  column_name_cn: 人均日通话时长
+  data_type: DOUBLE
+  nullable: false
+  is_primary_key: false
+  privacy_level: P0
+  description: 人均日通话时长
+  table_name: ads_collector_performance_di
+- column_name: collector_productivity
+  column_name_cn: 作业人效
+  data_type: DOUBLE
+  nullable: false
+  is_primary_key: false
+  privacy_level: P0
+  description: 作业人效
   table_name: ads_collector_performance_di
 - column_name: complaint_count
   column_name_cn: 投诉数
@@ -2758,14 +2958,6 @@
   privacy_level: P0
   description: 审批减免金额
   table_name: ads_reduction_roi_di
-- column_name: repaid_amount
-  column_name_cn: 回款金额
-  data_type: DOUBLE
-  nullable: false
-  is_primary_key: false
-  privacy_level: P0
-  description: 回款金额
-  table_name: ads_reduction_roi_di
 - column_name: reduction_usage_rate
   column_name_cn: 减免使用率
   data_type: DOUBLE
@@ -2773,6 +2965,14 @@
   is_primary_key: false
   privacy_level: P0
   description: 减免使用率
+  table_name: ads_reduction_roi_di
+- column_name: reduction_recovery_rate
+  column_name_cn: 减免回收率
+  data_type: DOUBLE
+  nullable: false
+  is_primary_key: false
+  privacy_level: P0
+  description: 减免回收率
   table_name: ads_reduction_roi_di
 - column_name: reduction_roi
   column_name_cn: 减免 ROI
@@ -2798,13 +2998,13 @@
   privacy_level: P1
   description: 模板 ID
   table_name: ads_compliance_qc_di
-- column_name: send_count
-  column_name_cn: 发送数
+- column_name: active_case_count
+  column_name_cn: 在催案件数
   data_type: INTEGER
   nullable: false
   is_primary_key: false
   privacy_level: P0
-  description: 发送数
+  description: 在催案件数
   table_name: ads_compliance_qc_di
 - column_name: complaint_count
   column_name_cn: 投诉数
@@ -2821,4 +3021,36 @@
   is_primary_key: false
   privacy_level: P0
   description: 投诉率
+  table_name: ads_compliance_qc_di
+- column_name: complaint_per_10k_cases
+  column_name_cn: 万案投诉率
+  data_type: DOUBLE
+  nullable: false
+  is_primary_key: false
+  privacy_level: P0
+  description: 万案投诉率
+  table_name: ads_compliance_qc_di
+- column_name: risk_phrase_hit_rate
+  column_name_cn: 高风险话术命中率
+  data_type: DOUBLE
+  nullable: false
+  is_primary_key: false
+  privacy_level: P0
+  description: 高风险话术命中率
+  table_name: ads_compliance_qc_di
+- column_name: qa_fail_rate
+  column_name_cn: 质检不合格率
+  data_type: DOUBLE
+  nullable: false
+  is_primary_key: false
+  privacy_level: P0
+  description: 质检不合格率
+  table_name: ads_compliance_qc_di
+- column_name: over_frequency_contact_rate
+  column_name_cn: 超频触达率
+  data_type: DOUBLE
+  nullable: false
+  is_primary_key: false
+  privacy_level: P0
+  description: 超频触达率
   table_name: ads_compliance_qc_di

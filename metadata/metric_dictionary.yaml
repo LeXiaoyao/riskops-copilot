@@ -1,0 +1,468 @@
+- metric_code: due_account_count
+  metric_name_cn: 到期账户数
+  business_domain: postloan
+  metric_type: count
+  numerator: 到期窗口内去重客户数
+  denominator: 无
+  formula: count(distinct customer_id where due_date in window)
+  grain: [stat_date, product_code, channel_code, city, risk_level]
+  source_tables: [dwd_due_plan_detail_di, dim_customer]
+  filter_condition: due_date = stat_date
+  owner: postloan_strategy_team
+  refresh_frequency: daily
+  version: v1.0
+  priority: P0
+  notes: 账户按 customer_id 去重，服务贷后经营到期规模判断。
+  change_log:
+    - date: 2026-05-15
+      change: Phase 1 初版
+- metric_code: due_loan_count
+  metric_name_cn: 到期借据数
+  business_domain: postloan
+  metric_type: count
+  numerator: 到期窗口内去重借据数
+  denominator: 无
+  formula: count(distinct loan_id where due_date in window)
+  grain: [stat_date, product_code, channel_code]
+  source_tables: [dwd_due_plan_detail_di]
+  filter_condition: due_date = stat_date
+  owner: postloan_strategy_team
+  refresh_frequency: daily
+  version: v1.0
+  priority: P0
+  notes: 借据按 loan_id 去重。
+  change_log:
+    - date: 2026-05-15
+      change: Phase 1 初版
+- metric_code: due_total_amount
+  metric_name_cn: 到期应还金额
+  business_domain: postloan
+  metric_type: amount
+  numerator: 到期应还金额合计
+  denominator: 无
+  formula: sum(due_amount)
+  grain: [stat_date, product_code, channel_code]
+  source_tables: [dwd_due_plan_detail_di]
+  filter_condition: due_date = stat_date
+  owner: postloan_strategy_team
+  refresh_frequency: daily
+  version: v1.0
+  priority: P0
+  notes: 金额含本金、利息和费用，不含减免。
+  change_log:
+    - date: 2026-05-15
+      change: Phase 1 初版
+- metric_code: collection_entry_rate
+  metric_name_cn: 入催率
+  business_domain: postloan
+  metric_type: ratio
+  numerator: 入催账户数
+  denominator: 到期账户数
+  formula: collection_entry_count / due_account_count
+  grain: [stat_date, product_code, dpd_bucket, risk_level]
+  source_tables: [dim_case, dwd_due_plan_detail_di]
+  filter_condition: case_create_date = stat_date
+  owner: postloan_strategy_team
+  refresh_frequency: daily
+  version: v1.0
+  priority: P0
+  notes: Phase 1 按入案日与到期日同日口径汇总。
+  change_log:
+    - date: 2026-05-15
+      change: Phase 1 初版
+- metric_code: recovery_rate_d7
+  metric_name_cn: D7 回收率
+  business_domain: postloan
+  metric_type: ratio
+  numerator: 到期后 7 天内累计回款金额
+  denominator: 到期应还金额
+  formula: repay_amount_within_7d / due_amount
+  grain: [stat_date, vendor_id, line_id, collector_id, dpd_bucket]
+  source_tables: [dwd_due_plan_detail_di, dwd_repayment_detail_di, dim_case_loan_mapping, dim_case]
+  filter_condition: repay_time <= due_date + 7 days
+  owner: postloan_strategy_team
+  refresh_frequency: daily
+  version: v1.0
+  priority: P0
+  notes: 金额口径不含减免。
+  change_log:
+    - date: 2026-05-15
+      change: Phase 1 初版
+- metric_code: recovery_rate_d15
+  metric_name_cn: D15 回收率
+  business_domain: postloan
+  metric_type: ratio
+  numerator: 到期后 15 天内累计回款金额
+  denominator: 到期应还金额
+  formula: repay_amount_within_15d / due_amount
+  grain: [stat_date, vendor_id, line_id, collector_id, dpd_bucket]
+  source_tables: [dwd_due_plan_detail_di, dwd_repayment_detail_di, dim_case_loan_mapping, dim_case]
+  filter_condition: repay_time <= due_date + 15 days
+  owner: postloan_strategy_team
+  refresh_frequency: daily
+  version: v1.0
+  priority: P0
+  notes: 金额口径不含减免。
+  change_log:
+    - date: 2026-05-15
+      change: Phase 1 初版
+- metric_code: recovery_rate_d30
+  metric_name_cn: D30 回收率
+  business_domain: postloan
+  metric_type: ratio
+  numerator: 到期后 30 天内累计回款金额
+  denominator: 到期应还金额
+  formula: repay_amount_within_30d / due_amount
+  grain: [stat_date, vendor_id, line_id, collector_id, dpd_bucket]
+  source_tables: [dwd_due_plan_detail_di, dwd_repayment_detail_di, dim_case_loan_mapping, dim_case]
+  filter_condition: repay_time <= due_date + 30 days
+  owner: postloan_strategy_team
+  refresh_frequency: daily
+  version: v1.0
+  priority: P0
+  notes: 金额口径不含减免。
+  change_log:
+    - date: 2026-05-15
+      change: Phase 1 初版
+- metric_code: m1_recovery_rate
+  metric_name_cn: M1 回收率
+  business_domain: postloan
+  metric_type: ratio
+  numerator: M1 案件回款金额
+  denominator: M1 初始待还金额
+  formula: m1_repay_amount / m1_initial_outstanding_amount
+  grain: [stat_date, vendor_id, line_id, product_code, balance_segment, risk_level]
+  source_tables: [dws_loan_status_snapshot_di]
+  filter_condition: dpd_bucket = M1
+  owner: postloan_strategy_team
+  refresh_frequency: daily
+  version: v1.0
+  priority: P0
+  notes: Phase 1 使用 DWS 借据日切 M1 金额口径。
+  change_log:
+    - date: 2026-05-15
+      change: Phase 1 初版
+- metric_code: call_coverage_rate
+  metric_name_cn: 拨打覆盖率
+  business_domain: collection
+  metric_type: ratio
+  numerator: 已拨打案件数
+  denominator: 已分配案件数
+  formula: called_case_count / assigned_case_count
+  grain: [stat_date, vendor_id, line_id, collector_id]
+  source_tables: [dws_collection_process_wide_di, dws_case_status_snapshot_di]
+  filter_condition: action_count > 0
+  owner: collection_operation_team
+  refresh_frequency: daily
+  version: v1.0
+  priority: P0
+  notes: 案件去重口径。
+  change_log:
+    - date: 2026-05-15
+      change: Phase 1 初版
+- metric_code: valid_coverage_rate
+  metric_name_cn: 有效覆盖率
+  business_domain: collection
+  metric_type: ratio
+  numerator: 有效沟通案件数
+  denominator: 已分配案件数
+  formula: valid_contact_case_count / assigned_case_count
+  grain: [stat_date, vendor_id, line_id, collector_id]
+  source_tables: [dwd_collection_action_detail_di, ods_call_record, dws_case_status_snapshot_di]
+  filter_condition: connected_flag = true and duration_seconds >= 60
+  owner: collection_operation_team
+  refresh_frequency: daily
+  version: v1.0
+  priority: P0
+  notes: 有效沟通为接通且通话时长不少于 60 秒。
+  change_log:
+    - date: 2026-05-15
+      change: Phase 1 初版
+- metric_code: connect_rate
+  metric_name_cn: 接通率
+  business_domain: collection
+  metric_type: ratio
+  numerator: 接通次数
+  denominator: 拨打次数
+  formula: connect_count / call_count
+  grain: [stat_date, vendor_id, line_id, collector_id]
+  source_tables: [dws_collection_process_wide_di]
+  filter_condition: action_count > 0
+  owner: collection_operation_team
+  refresh_frequency: daily
+  version: v1.0
+  priority: P0
+  notes: Phase 1 以触达动作总数作为拨打次数近似口径。
+  change_log:
+    - date: 2026-05-15
+      change: Phase 1 初版
+- metric_code: valid_contact_rate
+  metric_name_cn: 有效沟通率
+  business_domain: collection
+  metric_type: ratio
+  numerator: 有效沟通次数
+  denominator: 接通次数
+  formula: valid_contact_count / connect_count
+  grain: [stat_date, vendor_id, line_id, collector_id]
+  source_tables: [dwd_collection_action_detail_di, ods_call_record]
+  filter_condition: connected_flag = true
+  owner: collection_operation_team
+  refresh_frequency: daily
+  version: v1.0
+  priority: P0
+  notes: 有效沟通为接通且通话时长不少于 60 秒。
+  change_log:
+    - date: 2026-05-15
+      change: Phase 1 初版
+- metric_code: first_contact_hours
+  metric_name_cn: 首触达时效
+  business_domain: collection
+  metric_type: score
+  numerator: 首次触达时间与分案时间的小时差均值
+  denominator: 已触达案件数
+  formula: avg(first_contact_time - assign_time)
+  grain: [stat_date, vendor_id, line_id, collector_id]
+  source_tables: [dwd_collection_action_detail_di, dim_case]
+  filter_condition: action_time >= case_create_time
+  owner: collection_operation_team
+  refresh_frequency: daily
+  version: v1.0
+  priority: P0
+  notes: 单位小时，Phase 1 以 case_create_time 近似分案时间。
+  change_log:
+    - date: 2026-05-15
+      change: Phase 1 初版
+- metric_code: ptp_rate
+  metric_name_cn: PTP 率
+  business_domain: collection
+  metric_type: ratio
+  numerator: PTP 次数
+  denominator: 有效沟通次数
+  formula: ptp_count / valid_contact_count
+  grain: [stat_date, vendor_id, line_id, collector_id]
+  source_tables: [dwd_collection_action_detail_di, ods_call_record]
+  filter_condition: valid_contact_flag = true
+  owner: collection_operation_team
+  refresh_frequency: daily
+  version: v1.0
+  priority: P0
+  notes: PTP 基于催收动作标识。
+  change_log:
+    - date: 2026-05-15
+      change: Phase 1 初版
+- metric_code: ptp_keep_rate
+  metric_name_cn: PTP 履约率
+  business_domain: collection
+  metric_type: ratio
+  numerator: 已履约 PTP 次数
+  denominator: 已到期 PTP 次数
+  formula: kept_ptp_count / matured_ptp_count
+  grain: [stat_date, vendor_id, line_id, collector_id]
+  source_tables: [dws_collection_process_wide_di]
+  filter_condition: matured_ptp_count > 0
+  owner: collection_operation_team
+  refresh_frequency: daily
+  version: v1.0
+  priority: P0
+  notes: Phase 1 合成数据中 PTP 均视为已到承诺观察日。
+  change_log:
+    - date: 2026-05-15
+      change: Phase 1 初版
+- metric_code: avg_call_duration_per_call
+  metric_name_cn: 单通平均时长
+  business_domain: collection
+  metric_type: score
+  numerator: 通话总时长秒数
+  denominator: 通话次数
+  formula: sum(call_duration_sec where connect=1) / connect_count
+  grain: [stat_date, vendor_id, line_id, collector_id]
+  source_tables: [ods_call_record, dwd_collection_action_detail_di]
+  filter_condition: duration_seconds > 0
+  owner: collection_operation_team
+  refresh_frequency: daily
+  version: v1.0
+  priority: P1
+  notes: 单位秒。
+  change_log:
+    - date: 2026-05-15
+      change: Phase 1 初版
+- metric_code: avg_call_duration_per_collector
+  metric_name_cn: 人均日通话时长
+  business_domain: collection
+  metric_type: score
+  numerator: 通话总时长秒数
+  denominator: 活跃催员数
+  formula: sum(call_duration_sec) / active_collector_count / work_days
+  grain: [stat_date, vendor_id, line_id, collector_id]
+  source_tables: [ods_call_record, dwd_collection_action_detail_di]
+  filter_condition: duration_seconds > 0
+  owner: collection_operation_team
+  refresh_frequency: daily
+  version: v1.0
+  priority: P1
+  notes: 日切数据中 work_days 固定为 1。
+  change_log:
+    - date: 2026-05-15
+      change: Phase 1 初版
+- metric_code: collector_productivity
+  metric_name_cn: 作业人效
+  business_domain: collection
+  metric_type: amount
+  numerator: 回款金额
+  denominator: 活跃催员数
+  formula: repay_amount / active_collector_count
+  grain: [stat_date, vendor_id, line_id, collector_id]
+  source_tables: [dws_case_status_snapshot_di]
+  filter_condition: active_collector_count > 0
+  owner: collection_operation_team
+  refresh_frequency: daily
+  version: v1.0
+  priority: P1
+  notes: 单位为元每活跃催员。
+  change_log:
+    - date: 2026-05-15
+      change: Phase 1 初版
+- metric_code: complaint_rate
+  metric_name_cn: 投诉率
+  business_domain: compliance
+  metric_type: ratio
+  numerator: 投诉案件数
+  denominator: 在催案件数
+  formula: complaint_case_count / active_case_count
+  grain: [stat_date, vendor_id, collector_id, template_id]
+  source_tables: [dwd_complaint_detail_di, dws_case_status_snapshot_di]
+  filter_condition: active_case_count > 0
+  owner: compliance_qc_team
+  refresh_frequency: daily
+  version: v1.0
+  priority: P0
+  notes: 案件去重口径。
+  change_log:
+    - date: 2026-05-15
+      change: Phase 1 初版
+- metric_code: complaint_per_10k_cases
+  metric_name_cn: 万案投诉率
+  business_domain: compliance
+  metric_type: score
+  numerator: 投诉次数
+  denominator: 在催案件数
+  formula: complaint_count / active_case_count * 10000
+  grain: [stat_date, vendor_id, collector_id, template_id]
+  source_tables: [dwd_complaint_detail_di, dws_case_status_snapshot_di]
+  filter_condition: active_case_count > 0
+  owner: compliance_qc_team
+  refresh_frequency: daily
+  version: v1.0
+  priority: P0
+  notes: 单位为每万案件投诉次数。
+  change_log:
+    - date: 2026-05-15
+      change: Phase 1 初版
+- metric_code: risk_phrase_hit_rate
+  metric_name_cn: 高风险话术命中率
+  business_domain: compliance
+  metric_type: ratio
+  numerator: 高风险话术命中次数
+  denominator: 质检检查次数
+  formula: risk_phrase_hit_count / qa_checked_count
+  grain: [stat_date, vendor_id, collector_id, template_id]
+  source_tables: [dwd_collection_action_detail_di]
+  filter_condition: template_id = TPL_RISK_NOTICE
+  owner: compliance_qc_team
+  refresh_frequency: daily
+  version: v1.0
+  priority: P0
+  notes: Phase 1 以风险短信模板作为高风险话术命中代理。
+  change_log:
+    - date: 2026-05-15
+      change: Phase 1 初版
+- metric_code: qa_fail_rate
+  metric_name_cn: 质检不合格率
+  business_domain: compliance
+  metric_type: ratio
+  numerator: 质检不合格通话数
+  denominator: 质检通话数
+  formula: qa_fail_call_count / qa_checked_call_count
+  grain: [stat_date, vendor_id, collector_id, template_id]
+  source_tables: [dwd_complaint_detail_di, dwd_collection_action_detail_di]
+  filter_condition: complaint_level in (MEDIUM, HIGH)
+  owner: compliance_qc_team
+  refresh_frequency: daily
+  version: v1.0
+  priority: P1
+  notes: Phase 1 以中高等级投诉作为质检不合格代理。
+  change_log:
+    - date: 2026-05-15
+      change: Phase 1 初版
+- metric_code: over_frequency_contact_rate
+  metric_name_cn: 超频触达率
+  business_domain: compliance
+  metric_type: ratio
+  numerator: 单日触达超过 3 次的案件数
+  denominator: 单日已触达案件数
+  formula: over_frequency_case_count / contacted_case_count
+  grain: [stat_date, vendor_id, collector_id]
+  source_tables: [dwd_collection_action_detail_di]
+  filter_condition: daily_action_count > 3
+  owner: compliance_qc_team
+  refresh_frequency: daily
+  version: v1.0
+  priority: P1
+  notes: Phase 1 超频阈值为单案件单日 3 次。
+  change_log:
+    - date: 2026-05-15
+      change: Phase 1 初版
+- metric_code: reduction_usage_rate
+  metric_name_cn: 减免使用率
+  business_domain: roi
+  metric_type: ratio
+  numerator: 减免申请案件数
+  denominator: 可减免案件数
+  formula: reduction_case_count / eligible_case_count
+  grain: [stat_date, vendor_id, line_id, dpd_bucket]
+  source_tables: [ods_reduction_application, dws_case_status_snapshot_di]
+  filter_condition: approval_status in (APPROVED, REJECTED)
+  owner: postloan_strategy_team
+  refresh_frequency: daily
+  version: v1.0
+  priority: P0
+  notes: Phase 1 以在催案件作为可减免案件代理。
+  change_log:
+    - date: 2026-05-15
+      change: Phase 1 初版
+- metric_code: reduction_recovery_rate
+  metric_name_cn: 减免回收率
+  business_domain: roi
+  metric_type: ratio
+  numerator: 减免后回款金额
+  denominator: 减免案件待还金额
+  formula: repay_amount_after_reduction / reduction_case_outstanding_amount
+  grain: [stat_date, vendor_id, line_id, dpd_bucket]
+  source_tables: [ods_reduction_application, dws_case_status_snapshot_di]
+  filter_condition: reduction_case_count > 0
+  owner: postloan_strategy_team
+  refresh_frequency: daily
+  version: v1.0
+  priority: P0
+  notes: 金额口径不含已批准减免金额本身。
+  change_log:
+    - date: 2026-05-15
+      change: Phase 1 初版
+- metric_code: reduction_roi
+  metric_name_cn: 减免 ROI
+  business_domain: roi
+  metric_type: score
+  numerator: 实际回款金额减反事实预估回款金额
+  denominator: 审批减免金额
+  formula: (actual_repay - expected_repay_without_reduction) / approved_reduction_amount
+  grain: [stat_date, vendor_id, line_id, dpd_bucket]
+  source_tables: [ods_reduction_application, dws_case_status_snapshot_di]
+  filter_condition: approved_reduction_amount > 0
+  owner: postloan_strategy_team
+  refresh_frequency: daily
+  version: v1.0
+  priority: P1
+  notes: Phase 1 反事实回款使用历史同条件均值代理，不做因果推断。
+  change_log:
+    - date: 2026-05-15
+      change: Phase 1 初版

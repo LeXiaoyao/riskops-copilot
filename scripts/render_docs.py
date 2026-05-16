@@ -15,8 +15,8 @@ DOCS = ROOT / "docs"
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Render metadata-driven M1 docs.")
-    parser.add_argument("target", choices=["all", "data_dict", "privacy", "keys", "lineage"])
+    parser = argparse.ArgumentParser(description="Render metadata-driven docs.")
+    parser.add_argument("target", choices=["all", "data_dict", "privacy", "keys", "lineage", "metrics", "metric_lineage"])
     return parser
 
 
@@ -116,6 +116,69 @@ def render_lineage() -> None:
     write_doc(DOCS / "data_lineage.md", "\n".join(lines))
 
 
+def render_metrics() -> None:
+    metrics = load_yaml("metric_dictionary.yaml")
+    by_domain: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for item in metrics:
+        by_domain[item["business_domain"]].append(item)
+
+    lines = ["# 指标字典", "", "> 由 `metadata/metric_dictionary.yaml` 自动渲染。", ""]
+    for domain in ["postloan", "collection", "compliance", "roi"]:
+        if domain not in by_domain:
+            continue
+        lines.extend([f"## {domain}", ""])
+        for metric in by_domain[domain]:
+            lines.extend(
+                [
+                    f"### {metric['metric_code']}",
+                    f"- 中文名：{metric['metric_name_cn']}",
+                    f"- 类型：{metric['metric_type']}",
+                    f"- 分子：{metric['numerator']}",
+                    f"- 分母：{metric['denominator']}",
+                    f"- 公式：`{metric['formula']}`",
+                    f"- 粒度：{', '.join(metric['grain'])}",
+                    f"- 来源表：{', '.join(metric['source_tables'])}",
+                    f"- 过滤条件：`{metric['filter_condition']}`",
+                    f"- Owner：{metric['owner']}",
+                    f"- 刷新频率：{metric['refresh_frequency']}",
+                    f"- 版本：{metric['version']}",
+                    f"- 优先级：{metric['priority']}",
+                    f"- 说明：{metric['notes']}",
+                    "- 变更记录：",
+                ]
+            )
+            for change in metric["change_log"]:
+                lines.append(f"  - {change['date']}：{change['change']}")
+            lines.append("")
+    write_doc(DOCS / "metric_dictionary.md", "\n".join(lines))
+
+
+def render_metric_lineage() -> None:
+    lineage = load_yaml("metric_lineage.yaml")
+    lines = [
+        "# 指标血缘",
+        "",
+        "> 由 `metadata/metric_lineage.yaml` 自动渲染。",
+        "",
+        f"- 阶段：{lineage['phase']}",
+        f"- 范围：{lineage['scope']}",
+        "",
+    ]
+    for metric in lineage["metrics"]:
+        lines.extend(
+            [
+                f"## {metric['metric_code']}",
+                f"- 中文名：{metric['metric_name_cn']}",
+                f"- ADS：{metric['ads_table']}",
+                f"- DWS：{', '.join(metric['dws_tables']) if metric['dws_tables'] else '无'}",
+                f"- DWD：{', '.join(metric['dwd_tables']) if metric['dwd_tables'] else '无'}",
+                f"- ODS：{', '.join(metric['ods_tables']) if metric['ods_tables'] else '无'}",
+                "",
+            ]
+        )
+    write_doc(DOCS / "metric_lineage.md", "\n".join(lines))
+
+
 def main() -> int:
     args = build_parser().parse_args()
     renderers = {
@@ -123,6 +186,8 @@ def main() -> int:
         "privacy": render_privacy,
         "keys": render_keys,
         "lineage": render_lineage,
+        "metrics": render_metrics,
+        "metric_lineage": render_metric_lineage,
     }
     if args.target == "all":
         for renderer in renderers.values():

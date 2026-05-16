@@ -1,0 +1,32 @@
+changes:
+  - date: 2026-05-15
+    version: v1.0
+    scope: Phase 1 指标资产
+    metric_codes:
+      - due_account_count
+      - due_loan_count
+      - due_total_amount
+      - collection_entry_rate
+      - recovery_rate_d7
+      - recovery_rate_d15
+      - recovery_rate_d30
+      - m1_recovery_rate
+      - call_coverage_rate
+      - valid_coverage_rate
+      - connect_rate
+      - valid_contact_rate
+      - first_contact_hours
+      - ptp_rate
+      - ptp_keep_rate
+      - avg_call_duration_per_call
+      - avg_call_duration_per_collector
+      - collector_productivity
+      - complaint_rate
+      - complaint_per_10k_cases
+      - risk_phrase_hit_rate
+      - qa_fail_rate
+      - over_frequency_contact_rate
+      - reduction_usage_rate
+      - reduction_recovery_rate
+      - reduction_roi
+    change: 建立 M2 贷后 Phase 1 指标字典、血缘、计算和质量校验基线。

@@ -1,0 +1,13 @@
+owners:
+  postloan_strategy_team:
+    owner_name_cn: 贷后策略团队
+    domains: [postloan, roi]
+    responsibilities: 指标口径、回收率与减免策略指标验收
+  collection_operation_team:
+    owner_name_cn: 催收运营团队
+    domains: [collection]
+    responsibilities: 催收过程、人效与触达指标验收
+  compliance_qc_team:
+    owner_name_cn: 合规质检团队
+    domains: [compliance]
+    responsibilities: 投诉、质检与触达合规指标验收
