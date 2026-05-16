@@ -34,32 +34,32 @@ Codex must identify the current milestone and must not work outside the requeste
 ## TODO 总清单（按依赖排序）
 
 > 状态图例：✅ 已完成 / 🔥 下一步首要 / 🔄 进行中（已落地但未 commit / 部分完成） / ⚠️ 部分完成（待补强） / ⏳ 待办 / 🅿️ 阶段占位（依赖未到）
-> 最近一次更新：2026-05-16
-> 当前快照：M1 数据底座 commit `5978a13` 已 commit；GitHub 远程仓库已建好但未 push；主仓库 working tree 已开始 M2 工作（`metric_dictionary.yaml` / `calculators/*.py` / `test_metric*.py` 等 13 个 untracked + 8 个 modified，均未 commit）
+> 最近一次更新：2026-05-16（M2 commit `6a08f22` 已 push 后）
+> 当前快照：M1 commit `5978a13` + M2 commit `6a08f22` 均已 push 到 GitHub；本地 working tree clean；远程 6 个 commit 与本地完全对齐
 
 ### 阶段 1：M0 收尾 + GitHub 接入
 
 | 序号 | 任务 | 负责 | 状态 | 依赖 | 备注 |
 |---|---|---|---|---|---|
 | **C1** | 创建 GitHub 远程仓库（用户手动） | 用户 | ✅ | — | https://github.com/LeXiaoyao/riskops-copilot 已建好 |
-| **C2** | 首次推送到 GitHub（`git remote add origin` + `git push -u`） | Codex | 🔥 | C1 | 当前 `git remote -v` 为空；M1 4 个 commit 全部未推送 |
+| **C2** | 首次推送到 GitHub（`git remote add origin` + `git push -u`） | Claude | ✅ | C1 | 因 Codex sandbox 拦写 `.git/index` 报 `error: could not write index`，由 Claude Code 接管完成；用 `--force-with-lease` 覆盖 GitHub 自动建仓的 stub Initial commit |
 | **A1** | ADR-001 ~ ADR-010 详细版（每个一份独立文件） | Claude | ⏳ | — | 当前仅 PRD §13 表格汇总，未拆出单文件 |
 | **A2** | `docs/demo_script_v0.md` 演示脚本 | Claude | ⏳ | — | 配合 M7 演示包装 |
 | **A3** | `docs/interview_pitch.md` 面试讲稿 v1 | Claude | ⏳ | A2 | |
 
-### 阶段 2：M1 数据底座（commit `5978a13` 已落地）
+### 阶段 2：M1 数据底座（commit `5978a13` 已 push）
 
 | 序号 | 任务 | 负责 | 状态 | 依赖 | 备注 |
 |---|---|---|---|---|---|
 | **C3** | `pyproject.toml` + 依赖初始化 | Codex | ✅ | — | commit `5978a13` |
-| **C4** | `metadata/tables.yaml` 43 张表元信息 | Codex | ✅ | — | commit `5978a13`，10.7KB |
-| **C5** | `metadata/columns.yaml` 全部字段字典 | Codex | ✅ | C4 | commit `5978a13`，72KB（注：主仓库已 modified，疑 M2 补字段） |
+| **C4** | `metadata/tables.yaml` 43 张表元信息 | Codex | ✅ | — | commit `5978a13` |
+| **C5** | `metadata/columns.yaml` 全部字段字典 | Codex | ✅ | C4 | commit `5978a13`，72KB；M2 commit `6a08f22` 中 ADS 字段对齐 metric_code |
 | **C6** | `metadata/privacy_policy.yaml` 隐私分级 | Codex | ⚠️ | C5 | 现版本仅 P0-P4 level 维度；缺字段级 `fields:` 列表（详见 C6'） |
 | **C7** | `metadata/key_relationships.yaml` 主键关系 | Codex | ⚠️ | C4 | 现版本 10 条 relationships；缺 `entities:` 主键解释（详见 C7'） |
-| **C10** | `schemas/{dim,ods,dwd,dws,ads}.sql` 五份建表 | Codex | ✅ | C5 | commit `5978a13`（注：`ads.sql` 主仓库已 modified） |
-| **C11** | `scripts/render_docs.py` yaml → md 渲染 | Codex | ✅ | C5 | commit `5978a13`（注：主仓库已 modified，疑加 metric 渲染） |
-| **C12** | `scripts/generate_synthetic_data.py` 合成数据生成器 | Codex | ✅ | C10 | commit `5978a13`，28KB（注：主仓库已 modified） |
-| **C13** | `scripts/build_warehouse.py` 数仓加工 | Codex | ✅ | C10, C12 | commit `5978a13`，20KB（注：主仓库已 modified，疑 C17 替换占位 SQL） |
+| **C10** | `schemas/{dim,ods,dwd,dws,ads}.sql` 五份建表 | Codex | ✅ | C5 | commit `5978a13`；`ads.sql` 由 M2 commit `6a08f22` 全字段对齐 metric_code |
+| **C11** | `scripts/render_docs.py` yaml → md 渲染 | Codex | ✅ | C5 | commit `5978a13`；M2 commit `6a08f22` 增加 `metrics` / `metric_lineage` 子命令 |
+| **C12** | `scripts/generate_synthetic_data.py` 合成数据生成器 | Codex | ✅ | C10 | commit `5978a13`，28KB；M2 commit `6a08f22` 把最近 30 天 reduction 比例 7%→3% 让异常埋点 6 可被验证 |
+| **C13** | `scripts/build_warehouse.py` 数仓加工 | Codex | ✅ | C10, C12 | commit `5978a13`；M2 commit `6a08f22` 把 ADS 占位 SQL 替换为 `calculate_metric()` 调用链（见 C17） |
 | **C14** | `tests/test_data_quality.py` 数据质量测试 | Codex | ⚠️ | C13 | 当前为 1 个聚合 pytest 用例 + `scripts/validate_data_quality.py`；缺 11 条规则拆分（详见 C14'） |
 
 ### 阶段 3：M1 收尾补强（基于 R1 review 列出的差距）
@@ -69,24 +69,33 @@ Codex must identify the current milestone and must not work outside the requeste
 | **C6'** | 补强 `privacy_policy.yaml`：增加字段级 `fields:` 列表（每字段 allowed_layers / allowed_in_reports / allowed_in_llm_context / masking_rule / hashing_rule） | Codex | ⏳ | C5 | 从 columns.yaml 抽取，覆盖全部 P3/P4 字段 |
 | **C7'** | 补强 `key_relationships.yaml`：增加 `entities:` 字段，对 customer_id / loan_id / case_id 等主键给业务解释 + 加入 vendor/line/collector 资源维度关系 | Codex | ⏳ | C4 | |
 | **C14'** | 拆 `tests/test_data_quality.py` 为 8 条硬规则 + 3 条软规则的独立 pytest 用例（DQ001-DQ008 / DQ101-DQ103） | Codex | ⏳ | C14 | 现 validator 已有逻辑，只需拆 pytest 入口 |
-| **D1** | `docs/data_generation_log.md`：7 个异常埋点的验证 SQL + 预期值 + 实际跑出来的数值 | Codex | ⏳ | C12, C13 | C12 验收清单要求 |
+| **D1** | `docs/data_generation_log.md`：7 个异常埋点的验证 SQL + 预期值 + 实际跑出来的数值 | Codex | ⏳ | C12, C13 | C12 验收清单要求；M2 已用 `validate_trends` 验证其中 3 个，剩余 4 个待补 |
 | **R1** | Claude review M1 全产出（C3-C14 + C6'/C7'/C14'/D1） | Claude | 🔄 | M1 commit + 补强 | M1 commit 已可看；正式 review 建议在补强后 |
-| **C15** | M1 收尾统一 push（含 CHANGELOG 收尾 + tag `v0.1.0` + GitHub Release） | Codex | ⏳ | R1, C2 | C2 完成后这一步顺势可做 |
+| **C15** | M1 收尾 push（含 CHANGELOG 收尾 + tag `v0.1.0` + GitHub Release） | Codex | ⏳ | R1, C2 | push 主体已完成；tag / Release 待 M1 补强归位后再打 |
 
-### 阶段 4：M2 指标资产（主仓库 working tree 已落地，待 review + commit）
-
-> 当前状态：所有 M2 产出均在主仓库 working tree 中（untracked / modified），尚未 commit。**Claude 启动 R2 review 之前不要再改主仓库 working tree，避免冲突。**
+### 阶段 4：M2 指标资产（commit `6a08f22` 已 push）
 
 | 序号 | 任务 | 负责 | 状态 | 依赖 | 备注 |
 |---|---|---|---|---|---|
-| **C8** | `metadata/metric_dictionary.yaml` 39 个指标（26 实现 + 13 占位） | Codex | 🔄 | C4, C5 | 文件已生成（untracked），附带 `metric_owner.yaml` / `metric_change_log.yaml`，待 review |
-| **C9** | `metadata/metric_lineage.yaml` 26 个指标完整血缘 | Codex | 🔄 | C8 | 已 modified（从 3 条占位扩展），待 review |
-| **C16** | `riskops/metrics/calculators/<metric_code>.py` 26 个指标计算函数 | Codex | 🔄 | C8 | `base.py / postloan.py / collection.py / compliance.py / roi.py` 已生成（untracked），含 `riskops/metrics/dictionary.py` 入口 |
-| **C17** | 把 `build_warehouse.py` 中 ADS 占位 SQL 替换为 calculators 调用 | Codex | 🔄 | C16 | `build_warehouse.py` / `ads.sql` / `validate_metric_quality.py` 均已 modified |
-| **C18** | `tests/test_metric_calculation.py` 指标级单测（每个 metric_code 至少 1 个用例） | Codex | 🔄 | C16 | 实际产出 `test_metrics.py / test_metric_dictionary.py / test_metric_quality.py`（untracked） |
-| **C19** | 跑 `render_docs.py metrics`，产出 `docs/metric_dictionary.md` | Codex | 🔄 | C8, C11 | `docs/metric_dictionary.md / docs/metric_lineage.md` 已生成（untracked） |
-| **R2** | Claude review M2 产出（指标口径 vs PRD §6 / 计算函数 / 单测） | Claude | 🔥 | C8-C19 | M2 文件已全部在 working tree，等 R2 启动 |
-| **C20** | M2 收尾 commit + push + tag `v0.2.0` + Release | Codex | ⏳ | R2, C15 | 建议 M1 推送先完成，再走 M2 |
+| **C8** | `metadata/metric_dictionary.yaml` 26 个 Phase 1 指标 | Codex | ✅ | C4, C5 | commit `6a08f22`；Phase 2+ 13 个占位推迟到对应 Phase 启动时实现（决议见 `pending_questions.md`） |
+| **C9** | `metadata/metric_lineage.yaml` 26 个指标完整血缘 | Codex | ✅ | C8 | commit `6a08f22`（ADS→DWS→DWD→ODS 全覆盖） |
+| **C16** | `riskops/metrics/calculators/<domain>.py` 26 个指标计算函数 | Codex | ✅ | C8 | commit `6a08f22`；按业务域聚合 5 文件（postloan/collection/compliance/roi + base）+ `dictionary.py` 中央 registry（决议 + PRD §6.8 第 3 条修订） |
+| **C17** | 把 `build_warehouse.py` 中 ADS 占位 SQL 替换为 calculators 调用 | Codex | ✅ | C16 | commit `6a08f22`；`build_warehouse.py` / `ads.sql` / `m1_spec.py` / `columns.yaml` 全部对齐 metric_code |
+| **C18** | `tests/test_metric_*.py` 指标级单测 | Codex | ✅ | C16 | commit `6a08f22`；3 个 pytest 文件 + `validate_metric_quality.py` MQ-001 ~ MQ-010 + 3 个 trend 验证 |
+| **C19** | 跑 `render_docs.py metrics`，产出 `docs/metric_dictionary.md` | Codex | ✅ | C8, C11 | commit `6a08f22`；同时产出 `docs/metric_lineage.md` |
+| **R2** | Claude review M2 产出（指标口径 vs PRD §6 / 计算函数 / 单测） | Claude | ✅ | C8-C19 | 2026-05-16 PASS；19 pytest 全绿；1 blocker 拍板 + 3 minor 记账；决议见 `pending_questions.md` |
+| **C20** | M2 收尾 push + tag `v0.2.0` + Release | Codex | ⚠️ | R2 | push 主体已完成；tag / Release 待 M3 启动前批量打 |
+
+### 阶段 5：M3 引擎核心（待启动）
+
+> 入场前先把 R2 review 遗留的 3 个 minor 处理掉，避免 M3 引擎吃到不稳口径。
+
+| 序号 | 任务 | 负责 | 状态 | 依赖 | 备注 |
+|---|---|---|---|---|---|
+| **M3-prep-1** | `ptp_rate` / `complaint_rate` 跨表口径分级方案（dashboard 走 calculator，vendor/collector 维度记入 `metric_dictionary.notes` 说明降级口径） | Codex | ⏳ | R2 | 详见 `pending_questions.md` Metric Definition Questions |
+| **M3-prep-2** | `reduction_roi` 硬编码 0.82 基线移到 `configs/metric_params.yaml` | Codex | ⏳ | R2 | 详见 `pending_questions.md` Architecture Decision Questions |
+| **M3-prep-3** | `metric_dictionary.notes` 补 ptp_rate / complaint_rate / reduction_roi 的口径分级说明 | Codex | ⏳ | M3-prep-1, M3-prep-2 | |
+| **C21-C27** | 异常检测（§7.1）/ 归因（§7.2）/ 可视化（§7.3）/ 报告（§7.4）/ 催收质检（§7.5）/ 话术推荐（§7.6） | Codex | 🅿️ M3 | M3-prep | 按 PRD §10 里程碑序执行 |
 
 ---
 

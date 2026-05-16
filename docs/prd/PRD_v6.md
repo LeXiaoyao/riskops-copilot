@@ -707,7 +707,7 @@ ODS 层关键字段示例（每表 5-10 个核心字段）见 `metadata/columns.
 
 - **定义只在 YAML**：`metadata/metric_dictionary.yaml` 是唯一权威源。
 - **md 文档只引用 metric_code**：本章列出的口径摘要是阅读辅助；不允许在其他文档手抄口径。
-- **代码与字典强对应**：`riskops/metrics/calculators/<metric_code>.py` 每个指标一个计算函数，函数名即 metric_code。
+- **代码与字典强对应**：calculator 函数名严格 = `metric_code`，按业务域聚合到 `riskops/metrics/calculators/<domain>.py`（postloan / collection / compliance / roi），并由 `riskops/metrics/dictionary.py` 提供中央 `calculator_registry()` 完成 `metric_code → Callable` 注册，对外通过 `calculate_metric(metric_code, ...)` 单一入口调用。同域指标共享 helper（如 `_window_recovery` / `_valid_calls`），避免拆 26 文件后被迫复制或建立 import 链。决议依据见 `docs/decisions/pending_questions.md`（2026-05-16 RESOLVED）。
 - **修改流程**：先改 YAML（含 change_log），CI 校验通过后才允许合并；md 通过 `scripts/render_docs.py metrics` 自动渲染。
 
 ### 6.9 指标资产维护机制
@@ -1619,16 +1619,16 @@ Phase 2+ 再考虑：异步并行、消息总线、长期记忆。
 
 **M1（数据底座）阶段交付**：
 
-- [ ] T-01：把表字段迁移到 `metadata/tables.yaml` + `metadata/columns.yaml`（权威源；md 中的字段摘要将由 `scripts/render_docs.py` 反向校验同步）
-- [ ] T-12：写 `schemas/*.sql` 五个建表 SQL（DuckDB 方言）
-- [ ] T-13：写 `scripts/generate_synthetic_data.py` 合成数据生成器（含异常埋点）
-- [ ] T-14：写 `tests/test_data_quality.py` 数据质量测试（DQ-001 ~ DQ-008 全覆盖）
+- [x] T-01：把表字段迁移到 `metadata/tables.yaml` + `metadata/columns.yaml` — **commit 5978a13**（43 张表 / 400+ 字段；render_docs.py 反向渲染就绪）
+- [x] T-12：写 `schemas/*.sql` 五个建表 SQL（DuckDB 方言）— **commit 5978a13**
+- [x] T-13：写 `scripts/generate_synthetic_data.py` 合成数据生成器（含异常埋点）— **commit 5978a13**
+- [x] T-14：写 `tests/test_data_quality.py` 数据质量测试 — **commit 5978a13**（聚合到 `scripts/validate_data_quality.py`，DQ-001 ~ DQ-008 全覆盖；拆 8 硬 + 3 软规则为独立 pytest 入口列为 M1 补强项 C14'）
 
 **M2（指标资产）阶段交付**：
 
-- [ ] T-02：把 §6 全部指标迁移到 `metadata/metric_dictionary.yaml`
-- [ ] T-15：写 `riskops/metrics/calculators/<metric_code>.py` 计算函数（一指标一文件）
-- [ ] T-16：写 `metadata/metric_lineage.yaml` 血缘
+- [x] T-02：把 §6 全部指标迁移到 `metadata/metric_dictionary.yaml` — **commit 6a08f22**（26 个 Phase 1 指标，Phase 2+ 占位推迟到对应 Phase 启动时实现）
+- [x] T-15：写 calculator 计算函数 — **commit 6a08f22**（按业务域聚合 5 文件 + `dictionary.py` 中央 registry；详见 §6.8 第 3 条）
+- [x] T-16：写 `metadata/metric_lineage.yaml` 血缘 — **commit 6a08f22**（26 指标 ADS→DWS→DWD→ODS 全覆盖）
 
 **M3-M7 阶段交付（参考 §10.1 里程碑）**：
 
