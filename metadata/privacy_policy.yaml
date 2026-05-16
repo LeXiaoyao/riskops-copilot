@@ -1,0 +1,65 @@
+levels:
+- level: P0
+  name: 非敏感公开分析字段
+  warehouse_allowed: true
+  report_allowed: true
+  llm_allowed: true
+  examples:
+  - product_code
+  - province
+  - city
+  - dpd_bucket
+- level: P1
+  name: 业务内部键
+  warehouse_allowed: true
+  report_allowed: true
+  llm_allowed: true
+  examples:
+  - customer_id
+  - loan_id
+  - case_id
+  - vendor_id
+  - collector_id
+- level: P2
+  name: 脱敏个人字段
+  warehouse_allowed: true
+  report_allowed: true
+  llm_allowed: true
+  examples:
+  - mobile_masked
+  - note_text_masked
+  - transcript_masked
+- level: P3
+  name: 哈希或密文字段
+  warehouse_allowed: true
+  report_allowed: false
+  llm_allowed: false
+  examples:
+  - customer_id_hash
+  - id_no_hash
+  - mobile_hash
+  - bank_card_hash
+- level: P4
+  name: 明文 PII
+  warehouse_allowed: false
+  report_allowed: false
+  llm_allowed: false
+  examples:
+  - customer_name
+  - id_no
+  - mobile_no
+  - bank_card_no
+  - address
+rules:
+- P4 不得进入 DWD/DWS/ADS。
+- P4 不得进入报告。
+- P4 不得进入 LLM 上下文。
+- P4 只允许在 synthetic_data/raw_secure/ 中存在。
+- 默认不生成 raw_secure，除非显式使用 --with-raw。
+p4_field_names:
+- customer_name
+- id_no
+- mobile_no
+- bank_card_no
+- address
+raw_secure_path: synthetic_data/raw_secure/

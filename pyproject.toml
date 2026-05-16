@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "riskops-copilot"
+version = "0.0.0"
+description = "Local AI analytics workbench skeleton for consumer finance risk operations."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+  { name = "LeXiaoyao" }
+]
+dependencies = [
+  "duckdb",
+  "pandas",
+  "pyarrow",
+  "pyyaml",
+  "faker",
+  "numpy",
+  "plotly",
+  "jinja2",
+  "openpyxl",
+  "python-pptx",
+  "python-docx",
+  "textual",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
+]
+
+[tool.setuptools.packages.find]
+include = ["riskops*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

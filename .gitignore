@@ -88,14 +88,8 @@ synthetic_data/raw_secure/
 
 # ---------- Project: outputs ----------
 # 生成的报告/导出不入库（每次跑都会重生成）
-reports/*.html
-reports/*.pdf
-reports/*.md
-exports/*.xlsx
-exports/*.pptx
-exports/*.docx
-!reports/.gitkeep
-!exports/.gitkeep
+reports/
+exports/
 
 # 截图样例可以入库（README 用），但放在 docs/screenshots/
 # 这里只忽略临时截图

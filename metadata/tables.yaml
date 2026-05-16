@@ -1,0 +1,420 @@
+- table_name: dim_customer
+  table_name_cn: 客户维表
+  layer: DIM
+  domain: master_data
+  grain: customer_id
+  primary_key: customer_id
+  description: 客户基础信息
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: dim_loan
+  table_name_cn: 借据维表
+  layer: DIM
+  domain: master_data
+  grain: loan_id
+  primary_key: loan_id
+  description: 借据基础属性
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: dim_case
+  table_name_cn: 案件维表
+  layer: DIM
+  domain: master_data
+  grain: case_id
+  primary_key: case_id
+  description: 催收案件主数据
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: dim_case_loan_mapping
+  table_name_cn: 案件借据映射维表
+  layer: DIM
+  domain: master_data
+  grain: mapping_id
+  primary_key: mapping_id
+  description: 案件与借据多对多映射
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: dim_product
+  table_name_cn: 产品维表
+  layer: DIM
+  domain: master_data
+  grain: product_code
+  primary_key: product_code
+  description: 产品主数据
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: dim_channel
+  table_name_cn: 渠道维表
+  layer: DIM
+  domain: master_data
+  grain: channel_code
+  primary_key: channel_code
+  description: 渠道主数据
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: dim_vendor
+  table_name_cn: 供应商维表
+  layer: DIM
+  domain: master_data
+  grain: vendor_id
+  primary_key: vendor_id
+  description: 供应商主数据
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: dim_collection_line
+  table_name_cn: 催收线路维表
+  layer: DIM
+  domain: master_data
+  grain: line_id
+  primary_key: line_id
+  description: 催收线路主数据
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: dim_collector
+  table_name_cn: 催员维表
+  layer: DIM
+  domain: master_data
+  grain: collector_id
+  primary_key: collector_id
+  description: 催员主数据
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: dim_strategy
+  table_name_cn: 策略维表
+  layer: DIM
+  domain: master_data
+  grain: strategy_id
+  primary_key: strategy_id
+  description: 策略主数据
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: ods_repayment_plan
+  table_name_cn: 还款计划
+  layer: ODS
+  domain: source_events
+  grain: plan_id
+  primary_key: plan_id
+  description: 每笔借据每期应还计划
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: ods_repayment_detail
+  table_name_cn: 还款流水
+  layer: ODS
+  domain: source_events
+  grain: repay_id
+  primary_key: repay_id
+  description: 真实还款流水
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: ods_loan_daily_snapshot
+  table_name_cn: 借据日切
+  layer: ODS
+  domain: source_events
+  grain: stat_date+loan_id
+  primary_key:
+  - stat_date
+  - loan_id
+  description: 借据状态日切片
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: ods_case_daily_snapshot
+  table_name_cn: 案件日切
+  layer: ODS
+  domain: source_events
+  grain: stat_date+case_id
+  primary_key:
+  - stat_date
+  - case_id
+  description: 案件状态日切片
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: ods_customer_daily_snapshot
+  table_name_cn: 客户日切
+  layer: ODS
+  domain: source_events
+  grain: stat_date+customer_id
+  primary_key:
+  - stat_date
+  - customer_id
+  description: 客户状态日切片
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: ods_case_flow
+  table_name_cn: 案件流转
+  layer: ODS
+  domain: source_events
+  grain: flow_id
+  primary_key: flow_id
+  description: 案件状态流转流水
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: ods_assignment_decision_log
+  table_name_cn: 分案决策流水
+  layer: ODS
+  domain: source_events
+  grain: decision_id
+  primary_key: decision_id
+  description: 分案决策日志
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: ods_postloan_c_score
+  table_name_cn: 贷后 C 卡分
+  layer: ODS
+  domain: source_events
+  grain: score_id
+  primary_key: score_id
+  description: 贷后评分历史快照
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: ods_collection_note
+  table_name_cn: 催记
+  layer: ODS
+  domain: source_events
+  grain: note_id
+  primary_key: note_id
+  description: 催员作业文本记录
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: ods_collection_action
+  table_name_cn: 催收动作
+  layer: ODS
+  domain: source_events
+  grain: action_id
+  primary_key: action_id
+  description: 拨打、短信、AI 外呼等触达动作
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: ods_call_record
+  table_name_cn: 外呼记录
+  layer: ODS
+  domain: source_events
+  grain: call_id
+  primary_key: call_id
+  description: 外呼结果与录音转写引用
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: ods_sms_send_log
+  table_name_cn: 短信发送日志
+  layer: ODS
+  domain: source_events
+  grain: message_id
+  primary_key: message_id
+  description: 短信和语音发送流水
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: ods_reduction_application
+  table_name_cn: 减免申请
+  layer: ODS
+  domain: source_events
+  grain: reduction_id
+  primary_key: reduction_id
+  description: 减免申请与审批记录
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: ods_complaint
+  table_name_cn: 投诉记录
+  layer: ODS
+  domain: source_events
+  grain: complaint_id
+  primary_key: complaint_id
+  description: 投诉与合规事件记录
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: dwd_due_plan_detail_di
+  table_name_cn: 到期计划明细
+  layer: DWD
+  domain: detail_fact
+  grain: stat_date+plan_id
+  primary_key:
+  - stat_date
+  - plan_id
+  description: 清洗后的到期计划明细
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: dwd_repayment_detail_di
+  table_name_cn: 回款明细事实
+  layer: DWD
+  domain: detail_fact
+  grain: repay_id
+  primary_key: repay_id
+  description: 清洗后的回款事实
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: dwd_collection_action_detail_di
+  table_name_cn: 催收动作明细
+  layer: DWD
+  domain: detail_fact
+  grain: action_id
+  primary_key: action_id
+  description: 清洗后的催收动作事实
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: dwd_case_flow_detail_di
+  table_name_cn: 案件流转明细
+  layer: DWD
+  domain: detail_fact
+  grain: flow_id
+  primary_key: flow_id
+  description: 清洗后的案件流转事实
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: dwd_complaint_detail_di
+  table_name_cn: 投诉明细
+  layer: DWD
+  domain: detail_fact
+  grain: complaint_id
+  primary_key: complaint_id
+  description: 清洗后的投诉事实
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: dws_loan_status_snapshot_di
+  table_name_cn: 借据状态日切宽表
+  layer: DWS
+  domain: subject_wide
+  grain: stat_date+loan_id
+  primary_key:
+  - stat_date
+  - loan_id
+  description: 借据状态与回款窗口宽表
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: dws_case_status_snapshot_di
+  table_name_cn: 案件状态日切宽表
+  layer: DWS
+  domain: subject_wide
+  grain: stat_date+case_id
+  primary_key:
+  - stat_date
+  - case_id
+  description: 案件状态与作业结果宽表
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: dws_customer_status_snapshot_di
+  table_name_cn: 客户状态日切宽表
+  layer: DWS
+  domain: subject_wide
+  grain: stat_date+customer_id
+  primary_key:
+  - stat_date
+  - customer_id
+  description: 归户视角日切宽表
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: dws_collection_process_wide_di
+  table_name_cn: 催收过程宽表
+  layer: DWS
+  domain: subject_wide
+  grain: stat_date+case_id
+  primary_key:
+  - stat_date
+  - case_id
+  description: 触达、PTP、履约、投诉过程宽表
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: dws_vendor_line_capacity_di
+  table_name_cn: 供应商线路产能宽表
+  layer: DWS
+  domain: subject_wide
+  grain: stat_date+vendor_id+line_id
+  primary_key:
+  - stat_date
+  - vendor_id
+  - line_id
+  description: 供应商线路产能日切宽表
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: dws_customer_profile_di
+  table_name_cn: 客户画像日切
+  layer: DWS
+  domain: subject_wide
+  grain: stat_date+customer_id
+  primary_key:
+  - stat_date
+  - customer_id
+  description: 客户基础、借款、还款、贷后画像
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: dws_collector_profile_di
+  table_name_cn: 催员画像日切
+  layer: DWS
+  domain: subject_wide
+  grain: stat_date+collector_id
+  primary_key:
+  - stat_date
+  - collector_id
+  description: 催员作业、结果、合规画像
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: dws_customer_postloan_tag_di
+  table_name_cn: 客户贷后标签日切
+  layer: DWS
+  domain: subject_wide
+  grain: stat_date+customer_id
+  primary_key:
+  - stat_date
+  - customer_id
+  description: 客户贷后标签日切
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: ads_postloan_dashboard_di
+  table_name_cn: 贷后经营驾驶舱日切
+  layer: ADS
+  domain: application_summary
+  grain: stat_date
+  primary_key: stat_date
+  description: 贷后核心经营汇总
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: ads_recovery_attribution_di
+  table_name_cn: 回收率归因日切
+  layer: ADS
+  domain: application_summary
+  grain: stat_date+factor_code
+  primary_key:
+  - stat_date
+  - factor_code
+  description: 回收率归因占位汇总
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: ads_vendor_performance_di
+  table_name_cn: 供应商绩效日切
+  layer: ADS
+  domain: application_summary
+  grain: stat_date+vendor_id
+  primary_key:
+  - stat_date
+  - vendor_id
+  description: 供应商绩效日切
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: ads_collector_performance_di
+  table_name_cn: 催员绩效日切
+  layer: ADS
+  domain: application_summary
+  grain: stat_date+collector_id
+  primary_key:
+  - stat_date
+  - collector_id
+  description: 催员绩效日切
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: ads_reduction_roi_di
+  table_name_cn: 减免 ROI 日切
+  layer: ADS
+  domain: application_summary
+  grain: stat_date
+  primary_key: stat_date
+  description: 减免使用与回款 ROI 汇总
+  owner: RiskOps Data Foundation
+  phase: M1
+- table_name: ads_compliance_qc_di
+  table_name_cn: 合规质检日切
+  layer: ADS
+  domain: application_summary
+  grain: stat_date+template_id
+  primary_key:
+  - stat_date
+  - template_id
+  description: 投诉与合规质检汇总
+  owner: RiskOps Data Foundation
+  phase: M1

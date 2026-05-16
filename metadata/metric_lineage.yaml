@@ -1,0 +1,33 @@
+phase: M1
+scope: lineage placeholders only; metric calculation lands in M2
+metrics:
+- metric_code: m1_recovery_rate_d7
+  metric_name_cn: M1 D7 回收率
+  ads_table: ads_postloan_dashboard_di
+  dws_tables:
+  - dws_loan_status_snapshot_di
+  dwd_tables:
+  - dwd_due_plan_detail_di
+  - dwd_repayment_detail_di
+  ods_tables:
+  - ods_repayment_plan
+  - ods_repayment_detail
+- metric_code: connect_rate
+  metric_name_cn: 接通率
+  ads_table: ads_vendor_performance_di
+  dws_tables:
+  - dws_collection_process_wide_di
+  dwd_tables:
+  - dwd_collection_action_detail_di
+  ods_tables:
+  - ods_collection_action
+- metric_code: complaint_rate
+  metric_name_cn: 投诉率
+  ads_table: ads_compliance_qc_di
+  dws_tables:
+  - dws_collection_process_wide_di
+  dwd_tables:
+  - dwd_complaint_detail_di
+  ods_tables:
+  - ods_complaint
+  - ods_sms_send_log
