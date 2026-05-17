@@ -16,6 +16,7 @@ def render_markdown(results: list[dict[str, object]], warnings: list[str]) -> st
                 f"- 主因：{top['dimension_name']}={top['dimension_value']}，贡献度 {float(top['contribution_score']):.2%}。",
                 f"- 解释：{top['business_interpretation']}",
                 "- 归因口径：基于 M1 D7 回款金额 / 到期应还金额，比较最近窗口与基线窗口。",
+                "- 注意：贡献度为各维度切片的边际贡献，跨维度可能重叠，不可直接相加为整体下降的解释比例。",
                 "",
                 "## 2. Top 5 归因因素",
                 "",
