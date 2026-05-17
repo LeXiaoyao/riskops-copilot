@@ -1,5 +1,7 @@
 # M3 异常归因结构化报告
 
+> Demo Disclaimer: {{ summary.demo_disclaimer }}
+
 ## 1. 异常总览
 
 - 异常数量：{{ summary.anomaly_overview.anomaly_count }}
@@ -9,16 +11,34 @@
 - 基线窗口：{{ summary.anomaly_overview.baseline_window or "N/A" }}
 - 最近窗口：{{ summary.anomaly_overview.recent_window or "N/A" }}
 
-## 2. 高优先级异常列表
+## 2. 归因目标异常
+
+{% if summary.attribution_target_anomaly %}
+{% set target = summary.attribution_target_anomaly %}
+- anomaly_id：{{ target.anomaly_id }}
+- metric：{{ target.metric_name_cn }}（{{ target.metric_code }}）
+- severity：{{ target.severity }}
+- dimension：{{ target.dimension_name }}={{ target.dimension_value }}
+- baseline：{{ target.baseline_value | metric_value }}
+- recent：{{ target.recent_value | metric_value }}
+- change：{{ target.absolute_change | metric_value }} / {{ target.relative_change | pct }}
+- evidence_table：{{ target.evidence_table }}
+- explanation：{{ target.explanation }}
+- recommended_next_step：{{ target.recommended_next_step }}
+{% else %}
+- 归因目标异常已在高优先级异常列表中展示。
+{% endif %}
+
+## 3. 高优先级异常列表
 
 {% if summary.high_priority_anomalies %}
 {% for item in summary.high_priority_anomalies %}
 ### {{ loop.index }}. {{ item.metric_name_cn }}（{{ item.metric_code }}）
 - severity：{{ item.severity }}
 - dimension：{{ item.dimension_name }}={{ item.dimension_value }}
-- baseline：{{ item.baseline_value | number }}
-- recent：{{ item.recent_value | number }}
-- change：{{ item.absolute_change | number }} / {{ item.relative_change | pct }}
+- baseline：{{ item.baseline_value | metric_value }}
+- recent：{{ item.recent_value | metric_value }}
+- change：{{ item.absolute_change | metric_value }} / {{ item.relative_change | pct }}
 - evidence_table：{{ item.evidence_table }}
 - explanation：{{ item.explanation }}
 - recommended_next_step：{{ item.recommended_next_step }}
@@ -28,7 +48,7 @@
 - 未发现 high severity 异常。
 
 {% endif %}
-## 3. M1 D7 回收率下降归因摘要
+## 4. M1 D7 回收率下降归因摘要
 
 {% set attr = summary.m1_d7_attribution_summary %}
 - target_metric：{{ attr.target_metric_name_cn or "N/A" }}（{{ attr.target_metric_code or "N/A" }}）
@@ -42,7 +62,7 @@
 - 主因：N/A
 {% endif %}
 
-## 4. Top 5 drivers
+## 5. Top 5 drivers
 
 {% for driver in attr.top_drivers %}
 ### {{ driver.rank }}. {{ driver.dimension_name }}={{ driver.dimension_value }}
@@ -54,7 +74,7 @@
 - recommended_action：{{ driver.recommended_action }}
 
 {% endfor %}
-## 5. 每个 driver 的 evidence
+## 6. 每个 driver 的 evidence
 
 {% for driver in attr.top_drivers %}
 ### {{ driver.rank }}. {{ driver.dimension_name }}={{ driver.dimension_value }}
@@ -66,7 +86,7 @@
 {% endfor %}
 
 {% endfor %}
-## 6. process evidence / driver_linkage
+## 7. process evidence / driver_linkage
 
 {% if summary.process_evidence %}
 {% for item in summary.process_evidence %}
@@ -76,19 +96,19 @@
 - 未发现 process evidence / driver_linkage。
 {% endif %}
 
-## 7. 业务建议
+## 8. 业务建议
 
 {% for item in summary.business_recommendations %}
 - {{ item.driver }}：{{ item.recommendation }}
 {% endfor %}
 
-## 8. 数据局限
+## 9. 数据局限
 
 {% for item in summary.data_limitations %}
 - {{ item.source }}：{{ item.description }}
 {% endfor %}
 
-## 9. 下一步建议
+## 10. 下一步建议
 
 {% for item in summary.next_steps %}
 - {{ item.next_step }}

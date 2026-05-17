@@ -10,6 +10,7 @@ from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 REPORT_VERSION = "m3-c-v1"
 TEMPLATE_DIR = Path(__file__).resolve().parent / "templates"
+DEMO_DISCLAIMER = "本报告基于 synthetic_data / 合成数据生成，仅用于 M3 Demo 展示，不代表真实业务结论。"
 
 
 class M3ReportInputError(RuntimeError):
@@ -43,10 +44,12 @@ def build_m3_summary(
     target_anomaly_id = attribution_payload.get("target_anomaly_id")
     target_anomaly = _find_anomaly(anomalies, target_anomaly_id)
     high_priority_anomalies = [item for item in anomalies if item.get("severity") == "high"]
+    target_visible_in_high_priority = any(item.get("anomaly_id") == target_anomaly_id for item in high_priority_anomalies)
 
     return {
         "report_version": REPORT_VERSION,
         "source_files": source_files or {},
+        "demo_disclaimer": DEMO_DISCLAIMER,
         "anomaly_overview": {
             "anomaly_count": int(anomaly_payload.get("anomaly_count", len(anomalies))),
             "severity_counts": anomaly_payload.get("severity_counts", {}),
@@ -55,6 +58,7 @@ def build_m3_summary(
             "recent_window": _first_non_empty(anomalies, "recent_window"),
         },
         "high_priority_anomalies": high_priority_anomalies,
+        "attribution_target_anomaly": _anomaly_summary(target_anomaly) if target_anomaly and not target_visible_in_high_priority else None,
         "m1_d7_attribution_summary": {
             "target_metric_code": attribution_payload.get("target_metric_code"),
             "target_metric_name_cn": _first_non_empty(attributions, "target_metric_name_cn"),
@@ -82,6 +86,7 @@ def render_markdown(summary: dict[str, Any]) -> str:
     )
     env.filters["pct"] = _format_pct
     env.filters["number"] = _format_number
+    env.filters["metric_value"] = _format_metric_value
     return env.get_template("m3_summary.md.j2").render(summary=summary).rstrip() + "\n"
 
 
@@ -124,6 +129,28 @@ def _find_anomaly(anomalies: list[dict[str, Any]], anomaly_id: Any) -> dict[str,
         if item.get("anomaly_id") == anomaly_id:
             return item
     return None
+
+
+def _anomaly_summary(anomaly: dict[str, Any]) -> dict[str, Any]:
+    keys = [
+        "anomaly_id",
+        "metric_code",
+        "metric_name_cn",
+        "anomaly_type",
+        "severity",
+        "dimension_name",
+        "dimension_value",
+        "baseline_value",
+        "recent_value",
+        "absolute_change",
+        "relative_change",
+        "recent_window",
+        "baseline_window",
+        "evidence_table",
+        "explanation",
+        "recommended_next_step",
+    ]
+    return {key: anomaly.get(key) for key in keys}
 
 
 def _first_non_empty(items: list[dict[str, Any]], key: str) -> Any:
@@ -207,7 +234,7 @@ def _data_limitations(
     attribution_payload: dict[str, Any],
     top_drivers: list[dict[str, Any]],
 ) -> list[dict[str, str]]:
-    limitations: list[dict[str, str]] = []
+    limitations: list[dict[str, str]] = [{"source": "synthetic_data", "description": DEMO_DISCLAIMER}]
     for warning in _as_list(anomaly_payload.get("warnings")):
         limitations.append({"source": "anomaly_warning", "description": str(warning)})
     for warning in _as_list(attribution_payload.get("warnings")):
@@ -221,7 +248,7 @@ def _data_limitations(
     for note in notes:
         limitations.append({"source": "attribution_note", "description": note})
 
-    if not limitations:
+    if len(limitations) == 1:
         limitations.append({"source": "input_status", "description": "上游 anomaly_results 与 attribution_results 未返回 warnings。"})
     limitations.append(
         {
@@ -255,3 +282,11 @@ def _format_number(value: Any) -> str:
     if isinstance(value, int | float):
         return f"{value:.6f}"
     return "N/A"
+
+
+def _format_metric_value(value: Any) -> str:
+    if not isinstance(value, int | float):
+        return "N/A"
+    if abs(value) <= 1:
+        return f"{value:.2%}"
+    return f"{value:,.2f}"

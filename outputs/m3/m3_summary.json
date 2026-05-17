@@ -4,6 +4,7 @@
     "anomaly_results": "outputs/anomalies/anomaly_results.json",
     "attribution_results": "outputs/attribution/attribution_results.json"
   },
+  "demo_disclaimer": "本报告基于 synthetic_data / 合成数据生成，仅用于 M3 Demo 展示，不代表真实业务结论。",
   "anomaly_overview": {
     "anomaly_count": 8,
     "severity_counts": {
@@ -125,6 +126,24 @@
       "recommended_next_step": "下钻该模板的发送供应商、发送时段、投诉等级和具体话术，进入合规复核。"
     }
   ],
+  "attribution_target_anomaly": {
+    "anomaly_id": "M3A-m1_recovery_rate-overall-ALL",
+    "metric_code": "m1_recovery_rate",
+    "metric_name_cn": "M1 回收率",
+    "anomaly_type": "window_compare",
+    "severity": "medium",
+    "dimension_name": "overall",
+    "dimension_value": "ALL",
+    "baseline_value": 0.194297,
+    "recent_value": 0.152965,
+    "absolute_change": -0.041331,
+    "relative_change": -0.212723,
+    "recent_window": "2026-04-18~2026-05-17",
+    "baseline_window": "2026-03-19~2026-04-17",
+    "evidence_table": "ads_postloan_dashboard_di",
+    "explanation": "最近窗口均值 15.30% 低于基线 19.43%，变化 -4.13%。",
+    "recommended_next_step": "进入 M3-B 后按供应商、线路、客群结构、AI 覆盖和减免策略下钻归因。"
+  },
   "m1_d7_attribution_summary": {
     "target_metric_code": "recovery_rate_d7",
     "target_metric_name_cn": "D7 回收率",
@@ -973,6 +992,10 @@
     }
   ],
   "data_limitations": [
+    {
+      "source": "synthetic_data",
+      "description": "本报告基于 synthetic_data / 合成数据生成，仅用于 M3 Demo 展示，不代表真实业务结论。"
+    },
     {
       "source": "attribution_note",
       "description": "按 M1 dpd_bucket 过滤后解释 recovery_rate_d7，未重新定义指标口径。"

@@ -105,8 +105,10 @@ def test_m3_summary_schema_is_stable() -> None:
     assert set(summary) == {
         "report_version",
         "source_files",
+        "demo_disclaimer",
         "anomaly_overview",
         "high_priority_anomalies",
+        "attribution_target_anomaly",
         "m1_d7_attribution_summary",
         "process_evidence",
         "business_recommendations",
@@ -114,6 +116,8 @@ def test_m3_summary_schema_is_stable() -> None:
         "next_steps",
     }
     assert summary["m1_d7_attribution_summary"]["primary_driver"]["dimension_name"] == "channel_code"
+    assert summary["data_limitations"][0]["source"] == "synthetic_data"
+    assert summary["attribution_target_anomaly"]["anomaly_id"] == "M3A-m1_recovery_rate-overall-ALL"
 
 
 def test_top_driver_keeps_segment_and_driver_linkage_evidence() -> None:
@@ -128,16 +132,20 @@ def test_markdown_contains_required_sections() -> None:
     markdown = render_markdown(build_m3_summary(anomaly_payload(), attribution_payload()))
     for heading in [
         "## 1. 异常总览",
-        "## 2. 高优先级异常列表",
-        "## 3. M1 D7 回收率下降归因摘要",
-        "## 4. Top 5 drivers",
-        "## 5. 每个 driver 的 evidence",
-        "## 6. process evidence / driver_linkage",
-        "## 7. 业务建议",
-        "## 8. 数据局限",
-        "## 9. 下一步建议",
+        "## 2. 归因目标异常",
+        "## 3. 高优先级异常列表",
+        "## 4. M1 D7 回收率下降归因摘要",
+        "## 5. Top 5 drivers",
+        "## 6. 每个 driver 的 evidence",
+        "## 7. process evidence / driver_linkage",
+        "## 8. 业务建议",
+        "## 9. 数据局限",
+        "## 10. 下一步建议",
     ]:
         assert heading in markdown
+    assert "Demo Disclaimer: 本报告基于 synthetic_data / 合成数据生成" in markdown
+    assert "baseline：30.00%" in markdown
+    assert "0.300850" not in markdown
     assert "| --- |" not in markdown
 
 
@@ -155,6 +163,8 @@ def test_write_m3_report_outputs_json_and_markdown(tmp_path: Path) -> None:
     assert output_md.exists()
     payload = json.loads(output_json.read_text(encoding="utf-8"))
     assert payload["m1_d7_attribution_summary"]["top_drivers"]
+    assert payload["data_limitations"][0]["source"] == "synthetic_data"
+    assert payload["attribution_target_anomaly"]["metric_code"] == "m1_recovery_rate"
 
 
 def test_missing_input_file_has_clear_error(tmp_path: Path) -> None:
