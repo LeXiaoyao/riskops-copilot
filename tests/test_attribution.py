@@ -8,6 +8,14 @@ import pandas as pd
 from riskops.engines.attribution.analyzer import AttributionAnalyzer
 from riskops.engines.attribution.summary import render_markdown
 
+OUTCOME_DIMENSIONS = {
+    "ai_call_coverage",
+    "manual_call_coverage",
+    "reduction_usage_rate",
+    "ptp_keep_rate",
+    "complaint_rate",
+}
+
 
 def write_table(root: Path, layer: str, table: str, frame: pd.DataFrame) -> None:
     path = root / layer
@@ -86,7 +94,12 @@ def build_attribution_fixture(root: Path) -> Path:
         root,
         "dim",
         "dim_loan",
-        pd.DataFrame({"loan_id": [row["loan_id"] for row in loans], "channel_code": ["APP"] * len(loans)}),
+        pd.DataFrame(
+            {
+                "loan_id": [row["loan_id"] for row in loans],
+                "channel_code": ["UNKNOWN" if idx % 4 == 1 else "APP" for idx, _ in enumerate(loans)],
+            }
+        ),
     )
     write_table(
         root,
@@ -235,3 +248,25 @@ def test_markdown_summary_can_render(tmp_path: Path) -> None:
     run = AttributionAnalyzer(data_root=tmp_path, anomaly_json=anomaly_path).analyze("recovery_rate_d7")
     markdown = render_markdown(run.results, run.warnings)
     assert "# M1 D7 回收率下降归因摘要" in markdown
+
+
+def test_outcome_metrics_not_in_top_drivers(tmp_path: Path) -> None:
+    anomaly_path = build_attribution_fixture(tmp_path)
+    run = AttributionAnalyzer(data_root=tmp_path, anomaly_json=anomaly_path).analyze("recovery_rate_d7")
+    assert {item["dimension_name"] for item in run.results}.isdisjoint(OUTCOME_DIMENSIONS)
+
+
+def test_unknown_and_single_value_dimensions_excluded(tmp_path: Path) -> None:
+    anomaly_path = build_attribution_fixture(tmp_path)
+    run = AttributionAnalyzer(data_root=tmp_path, anomaly_json=anomaly_path).analyze("recovery_rate_d7")
+    assert all(item["dimension_value"] != "UNKNOWN" for item in run.results)
+    assert all(item["dimension_name"] != "dpd_bucket" for item in run.results)
+
+
+def test_top_drivers_have_sample_count_evidence(tmp_path: Path) -> None:
+    anomaly_path = build_attribution_fixture(tmp_path)
+    run = AttributionAnalyzer(data_root=tmp_path, anomaly_json=anomaly_path).analyze("recovery_rate_d7")
+    for item in run.results:
+        segment_evidence = item["evidence"][0]
+        assert segment_evidence["baseline_loan_count"] > 0
+        assert segment_evidence["recent_loan_count"] > 0

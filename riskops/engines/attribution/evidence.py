@@ -60,6 +60,8 @@ def build_evidence(row: pd.Series, process_metrics: list[dict[str, object]]) -> 
             "baseline_value": round(float(row["value_baseline"]), 6),
             "recent_value": round(float(row["value_recent"]), 6),
             "delta": round(float(row["delta"]), 6),
+            "baseline_loan_count": int(row.get("loan_count_baseline", 0)),
+            "recent_loan_count": int(row.get("loan_count_recent", 0)),
             "baseline_denominator": round(float(row["denominator_baseline"]), 2),
             "recent_denominator": round(float(row["denominator_recent"]), 2),
             "recent_weight": round(float(row.get("recent_weight", 0)), 6),

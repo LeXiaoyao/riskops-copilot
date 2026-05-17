@@ -27,15 +27,9 @@ ATTRIBUTION_DIMENSIONS = [
     "channel_code",
     "province",
     "region",
-    "dpd_bucket",
     "balance_segment",
     "risk_level",
     "score_band",
-    "ai_call_coverage",
-    "manual_call_coverage",
-    "reduction_usage_rate",
-    "ptp_keep_rate",
-    "complaint_rate",
 ]
 
 

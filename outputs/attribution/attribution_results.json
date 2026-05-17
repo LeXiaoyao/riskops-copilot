@@ -2,11 +2,7 @@
   "target_metric_code": "recovery_rate_d7",
   "target_anomaly_id": "M3A-m1_recovery_rate-overall-ALL",
   "attribution_count": 10,
-  "warnings": [
-    "dpd_bucket 没有可用于窗口对比的数据。",
-    "reduction_usage_rate 没有可用于窗口对比的数据。",
-    "complaint_rate 没有可用于窗口对比的数据。"
-  ],
+  "warnings": [],
   "attributions": [
     {
       "attribution_id": "M3B-recovery_rate_d7-01",
@@ -17,7 +13,7 @@
       "dimension_value": "ECOM",
       "baseline_value": 0.239025,
       "recent_value": 0.062908,
-      "contribution_score": 0.127169,
+      "contribution_score": 0.152561,
       "contribution_rank": 1,
       "evidence": [
         {
@@ -25,6 +21,8 @@
           "baseline_value": 0.239025,
           "recent_value": 0.062908,
           "delta": -0.176116,
+          "baseline_loan_count": 125,
+          "recent_loan_count": 131,
           "baseline_denominator": 149952.87,
           "recent_denominator": 154458.53,
           "recent_weight": 0.354739
@@ -82,9 +80,6 @@
       "recommended_action": "继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。",
       "confidence": "medium",
       "notes": [
-        "dpd_bucket 没有可用于窗口对比的数据。",
-        "reduction_usage_rate 没有可用于窗口对比的数据。",
-        "complaint_rate 没有可用于窗口对比的数据。",
         "按 M1 dpd_bucket 过滤后解释 recovery_rate_d7，未重新定义指标口径。"
       ]
     },
@@ -97,7 +92,7 @@
       "dimension_value": "山东",
       "baseline_value": 0.294522,
       "recent_value": 0.127253,
-      "contribution_score": 0.054364,
+      "contribution_score": 0.06522,
       "contribution_rank": 2,
       "evidence": [
         {
@@ -105,6 +100,8 @@
           "baseline_value": 0.294522,
           "recent_value": 0.127253,
           "delta": -0.167269,
+          "baseline_loan_count": 50,
+          "recent_loan_count": 58,
           "baseline_denominator": 55423.8,
           "recent_denominator": 69523.29,
           "recent_weight": 0.159671
@@ -162,9 +159,6 @@
       "recommended_action": "继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。",
       "confidence": "medium",
       "notes": [
-        "dpd_bucket 没有可用于窗口对比的数据。",
-        "reduction_usage_rate 没有可用于窗口对比的数据。",
-        "complaint_rate 没有可用于窗口对比的数据。",
         "按 M1 dpd_bucket 过滤后解释 recovery_rate_d7，未重新定义指标口径。"
       ]
     },
@@ -177,7 +171,7 @@
       "dimension_value": "D",
       "baseline_value": 0.17829,
       "recent_value": 0.059307,
-      "contribution_score": 0.047948,
+      "contribution_score": 0.057522,
       "contribution_rank": 3,
       "evidence": [
         {
@@ -185,6 +179,8 @@
           "baseline_value": 0.17829,
           "recent_value": 0.059307,
           "delta": -0.118983,
+          "baseline_loan_count": 25,
+          "recent_loan_count": 35,
           "baseline_denominator": 31185.81,
           "recent_denominator": 44189.03,
           "recent_weight": 0.197976
@@ -242,9 +238,6 @@
       "recommended_action": "对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。",
       "confidence": "medium",
       "notes": [
-        "dpd_bucket 没有可用于窗口对比的数据。",
-        "reduction_usage_rate 没有可用于窗口对比的数据。",
-        "complaint_rate 没有可用于窗口对比的数据。",
         "按 M1 dpd_bucket 过滤后解释 recovery_rate_d7，未重新定义指标口径。"
       ]
     },
@@ -253,98 +246,20 @@
       "target_anomaly_id": "M3A-m1_recovery_rate-overall-ALL",
       "target_metric_code": "recovery_rate_d7",
       "target_metric_name_cn": "D7 回收率",
-      "dimension_name": "ptp_keep_rate",
-      "dimension_value": "NO_PTP",
-      "baseline_value": 0.186528,
-      "recent_value": 0.163113,
-      "contribution_score": 0.047565,
-      "contribution_rank": 4,
-      "evidence": [
-        {
-          "method": "segment_delta",
-          "baseline_value": 0.186528,
-          "recent_value": 0.163113,
-          "delta": -0.023415,
-          "baseline_denominator": 483138.94,
-          "recent_denominator": 434533.88,
-          "recent_weight": 0.997977
-        },
-        {
-          "method": "driver_linkage",
-          "metric_code": "connect_rate",
-          "metric_name_cn": "接通率",
-          "baseline_value": 0.318182,
-          "recent_value": 0.340909,
-          "delta": 0.022727
-        },
-        {
-          "method": "driver_linkage",
-          "metric_code": "ai_call_coverage",
-          "metric_name_cn": "AI 外呼覆盖率",
-          "baseline_value": 0.386364,
-          "recent_value": 0.113636,
-          "delta": -0.272727
-        },
-        {
-          "method": "driver_linkage",
-          "metric_code": "manual_call_coverage",
-          "metric_name_cn": "人工触达占比",
-          "baseline_value": 0.613636,
-          "recent_value": 0.886364,
-          "delta": 0.272727
-        },
-        {
-          "method": "driver_linkage",
-          "metric_code": "ptp_keep_rate",
-          "metric_name_cn": "PTP 履约率",
-          "baseline_value": 0.0,
-          "recent_value": 0.0,
-          "delta": 0.0
-        },
-        {
-          "method": "driver_linkage",
-          "metric_code": "reduction_usage_rate",
-          "metric_name_cn": "减免使用率",
-          "baseline_value": 0.0,
-          "recent_value": 0.0,
-          "delta": 0.0
-        },
-        {
-          "method": "driver_linkage",
-          "metric_code": "complaint_rate",
-          "metric_name_cn": "投诉率",
-          "baseline_value": 0.0,
-          "recent_value": 0.0,
-          "delta": 0.0
-        }
-      ],
-      "business_interpretation": "NO_PTP 对应的过程执行状态与回收率下降同步出现，支持过程指标作为解释链路。",
-      "recommended_action": "定位对应案件集合，检查触达策略、承诺还款跟进、减免授权或投诉管控是否发生变化。",
-      "confidence": "medium",
-      "notes": [
-        "dpd_bucket 没有可用于窗口对比的数据。",
-        "reduction_usage_rate 没有可用于窗口对比的数据。",
-        "complaint_rate 没有可用于窗口对比的数据。",
-        "按 M1 dpd_bucket 过滤后解释 recovery_rate_d7，未重新定义指标口径。"
-      ]
-    },
-    {
-      "attribution_id": "M3B-recovery_rate_d7-05",
-      "target_anomaly_id": "M3A-m1_recovery_rate-overall-ALL",
-      "target_metric_code": "recovery_rate_d7",
-      "target_metric_name_cn": "D7 回收率",
       "dimension_name": "province",
       "dimension_value": "上海",
       "baseline_value": 0.223535,
       "recent_value": 0.071648,
-      "contribution_score": 0.036876,
-      "contribution_rank": 5,
+      "contribution_score": 0.044239,
+      "contribution_rank": 4,
       "evidence": [
         {
           "method": "segment_delta",
           "baseline_value": 0.223535,
           "recent_value": 0.071648,
           "delta": -0.151888,
+          "baseline_loan_count": 62,
+          "recent_loan_count": 49,
           "baseline_denominator": 73624.81,
           "recent_denominator": 51934.09,
           "recent_weight": 0.119275
@@ -402,14 +317,11 @@
       "recommended_action": "继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。",
       "confidence": "medium",
       "notes": [
-        "dpd_bucket 没有可用于窗口对比的数据。",
-        "reduction_usage_rate 没有可用于窗口对比的数据。",
-        "complaint_rate 没有可用于窗口对比的数据。",
         "按 M1 dpd_bucket 过滤后解释 recovery_rate_d7，未重新定义指标口径。"
       ]
     },
     {
-      "attribution_id": "M3B-recovery_rate_d7-06",
+      "attribution_id": "M3B-recovery_rate_d7-05",
       "target_anomaly_id": "M3A-m1_recovery_rate-overall-ALL",
       "target_metric_code": "recovery_rate_d7",
       "target_metric_name_cn": "D7 回收率",
@@ -417,14 +329,16 @@
       "dimension_value": "A",
       "baseline_value": 0.364211,
       "recent_value": 0.198809,
-      "contribution_score": 0.033687,
-      "contribution_rank": 6,
+      "contribution_score": 0.040414,
+      "contribution_rank": 5,
       "evidence": [
         {
           "method": "segment_delta",
           "baseline_value": 0.364211,
           "recent_value": 0.198809,
           "delta": -0.165403,
+          "baseline_loan_count": 16,
+          "recent_loan_count": 21,
           "baseline_denominator": 19794.36,
           "recent_denominator": 22333.38,
           "recent_weight": 0.100058
@@ -482,14 +396,11 @@
       "recommended_action": "对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。",
       "confidence": "medium",
       "notes": [
-        "dpd_bucket 没有可用于窗口对比的数据。",
-        "reduction_usage_rate 没有可用于窗口对比的数据。",
-        "complaint_rate 没有可用于窗口对比的数据。",
         "按 M1 dpd_bucket 过滤后解释 recovery_rate_d7，未重新定义指标口径。"
       ]
     },
     {
-      "attribution_id": "M3B-recovery_rate_d7-07",
+      "attribution_id": "M3B-recovery_rate_d7-06",
       "target_anomaly_id": "M3A-m1_recovery_rate-overall-ALL",
       "target_metric_code": "recovery_rate_d7",
       "target_metric_name_cn": "D7 回收率",
@@ -497,14 +408,16 @@
       "dimension_value": "L_EAST_M2",
       "baseline_value": 0.334281,
       "recent_value": 0.19786,
-      "contribution_score": 0.032933,
-      "contribution_rank": 7,
+      "contribution_score": 0.039509,
+      "contribution_rank": 6,
       "evidence": [
         {
           "method": "segment_delta",
           "baseline_value": 0.334281,
           "recent_value": 0.19786,
           "delta": -0.13642,
+          "baseline_loan_count": 56,
+          "recent_loan_count": 46,
           "baseline_denominator": 55987.37,
           "recent_denominator": 51639.65,
           "recent_weight": 0.118599
@@ -562,14 +475,11 @@
       "recommended_action": "按线路核查人均案量、在催案件和催员可用产能，优先处理高贡献线路。",
       "confidence": "high",
       "notes": [
-        "dpd_bucket 没有可用于窗口对比的数据。",
-        "reduction_usage_rate 没有可用于窗口对比的数据。",
-        "complaint_rate 没有可用于窗口对比的数据。",
         "按 M1 dpd_bucket 过滤后解释 recovery_rate_d7，未重新定义指标口径。"
       ]
     },
     {
-      "attribution_id": "M3B-recovery_rate_d7-08",
+      "attribution_id": "M3B-recovery_rate_d7-07",
       "target_anomaly_id": "M3A-m1_recovery_rate-overall-ALL",
       "target_metric_code": "recovery_rate_d7",
       "target_metric_name_cn": "D7 回收率",
@@ -577,14 +487,16 @@
       "dimension_value": "华东 M2",
       "baseline_value": 0.334281,
       "recent_value": 0.19786,
-      "contribution_score": 0.032933,
-      "contribution_rank": 8,
+      "contribution_score": 0.039509,
+      "contribution_rank": 7,
       "evidence": [
         {
           "method": "segment_delta",
           "baseline_value": 0.334281,
           "recent_value": 0.19786,
           "delta": -0.13642,
+          "baseline_loan_count": 56,
+          "recent_loan_count": 46,
           "baseline_denominator": 55987.37,
           "recent_denominator": 51639.65,
           "recent_weight": 0.118599
@@ -642,9 +554,85 @@
       "recommended_action": "按线路核查人均案量、在催案件和催员可用产能，优先处理高贡献线路。",
       "confidence": "high",
       "notes": [
-        "dpd_bucket 没有可用于窗口对比的数据。",
-        "reduction_usage_rate 没有可用于窗口对比的数据。",
-        "complaint_rate 没有可用于窗口对比的数据。",
+        "按 M1 dpd_bucket 过滤后解释 recovery_rate_d7，未重新定义指标口径。"
+      ]
+    },
+    {
+      "attribution_id": "M3B-recovery_rate_d7-08",
+      "target_anomaly_id": "M3A-m1_recovery_rate-overall-ALL",
+      "target_metric_code": "recovery_rate_d7",
+      "target_metric_name_cn": "D7 回收率",
+      "dimension_name": "risk_level",
+      "dimension_value": "B",
+      "baseline_value": 0.188057,
+      "recent_value": 0.152293,
+      "contribution_score": 0.036473,
+      "contribution_rank": 8,
+      "evidence": [
+        {
+          "method": "segment_delta",
+          "baseline_value": 0.188057,
+          "recent_value": 0.152293,
+          "delta": -0.035764,
+          "baseline_loan_count": 172,
+          "recent_loan_count": 157,
+          "baseline_denominator": 206455.94,
+          "recent_denominator": 181840.52,
+          "recent_weight": 0.417626
+        },
+        {
+          "method": "driver_linkage",
+          "metric_code": "connect_rate",
+          "metric_name_cn": "接通率",
+          "baseline_value": 0.461538,
+          "recent_value": 0.409091,
+          "delta": -0.052448
+        },
+        {
+          "method": "driver_linkage",
+          "metric_code": "ai_call_coverage",
+          "metric_name_cn": "AI 外呼覆盖率",
+          "baseline_value": 0.307692,
+          "recent_value": 0.090909,
+          "delta": -0.216783
+        },
+        {
+          "method": "driver_linkage",
+          "metric_code": "manual_call_coverage",
+          "metric_name_cn": "人工触达占比",
+          "baseline_value": 0.692308,
+          "recent_value": 0.909091,
+          "delta": 0.216783
+        },
+        {
+          "method": "driver_linkage",
+          "metric_code": "ptp_keep_rate",
+          "metric_name_cn": "PTP 履约率",
+          "baseline_value": 0.0,
+          "recent_value": 0.0,
+          "delta": 0.0
+        },
+        {
+          "method": "driver_linkage",
+          "metric_code": "reduction_usage_rate",
+          "metric_name_cn": "减免使用率",
+          "baseline_value": 0.0,
+          "recent_value": 0.0,
+          "delta": 0.0
+        },
+        {
+          "method": "driver_linkage",
+          "metric_code": "complaint_rate",
+          "metric_name_cn": "投诉率",
+          "baseline_value": 0.0,
+          "recent_value": 0.0,
+          "delta": 0.0
+        }
+      ],
+      "business_interpretation": "B 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。",
+      "recommended_action": "对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。",
+      "confidence": "medium",
+      "notes": [
         "按 M1 dpd_bucket 过滤后解释 recovery_rate_d7，未重新定义指标口径。"
       ]
     },
@@ -653,45 +641,47 @@
       "target_anomaly_id": "M3A-m1_recovery_rate-overall-ALL",
       "target_metric_code": "recovery_rate_d7",
       "target_metric_name_cn": "D7 回收率",
-      "dimension_name": "ai_call_coverage",
-      "dimension_value": "NO_ACTION",
-      "baseline_value": 0.185842,
-      "recent_value": 0.168336,
-      "contribution_score": 0.030734,
+      "dimension_name": "balance_segment",
+      "dimension_value": "HIGH",
+      "baseline_value": 0.203665,
+      "recent_value": 0.162163,
+      "contribution_score": 0.036219,
       "contribution_rank": 9,
       "evidence": [
         {
           "method": "segment_delta",
-          "baseline_value": 0.185842,
-          "recent_value": 0.168336,
-          "delta": -0.017506,
-          "baseline_denominator": 436901.65,
-          "recent_denominator": 375539.71,
-          "recent_weight": 0.862487
+          "baseline_value": 0.203665,
+          "recent_value": 0.162163,
+          "delta": -0.041501,
+          "baseline_loan_count": 108,
+          "recent_loan_count": 127,
+          "baseline_denominator": 130990.64,
+          "recent_denominator": 155612.05,
+          "recent_weight": 0.357388
         },
         {
           "method": "driver_linkage",
           "metric_code": "connect_rate",
           "metric_name_cn": "接通率",
-          "baseline_value": 0.0,
-          "recent_value": 0.0,
-          "delta": 0.0
+          "baseline_value": 0.545455,
+          "recent_value": 0.421053,
+          "delta": -0.124402
         },
         {
           "method": "driver_linkage",
           "metric_code": "ai_call_coverage",
           "metric_name_cn": "AI 外呼覆盖率",
-          "baseline_value": 0.0,
-          "recent_value": 0.0,
-          "delta": 0.0
+          "baseline_value": 0.454545,
+          "recent_value": 0.105263,
+          "delta": -0.349282
         },
         {
           "method": "driver_linkage",
           "metric_code": "manual_call_coverage",
           "metric_name_cn": "人工触达占比",
-          "baseline_value": 0.0,
-          "recent_value": 0.0,
-          "delta": 0.0
+          "baseline_value": 0.545455,
+          "recent_value": 0.894737,
+          "delta": 0.349282
         },
         {
           "method": "driver_linkage",
@@ -718,13 +708,10 @@
           "delta": 0.0
         }
       ],
-      "business_interpretation": "NO_ACTION 对应的过程执行状态与回收率下降同步出现，支持过程指标作为解释链路。",
-      "recommended_action": "定位对应案件集合，检查触达策略、承诺还款跟进、减免授权或投诉管控是否发生变化。",
+      "business_interpretation": "HIGH 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。",
+      "recommended_action": "对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。",
       "confidence": "medium",
       "notes": [
-        "dpd_bucket 没有可用于窗口对比的数据。",
-        "reduction_usage_rate 没有可用于窗口对比的数据。",
-        "complaint_rate 没有可用于窗口对比的数据。",
         "按 M1 dpd_bucket 过滤后解释 recovery_rate_d7，未重新定义指标口径。"
       ]
     },
@@ -733,45 +720,47 @@
       "target_anomaly_id": "M3A-m1_recovery_rate-overall-ALL",
       "target_metric_code": "recovery_rate_d7",
       "target_metric_name_cn": "D7 回收率",
-      "dimension_name": "manual_call_coverage",
-      "dimension_value": "NO_ACTION",
-      "baseline_value": 0.185842,
-      "recent_value": 0.168336,
-      "contribution_score": 0.030734,
+      "dimension_name": "product_code",
+      "dimension_value": "P_CONS",
+      "baseline_value": 0.188839,
+      "recent_value": 0.154997,
+      "contribution_score": 0.032704,
       "contribution_rank": 10,
       "evidence": [
         {
           "method": "segment_delta",
-          "baseline_value": 0.185842,
-          "recent_value": 0.168336,
-          "delta": -0.017506,
-          "baseline_denominator": 436901.65,
-          "recent_denominator": 375539.71,
-          "recent_weight": 0.862487
+          "baseline_value": 0.188839,
+          "recent_value": 0.154997,
+          "delta": -0.033841,
+          "baseline_loan_count": 135,
+          "recent_loan_count": 138,
+          "baseline_denominator": 164611.04,
+          "recent_denominator": 172311.89,
+          "recent_weight": 0.395742
         },
         {
           "method": "driver_linkage",
           "metric_code": "connect_rate",
           "metric_name_cn": "接通率",
-          "baseline_value": 0.0,
-          "recent_value": 0.0,
-          "delta": 0.0
+          "baseline_value": 0.230769,
+          "recent_value": 0.333333,
+          "delta": 0.102564
         },
         {
           "method": "driver_linkage",
           "metric_code": "ai_call_coverage",
           "metric_name_cn": "AI 外呼覆盖率",
-          "baseline_value": 0.0,
-          "recent_value": 0.0,
-          "delta": 0.0
+          "baseline_value": 0.461538,
+          "recent_value": 0.2,
+          "delta": -0.261538
         },
         {
           "method": "driver_linkage",
           "metric_code": "manual_call_coverage",
           "metric_name_cn": "人工触达占比",
-          "baseline_value": 0.0,
-          "recent_value": 0.0,
-          "delta": 0.0
+          "baseline_value": 0.538462,
+          "recent_value": 0.8,
+          "delta": 0.261538
         },
         {
           "method": "driver_linkage",
@@ -798,13 +787,10 @@
           "delta": 0.0
         }
       ],
-      "business_interpretation": "NO_ACTION 对应的过程执行状态与回收率下降同步出现，支持过程指标作为解释链路。",
-      "recommended_action": "定位对应案件集合，检查触达策略、承诺还款跟进、减免授权或投诉管控是否发生变化。",
+      "business_interpretation": "P_CONS 分组的回收率下降对整体异常有可量化贡献。",
+      "recommended_action": "继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。",
       "confidence": "medium",
       "notes": [
-        "dpd_bucket 没有可用于窗口对比的数据。",
-        "reduction_usage_rate 没有可用于窗口对比的数据。",
-        "complaint_rate 没有可用于窗口对比的数据。",
         "按 M1 dpd_bucket 过滤后解释 recovery_rate_d7，未重新定义指标口径。"
       ]
     }
