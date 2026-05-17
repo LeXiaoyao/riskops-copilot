@@ -1,0 +1,15 @@
+recent_window_days: 30
+baseline_window_days: 30
+min_relative_change: 0.1
+min_absolute_change_pct: 0.02
+complaint_multiplier_threshold: 2.0
+severity_thresholds:
+  low:
+    min_relative_change: 0.10
+    min_absolute_change_pct: 0.02
+  medium:
+    min_relative_change: 0.15
+    min_absolute_change_pct: 0.04
+  high:
+    min_relative_change: 0.25
+    min_absolute_change_pct: 0.06

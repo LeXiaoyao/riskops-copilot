@@ -44,3 +44,12 @@ This file records unresolved or recently-resolved questions that require Claude 
 - `docs/codex_tasks.md` 阶段 4 C8 任务原 spec 写"39 个指标（26 实现 + 13 占位）"，M2 实际只产出 26 个完整指标。
 - **决议**（Claude）：**采纳现状**，不补占位。判断依据：Phase 2+ 指标的真实定义要等对应 Phase 启动时才能写清楚，现在塞 13 个 `metric_code` 空架子既无业务价值、又违反"不要为虚构的未来需求做抽象"的项目约定。
 - **后续动作**：`docs/codex_tasks.md` C8 spec 修订为"26 个 Phase 1 指标"，作为独立 docs commit 落地。
+
+### ⚠️ M3-A FIELD LIMITATION — 部分异常因子还没有正式 metric_code
+
+- **现象**：M3-A 需要检测 `avg_case_per_collector`、`high_balance_high_risk_share`、`ai_call_coverage` 等过程/结构异常，但当前 `metadata/metric_dictionary.yaml` 只覆盖 26 个 M2 Phase 1 指标，没有这些因子的正式指标定义。
+- **处理结果**：异常检测引擎优先读取现有 ADS/DWS 字段做最小实现：
+  - 华东线路人均案量读取 `dws_vendor_line_capacity_di.case_per_collector` 聚合结果，输出 `avg_case_per_collector`。
+  - 高余额高风险客群占比读取 `dws_customer_status_snapshot_di.total_outstanding_amount` + `risk_level` 代理生成，输出 `high_balance_high_risk_share`。
+  - AI 外呼覆盖率读取 `dws_collection_process_wide_di.ai_action_count / action_count`，输出 `ai_call_coverage`。
+- **待拍板**：M3-B/M4 前是否把这些异常因子补进正式指标字典，或作为 attribution factor 而非 metric 管理。
