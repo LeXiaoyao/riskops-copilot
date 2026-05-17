@@ -240,9 +240,10 @@
 - 刷新频率：daily
 - 版本：v1.0
 - 优先级：P0
-- 说明：PTP 基于催收动作标识。
+- 说明：Phase 1 dashboard 口径以 calculator 为准，按 ptp_count / valid_contact_count 计算；vendor / collector 维度当前缺少完整 valid_contact_count 分层明细时，允许在 ADS 侧降级为 ptp_count / connected_count，仅用于资源维度横向比较，不与 dashboard 绝对值混读。M3 归因默认读取 dashboard 权威口径，M4 展示 vendor / collector 时需标注降级分母；后续补齐分层有效沟通宽表后再统一口径。
 - 变更记录：
   - 2026-05-15：Phase 1 初版
+  - 2026-05-17：M3-prep 补充 dashboard 权威口径与 vendor / collector 降级边界
 
 ### ptp_keep_rate
 - 中文名：PTP 履约率
@@ -327,9 +328,10 @@
 - 刷新频率：daily
 - 版本：v1.0
 - 优先级：P0
-- 说明：案件去重口径。
+- 说明：Phase 1 dashboard 口径以 calculator 为准，按 complaint_case_count / active_case_count 的案件去重口径计算；vendor / collector 维度如仅有 assigned_case_count 或动作聚合投诉数，允许降级为 complaint_count / assigned_case_count， 仅用于资源维度风险排序，不与 dashboard 绝对值混读。M3 归因默认读取 dashboard 权威口径，M4 展示 vendor / collector 时需标注降级分母；后续补齐投诉案件与在催案件的同粒度桥表后再统一口径。
 - 变更记录：
   - 2026-05-15：Phase 1 初版
+  - 2026-05-17：M3-prep 补充 dashboard 权威口径与 vendor / collector 降级边界
 
 ### complaint_per_10k_cases
 - 中文名：万案投诉率
@@ -448,6 +450,7 @@
 - 刷新频率：daily
 - 版本：v1.0
 - 优先级：P1
-- 说明：Phase 1 反事实回款使用历史同条件均值代理，不做因果推断。
+- 说明：Phase 1 反事实回款使用配置项 baseline_recovery_without_reduction 作为无减免回收率代理，默认值为 0.82，不做因果推断； 当前 dashboard / ADS 均只表达日切整体 ROI，vendor / line / dpd_bucket 粒度在样本和对照组不足时不拆分展示。 M3 可将该配置作为异常与归因的业务基线输入，M4 展示时需说明其为代理基线；后续补齐同条件历史客群或对照组后升级为分层基线。
 - 变更记录：
   - 2026-05-15：Phase 1 初版
+  - 2026-05-17：M3-prep 将 0.82 基线迁移到 configs/metric_params.yaml 并补充口径边界

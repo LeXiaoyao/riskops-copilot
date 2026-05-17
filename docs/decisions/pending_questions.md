@@ -16,15 +16,16 @@ This file records unresolved or recently-resolved questions that require Claude 
 
 ## Metric Definition Questions
 
-### ⚠️ OPEN — 同一 metric_code 在不同 ADS 表口径分歧
+### ✅ RESOLVED 2026-05-17 — 同一 metric_code 在不同 ADS 表口径分歧
 
 - **现象**：`ptp_rate` / `complaint_rate` 等指标在 `ads_postloan_dashboard_di`（走 calculator）与 `ads_vendor_performance_di`（在 `build_warehouse.py` 内联计算）的分母不一致：
   - dashboard 维度：`ptp_count / valid_contact_count`
   - vendor 维度：`ptp_count / connected_count`
 - **业务原因**：vendor 粒度没有 vendor-level `valid_contact_count` 可用，必须降级到 `connected_count`。
 - **风险**：违反 PRD §6.8 "代码与字典强对应"精神，看板与供应商表对同一名字的指标读出来数值不一致，存在解释成本。
-- **拟处理时机**：M3（引擎核心）阶段，配合"指标在不同粒度的口径分级"机制一起做。
-- **临时缓解**：M3 启动前如有疑问，以 `ads_postloan_dashboard_di` 的口径（来自 calculator）为准。
+- **处理结果**：不大改计算链路，保留 `ads_postloan_dashboard_di` 的 calculator 口径作为 dashboard 权威口径；`metadata/metric_dictionary.yaml` 已在
+  `ptp_rate` / `complaint_rate` notes 中记录 vendor / collector 维度的降级分母、适用边界和 M3/M4 展示要求。
+- **后续边界**：M3 归因默认读取 dashboard 权威口径；M4 如展示 vendor / collector 维度，必须标注降级口径，直到补齐同粒度有效沟通 / 投诉桥表。
 
 ## Privacy Boundary Questions
 
@@ -32,11 +33,11 @@ This file records unresolved or recently-resolved questions that require Claude 
 
 ## Architecture Decision Questions
 
-### ⚠️ MINOR — `reduction_roi` 硬编码 0.82 基线
+### ✅ RESOLVED 2026-05-17 — `reduction_roi` 硬编码 0.82 基线
 
 - `riskops/metrics/calculators/roi.py:54` 把"无减免对照组的回收率"硬编码为 0.82。
-- **拟处理**：M3 移到 `configs/metric_params.yaml` 或类似配置，避免业务参数散在代码里。
-- 不阻塞 M2 commit。
+- **处理结果**：已新增 `configs/metric_params.yaml`，`reduction_roi` 从 `reduction_roi.baseline_recovery_without_reduction`
+  读取基线；配置缺失时安全回退默认值 0.82，配置值非数字时抛出清晰错误。
 
 ### ⚠️ MINOR — Phase 2+ 13 个占位指标未生成
 

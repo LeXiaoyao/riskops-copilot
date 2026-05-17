@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from riskops.metrics.dictionary import calculate_metric, calculator_registry
+from riskops.metrics.calculators.roi import DEFAULT_BASELINE_RECOVERY_WITHOUT_REDUCTION, load_metric_params
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -23,6 +24,18 @@ def test_calculator_registry_exposes_phase1_metrics() -> None:
     assert "connect_rate" in registry
     assert "reduction_roi" in registry
     assert len(registry) == 26
+
+
+def test_reduction_roi_metric_params_default_when_config_missing(tmp_path: Path) -> None:
+    params = load_metric_params(tmp_path / "missing.yaml")
+    assert params["baseline_recovery_without_reduction"] == DEFAULT_BASELINE_RECOVERY_WITHOUT_REDUCTION
+
+
+def test_reduction_roi_metric_params_loads_configured_baseline(tmp_path: Path) -> None:
+    config = tmp_path / "metric_params.yaml"
+    config.write_text("reduction_roi:\n  baseline_recovery_without_reduction: 0.79\n", encoding="utf-8")
+    params = load_metric_params(config)
+    assert params["baseline_recovery_without_reduction"] == 0.79
 
 
 @pytest.mark.skipif(not data_is_available(), reason="synthetic warehouse data has not been built")

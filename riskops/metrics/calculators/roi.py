@@ -3,11 +3,28 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
+import yaml
 
 from riskops.metrics.calculators.base import DATA_ROOT, as_date, read_table, safe_rate
+
+ROOT = Path(__file__).resolve().parents[3]
+METRIC_PARAMS_PATH = ROOT / "configs" / "metric_params.yaml"
+DEFAULT_BASELINE_RECOVERY_WITHOUT_REDUCTION = 0.82
+
+
+def load_metric_params(path: Path = METRIC_PARAMS_PATH) -> dict[str, float]:
+    if not path.exists():
+        return {"baseline_recovery_without_reduction": DEFAULT_BASELINE_RECOVERY_WITHOUT_REDUCTION}
+    data: Any = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    roi_params = data.get("reduction_roi", data) if isinstance(data, dict) else {}
+    baseline = roi_params.get("baseline_recovery_without_reduction", DEFAULT_BASELINE_RECOVERY_WITHOUT_REDUCTION)
+    if not isinstance(baseline, int | float):
+        raise ValueError("configs/metric_params.yaml reduction_roi.baseline_recovery_without_reduction must be numeric")
+    return {"baseline_recovery_without_reduction": float(baseline)}
 
 
 def _reduction_daily(root: Path = DATA_ROOT) -> pd.DataFrame:
@@ -42,6 +59,7 @@ def reduction_recovery_rate(root: Path = DATA_ROOT) -> pd.DataFrame:
 
 
 def reduction_roi(root: Path = DATA_ROOT) -> pd.DataFrame:
+    params = load_metric_params()
     reduction = _reduction_daily(root)
     case_status = read_table(root, "dws", "dws_case_status_snapshot_di").copy()
     case_status["stat_date"] = as_date(case_status["stat_date"])
@@ -51,7 +69,8 @@ def reduction_roi(root: Path = DATA_ROOT) -> pd.DataFrame:
     )
     repay = case_status.groupby("stat_date", as_index=False).agg(actual_repay=("repaid_amount", "sum"))
     daily = reduced_cases.merge(repay, on="stat_date", how="left").fillna({"actual_repay": 0})
-    daily["expected_repay_without_reduction"] = daily["actual_repay"] * 0.82
+    baseline = params["baseline_recovery_without_reduction"]
+    daily["expected_repay_without_reduction"] = daily["actual_repay"] * baseline
     daily["reduction_roi"] = np.where(
         daily["approved_reduction_amount"] > 0,
         (daily["actual_repay"] - daily["expected_repay_without_reduction"]) / daily["approved_reduction_amount"],
