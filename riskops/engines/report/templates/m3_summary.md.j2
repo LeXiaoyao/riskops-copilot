@@ -1,0 +1,95 @@
+# M3 异常归因结构化报告
+
+## 1. 异常总览
+
+- 异常数量：{{ summary.anomaly_overview.anomaly_count }}
+- high：{{ summary.anomaly_overview.severity_counts.get("high", 0) }}
+- medium：{{ summary.anomaly_overview.severity_counts.get("medium", 0) }}
+- low：{{ summary.anomaly_overview.severity_counts.get("low", 0) }}
+- 基线窗口：{{ summary.anomaly_overview.baseline_window or "N/A" }}
+- 最近窗口：{{ summary.anomaly_overview.recent_window or "N/A" }}
+
+## 2. 高优先级异常列表
+
+{% if summary.high_priority_anomalies %}
+{% for item in summary.high_priority_anomalies %}
+### {{ loop.index }}. {{ item.metric_name_cn }}（{{ item.metric_code }}）
+- severity：{{ item.severity }}
+- dimension：{{ item.dimension_name }}={{ item.dimension_value }}
+- baseline：{{ item.baseline_value | number }}
+- recent：{{ item.recent_value | number }}
+- change：{{ item.absolute_change | number }} / {{ item.relative_change | pct }}
+- evidence_table：{{ item.evidence_table }}
+- explanation：{{ item.explanation }}
+- recommended_next_step：{{ item.recommended_next_step }}
+
+{% endfor %}
+{% else %}
+- 未发现 high severity 异常。
+
+{% endif %}
+## 3. M1 D7 回收率下降归因摘要
+
+{% set attr = summary.m1_d7_attribution_summary %}
+- target_metric：{{ attr.target_metric_name_cn or "N/A" }}（{{ attr.target_metric_code or "N/A" }}）
+- target_anomaly_id：{{ attr.target_anomaly_id or "N/A" }}
+- attribution_count：{{ attr.attribution_count }}
+{% if attr.primary_driver %}
+- 主因：{{ attr.primary_driver.dimension_name }}={{ attr.primary_driver.dimension_value }}
+- 贡献度：{{ attr.primary_driver.contribution_score | pct }}
+- 业务解释：{{ attr.primary_driver.business_interpretation }}
+{% else %}
+- 主因：N/A
+{% endif %}
+
+## 4. Top 5 drivers
+
+{% for driver in attr.top_drivers %}
+### {{ driver.rank }}. {{ driver.dimension_name }}={{ driver.dimension_value }}
+- contribution_score：{{ driver.contribution_score | pct }}
+- baseline：{{ driver.baseline_value | pct }}
+- recent：{{ driver.recent_value | pct }}
+- confidence：{{ driver.confidence }}
+- business_interpretation：{{ driver.business_interpretation }}
+- recommended_action：{{ driver.recommended_action }}
+
+{% endfor %}
+## 5. 每个 driver 的 evidence
+
+{% for driver in attr.top_drivers %}
+### {{ driver.rank }}. {{ driver.dimension_name }}={{ driver.dimension_value }}
+{% for evidence in driver.segment_evidence %}
+- segment_delta：baseline {{ evidence.baseline_value | pct }}，recent {{ evidence.recent_value | pct }}，delta {{ evidence.delta | pct }}，baseline_loan_count {{ evidence.baseline_loan_count }}，recent_loan_count {{ evidence.recent_loan_count }}，recent_weight {{ evidence.recent_weight | pct }}。
+{% endfor %}
+{% for evidence in driver.driver_linkage %}
+- driver_linkage：{{ evidence.metric_name_cn }}（{{ evidence.metric_code }}），baseline {{ evidence.baseline_value | pct }}，recent {{ evidence.recent_value | pct }}，delta {{ evidence.delta | pct }}。
+{% endfor %}
+
+{% endfor %}
+## 6. process evidence / driver_linkage
+
+{% if summary.process_evidence %}
+{% for item in summary.process_evidence %}
+- {{ item.driver }}：{{ item.metric_name_cn }}（{{ item.metric_code }}），baseline {{ item.baseline_value | pct }}，recent {{ item.recent_value | pct }}，delta {{ item.delta | pct }}。
+{% endfor %}
+{% else %}
+- 未发现 process evidence / driver_linkage。
+{% endif %}
+
+## 7. 业务建议
+
+{% for item in summary.business_recommendations %}
+- {{ item.driver }}：{{ item.recommendation }}
+{% endfor %}
+
+## 8. 数据局限
+
+{% for item in summary.data_limitations %}
+- {{ item.source }}：{{ item.description }}
+{% endfor %}
+
+## 9. 下一步建议
+
+{% for item in summary.next_steps %}
+- {{ item.next_step }}
+{% endfor %}
