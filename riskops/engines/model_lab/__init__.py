@@ -10,6 +10,14 @@ from riskops.engines.model_lab.scenario_schema import (
     summarize_strategy_scenarios,
     validate_strategy_scenarios,
 )
+from riskops.engines.model_lab.strategy_evaluator import (
+    evaluate_strategy_scenarios,
+    load_m3_summary,
+    render_strategy_eval_markdown,
+    run_strategy_evaluation,
+    write_strategy_eval_results,
+    write_strategy_eval_summary,
+)
 
 __all__ = [
     "REQUIRED_COMPLIANCE_BOUNDARIES",
@@ -20,4 +28,10 @@ __all__ = [
     "load_strategy_scenarios",
     "summarize_strategy_scenarios",
     "validate_strategy_scenarios",
+    "evaluate_strategy_scenarios",
+    "load_m3_summary",
+    "render_strategy_eval_markdown",
+    "run_strategy_evaluation",
+    "write_strategy_eval_results",
+    "write_strategy_eval_summary",
 ]

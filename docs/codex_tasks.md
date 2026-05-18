@@ -44,6 +44,8 @@ Codex must identify the current milestone and must not work outside the requeste
 - **下一步建议**：从 M6-A 开始，先固定策略情景 schema 和配置边界，再进入 evaluator 与 ROI 计算。
 - **M6-A 状态**：Strategy Scenario Schema 已完成，包含 `configs/strategy_scenarios.yaml`、schema loader / validator、校验脚本、测试和说明文档。
 - **M6-A 后下一步建议**：进入 M6-B Offline Strategy Evaluator，只读取 M6-A scenario 和 synthetic M3 / ADS 输出做离线评估。
+- **M6-B 状态**：Offline Strategy Evaluator 已完成，包含 evaluator、运行脚本、JSON / Markdown 输出、测试和说明文档。
+- **M6-B 后下一步建议**：进入 M6-C ROI & Cost-Benefit Calculator，在 M6-B delta 基础上增加成本收益测算。
 
 ### 阶段 1：M0 收尾 + GitHub 接入
 

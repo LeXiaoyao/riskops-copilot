@@ -1,0 +1,456 @@
+{
+  "report_version": "m6-b-v1",
+  "generated_at": "2026-05-18T07:03:50+00:00",
+  "demo_disclaimer": "本报告基于 synthetic data / 合成数据和 M3 规则输出生成，仅用于离线 demo estimate，不代表真实业务结论、真实策略引擎或真实财务结果。",
+  "scenario_count": 5,
+  "strategy_type_counts": {
+    "allocation_strategy": 1,
+    "capacity_strategy": 1,
+    "contact_strategy": 1,
+    "segmentation_strategy": 1,
+    "settlement_strategy": 1
+  },
+  "target_metric_counts": {
+    "recovery_rate_d7": 5
+  },
+  "priority_scenarios": [
+    "increase_ai_call_coverage",
+    "increase_manual_capacity",
+    "vendor_reallocation"
+  ],
+  "results": [
+    {
+      "scenario_id": "increase_ai_call_coverage",
+      "scenario_name": "提升 AI 外呼覆盖",
+      "strategy_type": "contact_strategy",
+      "target_metric": "recovery_rate_d7",
+      "target_anomaly_id": "M3A-ai_call_coverage-action_type-AI_OUTBOUND",
+      "baseline_value": 0.152965,
+      "scenario_value": 0.158965,
+      "estimated_delta": 0.006,
+      "estimated_direction": "improve",
+      "confidence": "medium",
+      "impacted_segments": [
+        {
+          "dimension": "action_type",
+          "value": "AI_OUTBOUND"
+        },
+        {
+          "dimension": "channel_code",
+          "value": "ECOM"
+        }
+      ],
+      "assumptions_used": [
+        "AI 外呼覆盖提升只用于离线模拟，不代表真实外呼动作。",
+        "触达补强可能改善早期提醒和低成本触达，但不能单独证明回收提升。"
+      ],
+      "evidence_links": [
+        {
+          "source": "anomaly",
+          "source_id": "M3A-ai_call_coverage-action_type-AI_OUTBOUND",
+          "metric_code": "ai_call_coverage",
+          "driver": "action_type=AI_OUTBOUND",
+          "baseline_value": 0.30085,
+          "recent_value": 0.177833,
+          "delta": -0.123017,
+          "note": "AI 外呼覆盖率从 30.09% 降至 17.78%。"
+        },
+        {
+          "source": "process_evidence",
+          "source_id": "M3B-recovery_rate_d7-01",
+          "metric_code": "ai_call_coverage",
+          "driver": "channel_code=ECOM",
+          "baseline_value": 0.461538,
+          "recent_value": 0.071429,
+          "delta": -0.39011,
+          "note": null
+        },
+        {
+          "source": "process_evidence",
+          "source_id": "M3B-recovery_rate_d7-02",
+          "metric_code": "ai_call_coverage",
+          "driver": "province=山东",
+          "baseline_value": 1.0,
+          "recent_value": 0.0,
+          "delta": -1.0,
+          "note": null
+        },
+        {
+          "source": "process_evidence",
+          "source_id": "M3B-recovery_rate_d7-03",
+          "metric_code": "ai_call_coverage",
+          "driver": "score_band=D",
+          "baseline_value": 0.0,
+          "recent_value": 0.0,
+          "delta": 0.0,
+          "note": null
+        },
+        {
+          "source": "process_evidence",
+          "source_id": "M3B-recovery_rate_d7-04",
+          "metric_code": "ai_call_coverage",
+          "driver": "province=上海",
+          "baseline_value": 0.333333,
+          "recent_value": 0.0,
+          "delta": -0.333333,
+          "note": null
+        },
+        {
+          "source": "process_evidence",
+          "source_id": "M3B-recovery_rate_d7-05",
+          "metric_code": "ai_call_coverage",
+          "driver": "score_band=A",
+          "baseline_value": 0.25,
+          "recent_value": 0.0,
+          "delta": -0.25,
+          "note": null
+        }
+      ],
+      "recommended_action": "优先复核 AI 外呼覆盖下降的渠道和区域切片，离线评估恢复覆盖后的 D7 回收率改善空间。",
+      "business_interpretation": "AI 外呼覆盖下降是 contact weakness 线索，离线模拟只评估触达补强可能带来的方向性改善。",
+      "compliance_boundary": [
+        "synthetic_data_only",
+        "no_real_customer_data",
+        "no_real_collection_action",
+        "no_sms_voice_whatsapp",
+        "no_llm_decisioning"
+      ],
+      "caveats": [
+        "estimated_delta 是 demo estimate，不是真实预测。",
+        "不改变 M1/M2/M3 指标口径。",
+        "这是触达补强假设，不代表真实外呼动作，也不证明覆盖提升一定带来回收提升。"
+      ]
+    },
+    {
+      "scenario_id": "increase_manual_capacity",
+      "scenario_name": "补充人工催收产能",
+      "strategy_type": "capacity_strategy",
+      "target_metric": "recovery_rate_d7",
+      "target_anomaly_id": "M3A-avg_case_per_collector-region-华东",
+      "baseline_value": 0.152965,
+      "scenario_value": 0.156965,
+      "estimated_delta": 0.004,
+      "estimated_direction": "reduce_risk",
+      "confidence": "medium",
+      "impacted_segments": [
+        {
+          "dimension": "region",
+          "value": "华东"
+        },
+        {
+          "dimension": "line_id",
+          "value": "ALL"
+        }
+      ],
+      "assumptions_used": [
+        "人均案量是 capacity pressure signal，不是最终根因。",
+        "产能改善可能提升跟进及时性，但仍需结合客群结构和触达质量验证。"
+      ],
+      "evidence_links": [
+        {
+          "source": "anomaly",
+          "source_id": "M3A-avg_case_per_collector-region-华东",
+          "metric_code": "avg_case_per_collector",
+          "driver": "region=华东",
+          "baseline_value": 13.535364,
+          "recent_value": 19.1022,
+          "delta": 5.566836,
+          "note": "华东线路人均案量从 13.54 升至 19.10，产能压力上升。"
+        }
+      ],
+      "recommended_action": "优先评估华东作业线临时增员或分案转移的影响面，观察产能压力缓解方向。",
+      "business_interpretation": "人均案量上升说明产能压力变大，离线模拟只评估补人工后是否可能缓解 M1 D7 压力。",
+      "compliance_boundary": [
+        "synthetic_data_only",
+        "no_real_customer_data",
+        "no_real_collection_action",
+        "no_sms_voice_whatsapp",
+        "no_llm_decisioning"
+      ],
+      "caveats": [
+        "estimated_delta 是 demo estimate，不是真实预测。",
+        "不改变 M1/M2/M3 指标口径。",
+        "人均案量是 capacity pressure signal，不是最终根因；仍需结合客群结构和触达质量验证。"
+      ]
+    },
+    {
+      "scenario_id": "adjust_reduction_usage",
+      "scenario_name": "调整减免使用策略",
+      "strategy_type": "settlement_strategy",
+      "target_metric": "recovery_rate_d7",
+      "target_anomaly_id": "M3A-reduction_usage_rate-overall-ALL",
+      "baseline_value": 0.152965,
+      "scenario_value": 0.155965,
+      "estimated_delta": 0.003,
+      "estimated_direction": "improve",
+      "confidence": "low",
+      "impacted_segments": [
+        {
+          "dimension": "overall",
+          "value": "ALL"
+        },
+        {
+          "dimension": "dpd_bucket",
+          "value": "M1"
+        }
+      ],
+      "assumptions_used": [
+        "减免策略变化可能提升部分客群回收意愿。",
+        "减免成本和回收增益必须在后续 M6-C 中单独说明。"
+      ],
+      "evidence_links": [
+        {
+          "source": "anomaly",
+          "source_id": "M3A-reduction_usage_rate-overall-ALL",
+          "metric_code": "reduction_usage_rate",
+          "driver": "overall=ALL",
+          "baseline_value": 0.000625,
+          "recent_value": 0.000455,
+          "delta": -0.00017,
+          "note": "减免使用率从 0.06% 降至 0.05%。"
+        },
+        {
+          "source": "process_evidence",
+          "source_id": "M3B-recovery_rate_d7-01",
+          "metric_code": "reduction_usage_rate",
+          "driver": "channel_code=ECOM",
+          "baseline_value": 0.0,
+          "recent_value": 0.0,
+          "delta": 0.0,
+          "note": null
+        },
+        {
+          "source": "process_evidence",
+          "source_id": "M3B-recovery_rate_d7-02",
+          "metric_code": "reduction_usage_rate",
+          "driver": "province=山东",
+          "baseline_value": 0.0,
+          "recent_value": 0.0,
+          "delta": 0.0,
+          "note": null
+        },
+        {
+          "source": "process_evidence",
+          "source_id": "M3B-recovery_rate_d7-03",
+          "metric_code": "reduction_usage_rate",
+          "driver": "score_band=D",
+          "baseline_value": 0.0,
+          "recent_value": 0.0,
+          "delta": 0.0,
+          "note": null
+        },
+        {
+          "source": "process_evidence",
+          "source_id": "M3B-recovery_rate_d7-04",
+          "metric_code": "reduction_usage_rate",
+          "driver": "province=上海",
+          "baseline_value": 0.0,
+          "recent_value": 0.0,
+          "delta": 0.0,
+          "note": null
+        },
+        {
+          "source": "process_evidence",
+          "source_id": "M3B-recovery_rate_d7-05",
+          "metric_code": "reduction_usage_rate",
+          "driver": "score_band=A",
+          "baseline_value": 0.0,
+          "recent_value": 0.0,
+          "delta": 0.0,
+          "note": null
+        }
+      ],
+      "recommended_action": "复核减免授权、审批门槛和适用客群，离线观察适度提高减免使用后的回收改善方向。",
+      "business_interpretation": "减免使用率下降提示 settlement tool 可能使用不足，离线模拟只观察回收改善方向。",
+      "compliance_boundary": [
+        "synthetic_data_only",
+        "no_real_customer_data",
+        "no_real_collection_action",
+        "no_sms_voice_whatsapp",
+        "no_llm_decisioning"
+      ],
+      "caveats": [
+        "estimated_delta 是 demo estimate，不是真实预测。",
+        "不改变 M1/M2/M3 指标口径。",
+        "该估算不代表真实减免审批，也不计算 ROI；成本收益留给 M6-C 单独处理。"
+      ]
+    },
+    {
+      "scenario_id": "vendor_reallocation",
+      "scenario_name": "供应商与作业线资源再分配",
+      "strategy_type": "allocation_strategy",
+      "target_metric": "recovery_rate_d7",
+      "target_anomaly_id": "M3A-m1_recovery_rate-overall-ALL",
+      "baseline_value": 0.152965,
+      "scenario_value": 0.157965,
+      "estimated_delta": 0.005,
+      "estimated_direction": "reduce_risk",
+      "confidence": "medium",
+      "impacted_segments": [
+        {
+          "dimension": "region",
+          "value": "华东"
+        },
+        {
+          "dimension": "vendor_id",
+          "value": "ALL"
+        },
+        {
+          "dimension": "line_id",
+          "value": "ALL"
+        }
+      ],
+      "assumptions_used": [
+        "vendor / line / region 组合只是资源配置线索，不直接等同责任归因。",
+        "line_id 是催收作业线 / 催收单元 / 分案作业队列，不是电话线路。"
+      ],
+      "evidence_links": [
+        {
+          "source": "anomaly",
+          "source_id": "M3A-avg_case_per_collector-region-华东",
+          "metric_code": "avg_case_per_collector",
+          "driver": "region=华东",
+          "baseline_value": 13.535364,
+          "recent_value": 19.1022,
+          "delta": 5.566836,
+          "note": "华东线路人均案量从 13.54 升至 19.10，产能压力上升。"
+        },
+        {
+          "source": "anomaly",
+          "source_id": "M3A-m1_recovery_rate-overall-ALL",
+          "metric_code": "m1_recovery_rate",
+          "driver": "overall=ALL",
+          "baseline_value": 0.194297,
+          "recent_value": 0.152965,
+          "delta": -0.041331,
+          "note": "最近窗口均值 15.30% 低于基线 19.43%，变化 -4.13%。"
+        }
+      ],
+      "recommended_action": "围绕 ECOM、山东、上海、华东和作业线组合做资源再分配模拟，避免直接写成供应商责任结论。",
+      "business_interpretation": "资源再分配围绕 channel / vendor / line / region 信号展开，用于评估资源组合调整的影响面。",
+      "compliance_boundary": [
+        "synthetic_data_only",
+        "no_real_customer_data",
+        "no_real_collection_action",
+        "no_sms_voice_whatsapp",
+        "no_llm_decisioning"
+      ],
+      "caveats": [
+        "estimated_delta 是 demo estimate，不是真实预测。",
+        "不改变 M1/M2/M3 指标口径。",
+        "line_id 是催收作业线 / 催收单元 / 分案作业队列，不是电话线路；资源再分配只是离线估算。"
+      ]
+    },
+    {
+      "scenario_id": "score_band_D_priority",
+      "scenario_name": "D 分客群优先跟进",
+      "strategy_type": "segmentation_strategy",
+      "target_metric": "recovery_rate_d7",
+      "target_anomaly_id": "M3B-recovery_rate_d7-03",
+      "baseline_value": 0.059307,
+      "scenario_value": 0.061307,
+      "estimated_delta": 0.002,
+      "estimated_direction": "monitor",
+      "confidence": "medium",
+      "impacted_segments": [
+        {
+          "dimension": "score_band",
+          "value": "D"
+        },
+        {
+          "dimension": "dpd_bucket",
+          "value": "M1"
+        }
+      ],
+      "assumptions_used": [
+        "score_band 是分层线索，不是最终根因。",
+        "提高优先级只能代表资源模拟，不代表客户级自动决策。"
+      ],
+      "evidence_links": [
+        {
+          "source": "attribution",
+          "source_id": "M3B-recovery_rate_d7-03",
+          "metric_code": null,
+          "driver": "score_band=D",
+          "baseline_value": 0.17829,
+          "recent_value": 0.059307,
+          "delta": null,
+          "note": "D 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。"
+        },
+        {
+          "source": "process_evidence",
+          "source_id": "M3B-recovery_rate_d7-03",
+          "metric_code": "connect_rate",
+          "driver": "score_band=D",
+          "baseline_value": 0.5,
+          "recent_value": 0.0,
+          "delta": -0.5,
+          "note": null
+        },
+        {
+          "source": "process_evidence",
+          "source_id": "M3B-recovery_rate_d7-03",
+          "metric_code": "ai_call_coverage",
+          "driver": "score_band=D",
+          "baseline_value": 0.0,
+          "recent_value": 0.0,
+          "delta": 0.0,
+          "note": null
+        },
+        {
+          "source": "process_evidence",
+          "source_id": "M3B-recovery_rate_d7-03",
+          "metric_code": "manual_call_coverage",
+          "driver": "score_band=D",
+          "baseline_value": 1.0,
+          "recent_value": 1.0,
+          "delta": 0.0,
+          "note": null
+        },
+        {
+          "source": "process_evidence",
+          "source_id": "M3B-recovery_rate_d7-03",
+          "metric_code": "ptp_keep_rate",
+          "driver": "score_band=D",
+          "baseline_value": 0.0,
+          "recent_value": 0.0,
+          "delta": 0.0,
+          "note": null
+        },
+        {
+          "source": "process_evidence",
+          "source_id": "M3B-recovery_rate_d7-03",
+          "metric_code": "reduction_usage_rate",
+          "driver": "score_band=D",
+          "baseline_value": 0.0,
+          "recent_value": 0.0,
+          "delta": 0.0,
+          "note": null
+        }
+      ],
+      "recommended_action": "将 score_band=D 作为优先跟进分层线索，离线观察触达、PTP 和减免跟进策略的影响面。",
+      "business_interpretation": "score_band=D 是高风险分层线索，离线模拟只评估提高跟进优先级的方向性价值。",
+      "compliance_boundary": [
+        "synthetic_data_only",
+        "no_real_customer_data",
+        "no_real_collection_action",
+        "no_sms_voice_whatsapp",
+        "no_llm_decisioning"
+      ],
+      "caveats": [
+        "estimated_delta 是 demo estimate，不是真实预测。",
+        "不改变 M1/M2/M3 指标口径。",
+        "score_band 是分层线索，不是最终根因；不生成真实客户名单，不训练或调用评分模型。"
+      ]
+    }
+  ],
+  "business_boundary": [
+    "不是真实策略引擎。",
+    "不自动决策。",
+    "不产生真实催收动作。",
+    "不发送 SMS / voice / WhatsApp。",
+    "不调用 LLM 做策略决策。",
+    "不代表真实财务结果。",
+    "不改变 M1/M2/M3 指标口径。"
+  ]
+}
