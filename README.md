@@ -73,6 +73,7 @@ python scripts/riskops_cli.py render-report
 python scripts/generate_synthetic_data.py --help
 python scripts/build_warehouse.py --help
 python scripts/render_docs.py --help
+python scripts/validate_strategy_scenarios.py
 python scripts/validate_data_quality.py --help
 python scripts/validate_metric_quality.py --help
 python scripts/render_dashboard.py

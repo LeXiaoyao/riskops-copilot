@@ -1,0 +1,159 @@
+schema_version: m6-a-v1
+description: M6-A demo strategy scenarios for offline Strategy Evaluation Lab inputs.
+scenarios:
+  - scenario_id: increase_ai_call_coverage
+    name: 提升 AI 外呼覆盖
+    description: 提升 AI 外呼覆盖，验证触达补强是否可能改善 M1 D7 回收率。
+    strategy_type: contact_strategy
+    target_metric: recovery_rate_d7
+    target_anomaly_id: M3A-ai_call_coverage-action_type-AI_OUTBOUND
+    target_segments:
+      - dimension: action_type
+        value: AI_OUTBOUND
+      - dimension: channel_code
+        value: ECOM
+    levers:
+      - lever_name: ai_call_coverage_rate
+        baseline_signal: AI 外呼覆盖率最近窗口低于基线。
+        proposed_change: 将 AI 外呼覆盖恢复到接近基线水平。
+    assumptions:
+      - AI 外呼覆盖提升只用于离线模拟，不代表真实外呼动作。
+      - 触达补强可能改善早期提醒和低成本触达，但不能单独证明回收提升。
+    constraints:
+      - 不触发真实外呼。
+      - 不读取客户明细或 P4 字段。
+      - 后续 M6-B 只能输出 demo estimate。
+    expected_direction: improve
+    evaluation_notes: 后续 evaluator 可比较 baseline 覆盖率、scenario 覆盖率和 D7 回收率方向性变化。
+    compliance_boundary:
+      - synthetic_data_only
+      - no_real_customer_data
+      - no_real_collection_action
+      - no_sms_voice_whatsapp
+      - no_llm_decisioning
+
+  - scenario_id: increase_manual_capacity
+    name: 补充人工催收产能
+    description: 补充人工催收产能，缓解人均案量过高带来的产能压力。
+    strategy_type: capacity_strategy
+    target_metric: recovery_rate_d7
+    target_anomaly_id: M3A-avg_case_per_collector-region-华东
+    target_segments:
+      - dimension: region
+        value: 华东
+      - dimension: line_id
+        value: ALL
+    levers:
+      - lever_name: active_collector_count
+        baseline_signal: 华东线路人均案量显著高于基线。
+        proposed_change: 模拟增加催员或临时支援产能。
+    assumptions:
+      - 人均案量是 capacity pressure signal，不是最终根因。
+      - 产能改善可能提升跟进及时性，但仍需结合客群结构和触达质量验证。
+    constraints:
+      - 不代表真实排班或真实分案调整。
+      - 不产生催员绩效结论。
+      - 后续 M6-B 只能做离线影响面估算。
+    expected_direction: improve
+    evaluation_notes: 后续 evaluator 可观察人均案量下降方向和目标分组 D7 回收率的模拟变化。
+    compliance_boundary:
+      - synthetic_data_only
+      - no_real_customer_data
+      - no_real_collection_action
+      - no_sms_voice_whatsapp
+      - no_llm_decisioning
+
+  - scenario_id: adjust_reduction_usage
+    name: 调整减免使用策略
+    description: 调整减免使用策略，评估回收增益与减免费用之间的平衡。
+    strategy_type: settlement_strategy
+    target_metric: recovery_rate_d7
+    target_anomaly_id: M3A-reduction_usage_rate-overall-ALL
+    target_segments:
+      - dimension: overall
+        value: ALL
+      - dimension: dpd_bucket
+        value: M1
+    levers:
+      - lever_name: reduction_usage_rate
+        baseline_signal: 减免使用率最近窗口低于基线。
+        proposed_change: 模拟对符合条件客群适度提高减免使用率。
+    assumptions:
+      - 减免策略变化可能提升部分客群回收意愿。
+      - 减免成本和回收增益必须在后续 M6-C 中单独说明。
+    constraints:
+      - 不代表真实减免审批。
+      - 不生成客户级减免名单。
+      - 不输出真实财务结论。
+    expected_direction: improve
+    evaluation_notes: 后续 evaluator 可读取减免使用率和 D7 回收率，M6-C 再计算 demo ROI。
+    compliance_boundary:
+      - synthetic_data_only
+      - no_real_customer_data
+      - no_real_collection_action
+      - no_sms_voice_whatsapp
+      - no_llm_decisioning
+
+  - scenario_id: vendor_reallocation
+    name: 供应商与作业线资源再分配
+    description: 对 vendor / line / region 组合做资源再分配，观察资源结构变化对回收表现的可能影响。
+    strategy_type: allocation_strategy
+    target_metric: recovery_rate_d7
+    target_anomaly_id: M3A-m1_recovery_rate-overall-ALL
+    target_segments:
+      - dimension: region
+        value: 华东
+      - dimension: vendor_id
+        value: ALL
+      - dimension: line_id
+        value: ALL
+    levers:
+      - lever_name: allocation_share
+        baseline_signal: 部分区域和作业线存在回收率下降与产能压力并存。
+        proposed_change: 模拟将一部分案件从压力较高组合转移到承载更稳的组合。
+    assumptions:
+      - vendor / line / region 组合只是资源配置线索，不直接等同责任归因。
+      - line_id 是催收作业线 / 催收单元 / 分案作业队列，不是电话线路。
+    constraints:
+      - 不代表真实供应商考核或真实分案动作。
+      - 不改变既有 attribution 结论。
+      - 后续 M6-B 只能做组合层面的离线估算。
+    expected_direction: reduce_risk
+    evaluation_notes: 后续 evaluator 可比较资源压力组合和目标指标方向，不输出供应商责任结论。
+    compliance_boundary:
+      - synthetic_data_only
+      - no_real_customer_data
+      - no_real_collection_action
+      - no_sms_voice_whatsapp
+      - no_llm_decisioning
+
+  - scenario_id: score_band_D_priority
+    name: D 分客群优先跟进
+    description: 对 score_band=D 的高风险客群提高跟进优先级。
+    strategy_type: segmentation_strategy
+    target_metric: recovery_rate_d7
+    target_anomaly_id: M3B-recovery_rate_d7-03
+    target_segments:
+      - dimension: score_band
+        value: D
+      - dimension: dpd_bucket
+        value: M1
+    levers:
+      - lever_name: followup_priority
+        baseline_signal: score_band=D 分组对 D7 回收率下降存在贡献信号。
+        proposed_change: 模拟提高 D 分客群的跟进优先级和触达节奏。
+    assumptions:
+      - score_band 是分层线索，不是最终根因。
+      - 提高优先级只能代表资源模拟，不代表客户级自动决策。
+    constraints:
+      - 不生成真实客户名单。
+      - 不触发真实催收动作。
+      - 不训练或调用评分模型。
+    expected_direction: monitor
+    evaluation_notes: 后续 evaluator 可观察 D 分客群影响面和目标指标变化方向，避免把分层线索写成最终根因。
+    compliance_boundary:
+      - synthetic_data_only
+      - no_real_customer_data
+      - no_real_collection_action
+      - no_sms_voice_whatsapp
+      - no_llm_decisioning
