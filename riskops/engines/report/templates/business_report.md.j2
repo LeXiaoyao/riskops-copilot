@@ -1,0 +1,100 @@
+# RiskOps Copilot M4-C 业务经营分析报告
+
+> Demo Disclaimer: {{ report.demo_disclaimer }}
+
+## 1. 执行摘要
+
+- **本期异常发现**：共发现 {{ report.overview.anomaly_count }} 个异常，其中 high {{ report.overview.severity_counts.get("high", 0) }} 个、medium {{ report.overview.severity_counts.get("medium", 0) }} 个、low {{ report.overview.severity_counts.get("low", 0) }} 个。
+- **核心问题**：M1 D7 回收率下降。{{ report.target.metric_name_cn or "M1 回收率" }} 从 {{ report.target.baseline_value | metric_value }} 降至 {{ report.target.recent_value | metric_value }}，relative change 为 {{ report.target.relative_change | pct }}。
+- **初步归因方向**：Top drivers 指向 channel_code=ECOM、province=山东 / 上海、score_band=D / A，说明问题更像渠道、区域、客群结构与作业资源共同变化，而不是单个字段异常。
+- **建议优先动作**：优先下钻 ECOM x vendor x line x score_band，并同步复核 AI 外呼覆盖、PTP 履约、减免使用率、投诉率和人均案量。
+- **经营判断边界**：当前结论来自 synthetic data / 合成数据和 M3 规则输出，用于展示分析框架，不代表真实业务结论。
+
+## 2. 异常总览
+
+### 2.1 按 severity 汇总
+
+{% for item in report.overview.severity_summary %}
+- **{{ item.severity }}**：{{ item.count }} 个
+{% endfor %}
+- **基线窗口**：{{ report.overview.baseline_window or "N/A" }}
+- **最近窗口**：{{ report.overview.recent_window or "N/A" }}
+
+### 2.2 高优先级异常列表
+
+{% for item in report.high_priority_anomalies %}
+- **{{ item.metric_name_cn }}（{{ item.metric_code }}）**
+  - severity：{{ item.severity }}
+  - dimension：{{ item.dimension_name }}={{ item.dimension_value }}
+  - baseline / recent：{{ item.baseline_value | metric_value }} / {{ item.recent_value | metric_value }}
+  - relative change：{{ item.relative_change | pct }}
+  - 业务解释：{{ item.business_explanation }}
+  - 建议动作：{{ item.recommended_next_step }}
+{% endfor %}
+
+## 3. M1 D7 回收率下降专题
+
+- **指标定位**：{{ report.target_metric_name_cn }}（{{ report.target_metric_code }}）用于观察 M1 阶段早期回收表现，是贷后经营里判断触达、承诺、资源投入是否有效的核心结果指标。
+- **baseline**：{{ report.target.baseline_value | metric_value }}
+- **recent**：{{ report.target.recent_value | metric_value }}
+- **relative change**：{{ report.target.relative_change | pct }}
+- **为什么这是核心问题**：M1 D7 回收率下降会提前反映新入案或早期逾期客群的回款压力，一旦持续恶化，后续 M1、M2+ 桶位的催收难度和资源成本都会上升。
+- **可能影响环节**：渠道客群质量、区域供应商执行、line_id 作业队列承载、AI 外呼覆盖、人工跟进节奏、PTP 履约管理、减免策略使用和合规投诉风险。
+- **当前边界**：本专题不重新定义指标口径，只解释 M3 已输出的 D7 回收率异常与 attribution 结果。
+
+## 4. Top drivers 解释
+
+{% for driver in report.top_drivers %}
+### {{ driver.rank }}. {{ driver.dimension_name }}={{ driver.dimension_value }}
+
+- **baseline / recent**：{{ driver.baseline_value | metric_value }} / {{ driver.recent_value | metric_value }}
+- **contribution_score**：{{ driver.contribution_score | pct }}
+- **confidence**：{{ driver.confidence or "N/A" }}
+- **业务含义**：{{ driver.meaning }}
+- **可解释边界**：{{ driver.boundary }}
+- **下一步下钻建议**：{{ driver.next_step }}
+- **M3 原始解释**：{{ driver.business_interpretation }}
+
+{% endfor %}
+## 5. 产能压力分析
+
+- **line_id 口径说明**：line_id 在本项目中表示催收作业线 / 催收单元 / 分案作业队列，不是电话线路，也不是单纯地理线路。
+{% if report.capacity_signals %}
+{% for item in report.capacity_signals %}
+- **产能压力信号**：{{ item.metric_name_cn }}（{{ item.metric_code }}）从 {{ item.baseline_value | metric_value }} 升至 {{ item.recent_value | metric_value }}，relative change 为 {{ item.relative_change | pct }}。
+- **业务解释**：{{ item.business_explanation }}
+- **建议动作**：{{ item.recommended_next_step }}
+{% endfor %}
+{% else %}
+- **产能压力信号**：当前报告未发现 avg_case_per_collector 高优先级异常。
+{% endif %}
+- **分析边界**：人均案量 / 催员负荷属于 capacity pressure signal，用于提示资源承载压力，不是最终根因。最终判断仍需结合 vendor、line、score_band、触达和履约链路共同验证。
+
+## 6. 过程证据链
+
+- **证据链口径**：以下指标属于 process evidence，用于解释异常发生前后的过程变化，不单独构成根因。
+{% for item in report.process_evidence %}
+- **{{ item.label }}（{{ item.metric_code }}）**
+  - driver：{{ item.driver }}
+  - baseline / recent：{{ item.baseline_value | metric_value }} / {{ item.recent_value | metric_value }}
+  - delta：{{ item.delta | signed_metric_value }}
+  - 解释：{{ item.meaning }}
+{% endfor %}
+
+## 7. 管理动作建议
+
+{% for item in report.management_actions %}
+- {{ item }}
+{% endfor %}
+
+## 8. 数据局限与合规说明
+
+{% for item in report.data_limitations %}
+- {{ item }}
+{% endfor %}
+
+## 9. 后续产品路线
+
+{% for item in report.roadmap %}
+- {{ item }}
+{% endfor %}
