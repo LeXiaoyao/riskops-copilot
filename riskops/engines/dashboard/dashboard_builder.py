@@ -44,6 +44,51 @@ PROCESS_METRIC_GROUPS = [
 
 CAPACITY_METRIC_CODES = {"avg_case_per_collector"}
 
+EVIDENCE_CHAINS = [
+    {
+        "chain_code": "contact",
+        "chain_label": "触达证据",
+        "group_codes": ["ai_call"],
+        "neutral_phrase": "AI / 人工触达比例",
+        "polarity": "negative_when_drop",
+    },
+    {
+        "chain_code": "fulfill",
+        "chain_label": "履约证据",
+        "group_codes": ["ptp_keep"],
+        "neutral_phrase": "PTP 履约",
+        "polarity": "negative_when_drop",
+    },
+    {
+        "chain_code": "tool",
+        "chain_label": "策略工具证据",
+        "group_codes": ["reduction"],
+        "neutral_phrase": "减免使用",
+        "polarity": "negative_when_drop",
+    },
+    {
+        "chain_code": "compliance",
+        "chain_label": "合规证据",
+        "group_codes": ["complaint"],
+        "neutral_phrase": "投诉率",
+        "polarity": "negative_when_rise",
+    },
+    {
+        "chain_code": "capacity",
+        "chain_label": "产能压力证据",
+        "group_codes": [],
+        "neutral_phrase": "人均案量 / 催员负荷",
+        "polarity": "negative_when_rise",
+    },
+]
+
+FIELD_GLOSSARY = [
+    {"en": "baseline", "cn": "历史基准", "hint": "基线窗口内的平均水平"},
+    {"en": "recent", "cn": "最近窗口", "hint": "最近窗口内的实际表现"},
+    {"en": "relative change", "cn": "相对变化", "hint": "最近窗口相对历史基准的变化幅度"},
+    {"en": "severity", "cn": "严重度", "hint": "high / medium / low 级，由 M3-A 规则配置决定"},
+]
+
 NEXT_PHASE_ROADMAP = [
     {
         "phase": "M4 后续增强",
@@ -137,6 +182,32 @@ def build_dashboard_context(
         {"label": "low 级", "value": _safe_int(severity_counts.get("low")), "tone": "low"},
     ]
 
+    process_groups = _group_process_evidence(process_evidence)
+    capacity_signals = _capacity_signals(high_priority)
+
+    driver_displays = [_driver_display(item) for item in top_drivers]
+    contribution_max = _max_contribution(driver_displays)
+    for driver in driver_displays:
+        driver["progress_pct"] = _progress_pct(driver.get("contribution_score"), contribution_max)
+        driver["role_explanation"] = _role_explanation(
+            driver.get("dimension_name"), driver.get("dimension_value")
+        )
+
+    anomaly_displays = [_anomaly_display(item) for item in high_priority]
+
+    evidence_chains = _build_evidence_chains(process_groups, capacity_signals)
+
+    executive_summary = _executive_summary(
+        anomaly_count=_safe_int(overview.get("anomaly_count")),
+        severity_counts=severity_counts,
+        target_anomaly=target_anomaly,
+        target_metric_name=target_metric_name,
+        target_metric_code=target_metric_code,
+        process_groups=process_groups,
+        capacity_signals=capacity_signals,
+        top_drivers=driver_displays,
+    )
+
     generated_at = generated_at or datetime.now()
 
     return {
@@ -163,10 +234,14 @@ def build_dashboard_context(
             "anomaly_id": attribution_summary.get("target_anomaly_id"),
             "anomaly": _anomaly_display(target_anomaly) if target_anomaly else None,
         },
-        "high_priority_anomalies": [_anomaly_display(item) for item in high_priority],
-        "top_drivers": [_driver_display(item) for item in top_drivers],
-        "process_evidence_groups": _group_process_evidence(process_evidence),
-        "capacity_signals": _capacity_signals(high_priority),
+        "executive_summary": executive_summary,
+        "high_priority_anomalies": anomaly_displays,
+        "high_priority_glossary": FIELD_GLOSSARY,
+        "top_drivers": driver_displays,
+        "contribution_max": contribution_max,
+        "process_evidence_groups": process_groups,
+        "evidence_chains": evidence_chains,
+        "capacity_signals": capacity_signals,
         "data_limitations": data_limitations,
         "next_steps": next_steps,
         "roadmap": NEXT_PHASE_ROADMAP,
@@ -330,3 +405,214 @@ def _format_signed_value(value: Any) -> str:
     if abs(value) <= 1:
         return f"{value:+.2%}"
     return f"{value:+,.2f}"
+
+
+def _max_contribution(drivers: list[dict[str, Any]]) -> float:
+    values = [
+        d.get("contribution_score")
+        for d in drivers
+        if isinstance(d.get("contribution_score"), int | float)
+    ]
+    return max(values) if values else 0.0
+
+
+def _progress_pct(score: Any, max_score: float) -> float:
+    if not isinstance(score, int | float):
+        return 0.0
+    if max_score <= 0:
+        return 0.0
+    return max(0.0, min(100.0, (score / max_score) * 100.0))
+
+
+def _role_explanation(dimension_name: Any, dimension_value: Any) -> str:
+    if dimension_name == "channel_code":
+        return "电商 / 渠道定位信号，建议下钻产品、供应商、线路。"
+    if dimension_name == "province":
+        return "地域分群信号，不应直接作为最终策略动作，需结合产能与产品结构。"
+    if dimension_name == "score_band":
+        if isinstance(dimension_value, str) and dimension_value.upper() in {"A", "B"}:
+            return "结构变化信号，检查高质量客群占比或样本结构是否漂移。"
+        return "风险分层信号，关注该客群的触达、减免和资源投入。"
+    if dimension_name == "risk_level":
+        return "风险层信号，结合余额段与入案策略综合判断。"
+    if dimension_name == "balance_segment":
+        return "余额结构信号，建议联动 risk_level 复核放贷与回收能力。"
+    if dimension_name == "vendor_id":
+        return "供应商信号，关注线路容量、外呼接通率与合规质检。"
+    if dimension_name == "line_id":
+        return "线路信号，建议联动产能与外呼策略下钻。"
+    return "维度切片信号，需进一步下钻 vendor / line / 产品组合确认。"
+
+
+def _executive_summary(
+    *,
+    anomaly_count: int,
+    severity_counts: dict[str, Any],
+    target_anomaly: dict[str, Any] | None,
+    target_metric_name: str,
+    target_metric_code: str,
+    process_groups: list[dict[str, Any]],
+    capacity_signals: list[dict[str, Any]],
+    top_drivers: list[dict[str, Any]],
+) -> list[str]:
+    sentences: list[str] = []
+    high = _safe_int(severity_counts.get("high"))
+    medium = _safe_int(severity_counts.get("medium"))
+    low = _safe_int(severity_counts.get("low"))
+    sentences.append(
+        f"本期共识别 {anomaly_count} 个异常，其中 {high} 个 high、{medium} 个 medium、{low} 个 low。"
+    )
+
+    if target_anomaly:
+        rc = target_anomaly.get("relative_change")
+        if isinstance(rc, int | float) and rc != 0:
+            direction = "下降" if rc < 0 else "上升"
+            sentences.append(
+                f"核心问题是 {target_metric_name}（{target_metric_code}）{direction}，"
+                f"历史基准 {_format_metric_value(target_anomaly.get('baseline_value'))} → "
+                f"最近窗口 {_format_metric_value(target_anomaly.get('recent_value'))}，"
+                f"相对变化 {_format_signed_pct(rc)}。"
+            )
+        else:
+            sentences.append(
+                f"核心问题是 {target_metric_name}（{target_metric_code}）出现异常。"
+            )
+
+    accompaniments: list[str] = []
+    for group in process_groups:
+        deltas = [
+            entry.get("delta")
+            for entry in group.get("entries", [])
+            if isinstance(entry.get("delta"), int | float)
+        ]
+        if not deltas:
+            continue
+        avg = sum(deltas) / len(deltas)
+        if abs(avg) < 1e-9:
+            continue
+        if group["group_code"] == "complaint":
+            verb = "上升" if avg > 0 else "下降"
+        else:
+            verb = "下降" if avg < 0 else "上升"
+        accompaniments.append(f"{group['group_label']}{verb}")
+    for cs in capacity_signals:
+        rc = cs.get("relative_change")
+        if isinstance(rc, int | float) and rc > 0:
+            accompaniments.append("产能压力上升")
+            break
+    if accompaniments:
+        sentences.append("伴随 " + "、".join(accompaniments) + "。")
+
+    if top_drivers:
+        pairs = [
+            f"{d.get('dimension_name')}={d.get('dimension_value')}"
+            for d in top_drivers[:3]
+            if d.get("dimension_name") and d.get("dimension_value") is not None
+        ]
+        if pairs:
+            sentences.append("初步归因指向 " + "、".join(pairs) + "。")
+        primary = top_drivers[0]
+        sentences.append(
+            f"建议优先下钻 {primary.get('dimension_name')}={primary.get('dimension_value')}"
+            " × vendor / line / score_band，并结合触达和合规证据复核。"
+        )
+
+    return sentences
+
+
+def _build_evidence_chains(
+    process_groups: list[dict[str, Any]],
+    capacity_signals: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    by_code = {g.get("group_code"): g for g in process_groups}
+    chains: list[dict[str, Any]] = []
+    for spec in EVIDENCE_CHAINS:
+        if spec["chain_code"] == "capacity":
+            chains.append(_capacity_chain(spec, capacity_signals))
+            continue
+        entries: list[dict[str, Any]] = []
+        for code in spec["group_codes"]:
+            entries.extend(by_code.get(code, {}).get("entries", []))
+        chains.append(_process_chain(spec, entries))
+    return chains
+
+
+def _process_chain(spec: dict[str, Any], entries: list[dict[str, Any]]) -> dict[str, Any]:
+    deltas = [e.get("delta") for e in entries if isinstance(e.get("delta"), int | float)]
+    if not entries or not deltas or all(abs(d) < 1e-9 for d in deltas):
+        return {
+            "chain_code": spec["chain_code"],
+            "chain_label": spec["chain_label"],
+            "tone": "neutral",
+            "tone_label": "无显著变化",
+            "headline": f"本期 {spec['neutral_phrase']} 在 Top drivers 切片中未观察到显著变化。",
+            "metric_focus": None,
+            "highlight": None,
+            "details": entries,
+        }
+    avg_delta = sum(deltas) / len(deltas)
+    if spec["polarity"] == "negative_when_rise":
+        tone = "negative" if avg_delta > 0 else "positive"
+    else:
+        tone = "negative" if avg_delta < 0 else "positive"
+    tone_label = "异常恶化" if tone == "negative" else "正向改善"
+    highlight = max(
+        entries,
+        key=lambda e: abs(e.get("delta")) if isinstance(e.get("delta"), int | float) else -1,
+    )
+    direction = "下降" if (highlight.get("delta") or 0) < 0 else "上升"
+    headline = (
+        f"{highlight.get('driver')} 的 "
+        f"{highlight.get('metric_name_cn') or highlight.get('metric_code')} {direction}："
+        f"历史基准 {_format_metric_value(highlight.get('baseline_value'))} → "
+        f"最近窗口 {_format_metric_value(highlight.get('recent_value'))}"
+        f"（变化 {_format_signed_value(highlight.get('delta'))}）。"
+    )
+    return {
+        "chain_code": spec["chain_code"],
+        "chain_label": spec["chain_label"],
+        "tone": tone,
+        "tone_label": tone_label,
+        "headline": headline,
+        "metric_focus": highlight.get("metric_name_cn") or highlight.get("metric_code"),
+        "highlight": highlight,
+        "details": entries,
+    }
+
+
+def _capacity_chain(spec: dict[str, Any], signals: list[dict[str, Any]]) -> dict[str, Any]:
+    if not signals:
+        return {
+            "chain_code": spec["chain_code"],
+            "chain_label": spec["chain_label"],
+            "tone": "neutral",
+            "tone_label": "无信号",
+            "headline": "本期未捕获产能维度异常。",
+            "metric_focus": None,
+            "highlight": None,
+            "details": [],
+        }
+    first = signals[0]
+    rc = first.get("relative_change")
+    if isinstance(rc, int | float):
+        tone = "negative" if rc > 0 else "positive"
+    else:
+        tone = "neutral"
+    tone_label = "产能压力上升" if tone == "negative" else "产能压力缓解"
+    headline = (
+        f"{first.get('metric_name_cn') or first.get('metric_code')}（"
+        f"{first.get('dimension_name')}={first.get('dimension_value')}）"
+        f"历史基准 {_format_metric_value(first.get('baseline_value'))} → "
+        f"最近窗口 {_format_metric_value(first.get('recent_value'))}"
+        f"（{_format_signed_pct(rc) if isinstance(rc, int | float) else 'N/A'}）。"
+    )
+    return {
+        "chain_code": spec["chain_code"],
+        "chain_label": spec["chain_label"],
+        "tone": tone,
+        "tone_label": tone_label,
+        "headline": headline,
+        "metric_focus": first.get("metric_name_cn") or first.get("metric_code"),
+        "highlight": first,
+        "details": signals,
+    }

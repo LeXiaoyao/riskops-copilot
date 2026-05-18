@@ -303,6 +303,195 @@
     font-size: 13px;
     font-style: italic;
   }
+  .exec-summary {
+    background: linear-gradient(180deg, #f3f7fc 0%, #ffffff 100%);
+    border: 1px solid #c4d6ed;
+    border-left: 4px solid var(--accent);
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin-bottom: 20px;
+  }
+  .exec-summary h2 {
+    margin: 0 0 4px;
+    font-size: 16px;
+    color: var(--accent);
+    letter-spacing: 0.02em;
+  }
+  .exec-summary .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 11px;
+    color: var(--accent);
+    opacity: 0.8;
+  }
+  .exec-summary ol {
+    margin: 10px 0 0;
+    padding-left: 22px;
+  }
+  .exec-summary li {
+    margin-bottom: 6px;
+    font-size: 14px;
+    color: var(--ink);
+  }
+  .exec-summary li::marker {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .glossary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+    background: #fafbfc;
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    padding: 10px 12px;
+  }
+  .glossary .item {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .glossary .item strong { color: var(--ink); }
+  .glossary .divider {
+    color: var(--line);
+    user-select: none;
+  }
+  .soft-table th {
+    background: #fbfcfd;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .soft-table tr:hover td { background: #f7faff; }
+  .soft-table .severity-pill {
+    background: #f3f5f7;
+    color: var(--muted);
+    border: 1px solid var(--line);
+  }
+  .soft-table .severity-pill.high {
+    background: #fff2ef;
+    color: #8b2c20;
+    border-color: #f3c2bd;
+  }
+  .soft-table .severity-pill.medium {
+    background: #fff8e0;
+    color: #7a4a00;
+    border-color: #f0d79a;
+  }
+  .contribution-bar {
+    height: 8px;
+    width: 100%;
+    background: #eef2f7;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+  .contribution-bar > .fill {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, #1f4f8b 0%, #4a8fcf 100%);
+    border-radius: 999px;
+  }
+  .driver-card .contribution-wrap {
+    flex: 1 1 220px;
+    min-width: 200px;
+  }
+  .driver-card .contribution-wrap .label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .driver-card .role-explanation {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--muted);
+    background: #f6f8fb;
+    border-left: 3px solid var(--accent-soft);
+    padding: 8px 10px;
+    border-radius: 4px;
+  }
+  .evidence-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .evidence-card {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 16px;
+    background: #fafbfc;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .evidence-card.tone-negative {
+    background: var(--high-soft);
+    border-color: #f3c2bd;
+  }
+  .evidence-card.tone-positive {
+    background: var(--low-soft);
+    border-color: #b9dac5;
+  }
+  .evidence-card.tone-neutral {
+    background: #f7f9fb;
+    border-color: var(--line);
+  }
+  .evidence-card .chain-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .evidence-card .tone-tag {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 1px 8px;
+    border-radius: 999px;
+    letter-spacing: 0.02em;
+  }
+  .evidence-card.tone-negative .tone-tag {
+    background: #fff;
+    color: var(--high);
+    border: 1px solid #f3c2bd;
+  }
+  .evidence-card.tone-positive .tone-tag {
+    background: #fff;
+    color: var(--low);
+    border: 1px solid #b9dac5;
+  }
+  .evidence-card.tone-neutral .tone-tag {
+    background: #fff;
+    color: var(--muted);
+    border: 1px solid var(--line);
+  }
+  .evidence-card .headline {
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .evidence-detail {
+    margin-top: 4px;
+  }
+  .evidence-detail summary {
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--muted);
+    list-style: none;
+    padding: 6px 10px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: #fbfcfd;
+    display: inline-block;
+  }
+  .evidence-detail summary::-webkit-details-marker { display: none; }
+  .evidence-detail[open] summary { background: var(--accent-soft); color: var(--accent); }
+  .evidence-detail table { margin-top: 10px; }
 </style>
 </head>
 <body>
@@ -313,7 +502,7 @@
     <h1>RiskOps Copilot</h1>
     <div class="subtitle">M4 Dashboard &amp; Report MVP</div>
     <div class="meta">
-      <span><strong>报告生成时间</strong>：2026-05-18 08:35:09</span>
+      <span><strong>报告生成时间</strong>：2026-05-18 09:30:54</span>
       <span><strong>基线窗口</strong>：2026-03-19~2026-04-17</span>
       <span><strong>最近窗口</strong>：2026-04-18~2026-05-17</span>
       <span><strong>M3 报告版本</strong>：m3-c-v1</span>
@@ -351,18 +540,30 @@
     </div>
   </section>
 
+  <section class="exec-summary" id="exec-summary">
+    <div class="eyebrow">Executive Summary</div>
+    <h2>本期一句话结论</h2>
+    <ol>
+      <li>本期共识别 8 个异常，其中 6 个 high、2 个 medium、0 个 low。</li>
+      <li>核心问题是 D7 回收率（recovery_rate_d7）下降，历史基准 19.43% → 最近窗口 15.30%，相对变化 -21.27%。</li>
+      <li>伴随 产能压力上升。</li>
+      <li>初步归因指向 channel_code=ECOM、province=山东、score_band=D。</li>
+      <li>建议优先下钻 channel_code=ECOM × vendor / line / score_band，并结合触达和合规证据复核。</li>
+    </ol>
+  </section>
+
   <section class="panel" id="high-priority">
     <h2>2. 高优先级异常列表</h2>
-    <div class="section-hint">按 severity 排序展示需要优先处置的异常事件。</div>
-    <table>
+    <div class="section-hint">按 severity 排序展示需要优先处置的异常事件；表格已做视觉减压，仅在 severity / 相对变化两列保留弱色提醒。</div>
+    <table class="soft-table">
       <thead>
         <tr>
           <th>指标</th>
-          <th>severity</th>
+          <th>严重度<br/><span style="font-weight: 400;">severity</span></th>
           <th>维度</th>
-          <th>baseline</th>
-          <th>recent</th>
-          <th>relative change</th>
+          <th>历史基准<br/><span style="font-weight: 400;">baseline</span></th>
+          <th>最近窗口<br/><span style="font-weight: 400;">recent</span></th>
+          <th>相对变化<br/><span style="font-weight: 400;">relative change</span></th>
           <th>下一步建议</th>
         </tr>
       </thead>
@@ -465,6 +666,17 @@
         </tr>
       </tbody>
     </table>
+    <div class="glossary" aria-label="字段说明">
+      <span class="item"><strong>字段说明</strong></span>
+      <span class="divider">·</span>
+      <span class="item"><strong>历史基准</strong> = baseline（基线窗口内的平均水平）</span>
+      <span class="divider">·</span>
+      <span class="item"><strong>最近窗口</strong> = recent（最近窗口内的实际表现）</span>
+      <span class="divider">·</span>
+      <span class="item"><strong>相对变化</strong> = relative change（最近窗口相对历史基准的变化幅度）</span>
+      <span class="divider">·</span>
+      <span class="item"><strong>严重度</strong> = severity（high / medium / low 级，由 M3-A 规则配置决定）</span>
+    </div>
   </section>
 
   <section class="panel" id="attribution">
@@ -486,6 +698,7 @@
     </div>
 
     <h3 style="margin: 12px 0 8px; font-size: 15px;">Top 5 drivers</h3>
+    <div class="section-hint" style="margin-bottom: 12px;">贡献度横向条形图按当前 Top driver 最大值归一化，仅用于相对排序参考。</div>
       <div class="driver-card">
         <div class="driver-head">
           <div>
@@ -493,13 +706,20 @@
             <span class="driver-title">channel_code = ECOM</span>
             <span class="driver-role">渠道结构</span>
           </div>
-          <div class="driver-contribution">贡献度 15.26%</div>
+          <div class="contribution-wrap">
+            <div class="label">贡献度 contribution</div>
+            <div class="driver-contribution">15.26%</div>
+            <div class="contribution-bar" aria-label="贡献度进度条">
+              <span class="fill" style="width: 100.0%;"></span>
+            </div>
+          </div>
         </div>
         <div class="driver-meta">
-          <span><strong>baseline</strong>：23.90%</span>
-          <span><strong>recent</strong>：6.29%</span>
+          <span><strong>历史基准</strong>：23.90%</span>
+          <span><strong>最近窗口</strong>：6.29%</span>
           <span><strong>confidence</strong>：medium</span>
         </div>
+        <p class="role-explanation"><strong>维度解读</strong>：电商 / 渠道定位信号，建议下钻产品、供应商、线路。</p>
         <p><strong>业务解释</strong>：ECOM 分组的回收率下降对整体异常有可量化贡献。</p>
         <p><strong>推荐动作</strong>：继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。</p>
       </div>
@@ -510,13 +730,20 @@
             <span class="driver-title">province = 山东</span>
             <span class="driver-role">区域结构</span>
           </div>
-          <div class="driver-contribution">贡献度 6.52%</div>
+          <div class="contribution-wrap">
+            <div class="label">贡献度 contribution</div>
+            <div class="driver-contribution">6.52%</div>
+            <div class="contribution-bar" aria-label="贡献度进度条">
+              <span class="fill" style="width: 42.8%;"></span>
+            </div>
+          </div>
         </div>
         <div class="driver-meta">
-          <span><strong>baseline</strong>：29.45%</span>
-          <span><strong>recent</strong>：12.73%</span>
+          <span><strong>历史基准</strong>：29.45%</span>
+          <span><strong>最近窗口</strong>：12.73%</span>
           <span><strong>confidence</strong>：medium</span>
         </div>
+        <p class="role-explanation"><strong>维度解读</strong>：地域分群信号，不应直接作为最终策略动作，需结合产能与产品结构。</p>
         <p><strong>业务解释</strong>：山东 分组的回收率下降对整体异常有可量化贡献。</p>
         <p><strong>推荐动作</strong>：继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。</p>
       </div>
@@ -527,13 +754,20 @@
             <span class="driver-title">score_band = D</span>
             <span class="driver-role">客群风险结构</span>
           </div>
-          <div class="driver-contribution">贡献度 5.75%</div>
+          <div class="contribution-wrap">
+            <div class="label">贡献度 contribution</div>
+            <div class="driver-contribution">5.75%</div>
+            <div class="contribution-bar" aria-label="贡献度进度条">
+              <span class="fill" style="width: 37.7%;"></span>
+            </div>
+          </div>
         </div>
         <div class="driver-meta">
-          <span><strong>baseline</strong>：17.83%</span>
-          <span><strong>recent</strong>：5.93%</span>
+          <span><strong>历史基准</strong>：17.83%</span>
+          <span><strong>最近窗口</strong>：5.93%</span>
           <span><strong>confidence</strong>：medium</span>
         </div>
+        <p class="role-explanation"><strong>维度解读</strong>：风险分层信号，关注该客群的触达、减免和资源投入。</p>
         <p><strong>业务解释</strong>：D 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。</p>
         <p><strong>推荐动作</strong>：对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。</p>
       </div>
@@ -544,13 +778,20 @@
             <span class="driver-title">province = 上海</span>
             <span class="driver-role">区域结构</span>
           </div>
-          <div class="driver-contribution">贡献度 4.42%</div>
+          <div class="contribution-wrap">
+            <div class="label">贡献度 contribution</div>
+            <div class="driver-contribution">4.42%</div>
+            <div class="contribution-bar" aria-label="贡献度进度条">
+              <span class="fill" style="width: 29.0%;"></span>
+            </div>
+          </div>
         </div>
         <div class="driver-meta">
-          <span><strong>baseline</strong>：22.35%</span>
-          <span><strong>recent</strong>：7.16%</span>
+          <span><strong>历史基准</strong>：22.35%</span>
+          <span><strong>最近窗口</strong>：7.16%</span>
           <span><strong>confidence</strong>：medium</span>
         </div>
+        <p class="role-explanation"><strong>维度解读</strong>：地域分群信号，不应直接作为最终策略动作，需结合产能与产品结构。</p>
         <p><strong>业务解释</strong>：上海 分组的回收率下降对整体异常有可量化贡献。</p>
         <p><strong>推荐动作</strong>：继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。</p>
       </div>
@@ -561,13 +802,20 @@
             <span class="driver-title">score_band = A</span>
             <span class="driver-role">客群风险结构</span>
           </div>
-          <div class="driver-contribution">贡献度 4.04%</div>
+          <div class="contribution-wrap">
+            <div class="label">贡献度 contribution</div>
+            <div class="driver-contribution">4.04%</div>
+            <div class="contribution-bar" aria-label="贡献度进度条">
+              <span class="fill" style="width: 26.5%;"></span>
+            </div>
+          </div>
         </div>
         <div class="driver-meta">
-          <span><strong>baseline</strong>：36.42%</span>
-          <span><strong>recent</strong>：19.88%</span>
+          <span><strong>历史基准</strong>：36.42%</span>
+          <span><strong>最近窗口</strong>：19.88%</span>
           <span><strong>confidence</strong>：medium</span>
         </div>
+        <p class="role-explanation"><strong>维度解读</strong>：结构变化信号，检查高质量客群占比或样本结构是否漂移。</p>
         <p><strong>业务解释</strong>：A 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。</p>
         <p><strong>推荐动作</strong>：对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。</p>
       </div>
@@ -575,325 +823,369 @@
 
   <section class="panel" id="process-evidence">
     <h2>4. Process evidence / driver linkage</h2>
-    <div class="section-hint">将 Top drivers 与过程指标（PTP 履约 / AI 外呼覆盖 / 减免使用率 / 投诉率）以及产能压力信号对齐。</div>
+    <div class="section-hint">先看证据链摘要卡片，再下钻明细表；分别覆盖触达、履约、策略工具、合规以及产能压力。</div>
 
-    <div class="process-group">
-      <h3>PTP 履约</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>driver</th>
-            <th>过程指标</th>
-            <th>baseline</th>
-            <th>recent</th>
-            <th>delta</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>channel_code=ECOM</td>
-            <td>PTP 履约率</td>
-            <td>0.00%</td>
-            <td>0.00%</td>
-            <td>
-                <span class="delta-neutral">+0.00%</span>
-            </td>
-          </tr>
-          <tr>
-            <td>province=山东</td>
-            <td>PTP 履约率</td>
-            <td>0.00%</td>
-            <td>0.00%</td>
-            <td>
-                <span class="delta-neutral">+0.00%</span>
-            </td>
-          </tr>
-          <tr>
-            <td>score_band=D</td>
-            <td>PTP 履约率</td>
-            <td>0.00%</td>
-            <td>0.00%</td>
-            <td>
-                <span class="delta-neutral">+0.00%</span>
-            </td>
-          </tr>
-          <tr>
-            <td>province=上海</td>
-            <td>PTP 履约率</td>
-            <td>0.00%</td>
-            <td>0.00%</td>
-            <td>
-                <span class="delta-neutral">+0.00%</span>
-            </td>
-          </tr>
-          <tr>
-            <td>score_band=A</td>
-            <td>PTP 履约率</td>
-            <td>0.00%</td>
-            <td>0.00%</td>
-            <td>
-                <span class="delta-neutral">+0.00%</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="process-group">
-      <h3>AI 外呼覆盖</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>driver</th>
-            <th>过程指标</th>
-            <th>baseline</th>
-            <th>recent</th>
-            <th>delta</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>channel_code=ECOM</td>
-            <td>AI 外呼覆盖率</td>
-            <td>46.15%</td>
-            <td>7.14%</td>
-            <td>
-                <span class="delta-negative">-39.01%</span>
-            </td>
-          </tr>
-          <tr>
-            <td>channel_code=ECOM</td>
-            <td>人工触达占比</td>
-            <td>53.85%</td>
-            <td>92.86%</td>
-            <td>
-                <span class="delta-positive">+39.01%</span>
-            </td>
-          </tr>
-          <tr>
-            <td>province=山东</td>
-            <td>AI 外呼覆盖率</td>
-            <td>100.00%</td>
-            <td>0.00%</td>
-            <td>
-                <span class="delta-negative">-100.00%</span>
-            </td>
-          </tr>
-          <tr>
-            <td>province=山东</td>
-            <td>人工触达占比</td>
-            <td>0.00%</td>
-            <td>100.00%</td>
-            <td>
-                <span class="delta-positive">+100.00%</span>
-            </td>
-          </tr>
-          <tr>
-            <td>score_band=D</td>
-            <td>AI 外呼覆盖率</td>
-            <td>0.00%</td>
-            <td>0.00%</td>
-            <td>
-                <span class="delta-neutral">+0.00%</span>
-            </td>
-          </tr>
-          <tr>
-            <td>score_band=D</td>
-            <td>人工触达占比</td>
-            <td>100.00%</td>
-            <td>100.00%</td>
-            <td>
-                <span class="delta-neutral">+0.00%</span>
-            </td>
-          </tr>
-          <tr>
-            <td>province=上海</td>
-            <td>AI 外呼覆盖率</td>
-            <td>33.33%</td>
-            <td>0.00%</td>
-            <td>
-                <span class="delta-negative">-33.33%</span>
-            </td>
-          </tr>
-          <tr>
-            <td>province=上海</td>
-            <td>人工触达占比</td>
-            <td>66.67%</td>
-            <td>100.00%</td>
-            <td>
-                <span class="delta-positive">+33.33%</span>
-            </td>
-          </tr>
-          <tr>
-            <td>score_band=A</td>
-            <td>AI 外呼覆盖率</td>
-            <td>25.00%</td>
-            <td>0.00%</td>
-            <td>
-                <span class="delta-negative">-25.00%</span>
-            </td>
-          </tr>
-          <tr>
-            <td>score_band=A</td>
-            <td>人工触达占比</td>
-            <td>75.00%</td>
-            <td>100.00%</td>
-            <td>
-                <span class="delta-positive">+25.00%</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="process-group">
-      <h3>减免使用率</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>driver</th>
-            <th>过程指标</th>
-            <th>baseline</th>
-            <th>recent</th>
-            <th>delta</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>channel_code=ECOM</td>
-            <td>减免使用率</td>
-            <td>0.00%</td>
-            <td>0.00%</td>
-            <td>
-                <span class="delta-neutral">+0.00%</span>
-            </td>
-          </tr>
-          <tr>
-            <td>province=山东</td>
-            <td>减免使用率</td>
-            <td>0.00%</td>
-            <td>0.00%</td>
-            <td>
-                <span class="delta-neutral">+0.00%</span>
-            </td>
-          </tr>
-          <tr>
-            <td>score_band=D</td>
-            <td>减免使用率</td>
-            <td>0.00%</td>
-            <td>0.00%</td>
-            <td>
-                <span class="delta-neutral">+0.00%</span>
-            </td>
-          </tr>
-          <tr>
-            <td>province=上海</td>
-            <td>减免使用率</td>
-            <td>0.00%</td>
-            <td>0.00%</td>
-            <td>
-                <span class="delta-neutral">+0.00%</span>
-            </td>
-          </tr>
-          <tr>
-            <td>score_band=A</td>
-            <td>减免使用率</td>
-            <td>0.00%</td>
-            <td>0.00%</td>
-            <td>
-                <span class="delta-neutral">+0.00%</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="process-group">
-      <h3>投诉率</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>driver</th>
-            <th>过程指标</th>
-            <th>baseline</th>
-            <th>recent</th>
-            <th>delta</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>channel_code=ECOM</td>
-            <td>投诉率</td>
-            <td>0.00%</td>
-            <td>0.00%</td>
-            <td>
-                <span class="delta-neutral">+0.00%</span>
-            </td>
-          </tr>
-          <tr>
-            <td>province=山东</td>
-            <td>投诉率</td>
-            <td>0.00%</td>
-            <td>0.00%</td>
-            <td>
-                <span class="delta-neutral">+0.00%</span>
-            </td>
-          </tr>
-          <tr>
-            <td>score_band=D</td>
-            <td>投诉率</td>
-            <td>0.00%</td>
-            <td>0.00%</td>
-            <td>
-                <span class="delta-neutral">+0.00%</span>
-            </td>
-          </tr>
-          <tr>
-            <td>province=上海</td>
-            <td>投诉率</td>
-            <td>0.00%</td>
-            <td>0.00%</td>
-            <td>
-                <span class="delta-neutral">+0.00%</span>
-            </td>
-          </tr>
-          <tr>
-            <td>score_band=A</td>
-            <td>投诉率</td>
-            <td>0.00%</td>
-            <td>0.00%</td>
-            <td>
-                <span class="delta-neutral">+0.00%</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="evidence-grid">
+      <div class="evidence-card tone-positive">
+        <div class="chain-label">
+          <span>触达证据</span>
+          <span class="tone-tag">正向改善</span>
+        </div>
+        <div class="headline">province=山东 的 AI 外呼覆盖率 下降：历史基准 100.00% → 最近窗口 0.00%（变化 -100.00%）。</div>
+        <div style="font-size: 12px; color: var(--muted);">主指标：AI 外呼覆盖率</div>
+      </div>
+      <div class="evidence-card tone-neutral">
+        <div class="chain-label">
+          <span>履约证据</span>
+          <span class="tone-tag">无显著变化</span>
+        </div>
+        <div class="headline">本期 PTP 履约 在 Top drivers 切片中未观察到显著变化。</div>
+      </div>
+      <div class="evidence-card tone-neutral">
+        <div class="chain-label">
+          <span>策略工具证据</span>
+          <span class="tone-tag">无显著变化</span>
+        </div>
+        <div class="headline">本期 减免使用 在 Top drivers 切片中未观察到显著变化。</div>
+      </div>
+      <div class="evidence-card tone-neutral">
+        <div class="chain-label">
+          <span>合规证据</span>
+          <span class="tone-tag">无显著变化</span>
+        </div>
+        <div class="headline">本期 投诉率 在 Top drivers 切片中未观察到显著变化。</div>
+      </div>
+      <div class="evidence-card tone-negative">
+        <div class="chain-label">
+          <span>产能压力证据</span>
+          <span class="tone-tag">产能压力上升</span>
+        </div>
+        <div class="headline">华东线路人均案量（region=华东）历史基准 13.54 → 最近窗口 19.10（+41.13%）。</div>
+        <div style="font-size: 12px; color: var(--muted);">主指标：华东线路人均案量</div>
+      </div>
     </div>
 
-    <div class="process-group">
-      <h3>产能压力信号</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>指标</th>
-            <th>维度</th>
-            <th>baseline</th>
-            <th>recent</th>
-            <th>relative change</th>
-            <th>说明</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong>华东线路人均案量</strong></td>
-            <td>region = 华东</td>
-            <td>13.54</td>
-            <td>19.10</td>
-            <td>
-                <span class="delta-positive">+41.13%</span>
-            </td>
-            <td>华东线路人均案量从 13.54 升至 19.10，产能压力上升。</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <details class="evidence-detail">
+      <summary>展开过程指标明细表（按 PTP / AI 外呼 / 减免 / 投诉 / 产能分组）</summary>
+
+      <div class="process-group">
+        <h3>PTP 履约</h3>
+        <table class="soft-table">
+          <thead>
+            <tr>
+              <th>driver</th>
+              <th>过程指标</th>
+              <th>历史基准<br/><span style="font-weight: 400;">baseline</span></th>
+              <th>最近窗口<br/><span style="font-weight: 400;">recent</span></th>
+              <th>变化<br/><span style="font-weight: 400;">delta</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>channel_code=ECOM</td>
+              <td>PTP 履约率</td>
+              <td>0.00%</td>
+              <td>0.00%</td>
+              <td>
+                  <span class="delta-neutral">+0.00%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>province=山东</td>
+              <td>PTP 履约率</td>
+              <td>0.00%</td>
+              <td>0.00%</td>
+              <td>
+                  <span class="delta-neutral">+0.00%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>score_band=D</td>
+              <td>PTP 履约率</td>
+              <td>0.00%</td>
+              <td>0.00%</td>
+              <td>
+                  <span class="delta-neutral">+0.00%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>province=上海</td>
+              <td>PTP 履约率</td>
+              <td>0.00%</td>
+              <td>0.00%</td>
+              <td>
+                  <span class="delta-neutral">+0.00%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>score_band=A</td>
+              <td>PTP 履约率</td>
+              <td>0.00%</td>
+              <td>0.00%</td>
+              <td>
+                  <span class="delta-neutral">+0.00%</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="process-group">
+        <h3>AI 外呼覆盖</h3>
+        <table class="soft-table">
+          <thead>
+            <tr>
+              <th>driver</th>
+              <th>过程指标</th>
+              <th>历史基准<br/><span style="font-weight: 400;">baseline</span></th>
+              <th>最近窗口<br/><span style="font-weight: 400;">recent</span></th>
+              <th>变化<br/><span style="font-weight: 400;">delta</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>channel_code=ECOM</td>
+              <td>AI 外呼覆盖率</td>
+              <td>46.15%</td>
+              <td>7.14%</td>
+              <td>
+                  <span class="delta-negative">-39.01%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>channel_code=ECOM</td>
+              <td>人工触达占比</td>
+              <td>53.85%</td>
+              <td>92.86%</td>
+              <td>
+                  <span class="delta-positive">+39.01%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>province=山东</td>
+              <td>AI 外呼覆盖率</td>
+              <td>100.00%</td>
+              <td>0.00%</td>
+              <td>
+                  <span class="delta-negative">-100.00%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>province=山东</td>
+              <td>人工触达占比</td>
+              <td>0.00%</td>
+              <td>100.00%</td>
+              <td>
+                  <span class="delta-positive">+100.00%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>score_band=D</td>
+              <td>AI 外呼覆盖率</td>
+              <td>0.00%</td>
+              <td>0.00%</td>
+              <td>
+                  <span class="delta-neutral">+0.00%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>score_band=D</td>
+              <td>人工触达占比</td>
+              <td>100.00%</td>
+              <td>100.00%</td>
+              <td>
+                  <span class="delta-neutral">+0.00%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>province=上海</td>
+              <td>AI 外呼覆盖率</td>
+              <td>33.33%</td>
+              <td>0.00%</td>
+              <td>
+                  <span class="delta-negative">-33.33%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>province=上海</td>
+              <td>人工触达占比</td>
+              <td>66.67%</td>
+              <td>100.00%</td>
+              <td>
+                  <span class="delta-positive">+33.33%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>score_band=A</td>
+              <td>AI 外呼覆盖率</td>
+              <td>25.00%</td>
+              <td>0.00%</td>
+              <td>
+                  <span class="delta-negative">-25.00%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>score_band=A</td>
+              <td>人工触达占比</td>
+              <td>75.00%</td>
+              <td>100.00%</td>
+              <td>
+                  <span class="delta-positive">+25.00%</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="process-group">
+        <h3>减免使用率</h3>
+        <table class="soft-table">
+          <thead>
+            <tr>
+              <th>driver</th>
+              <th>过程指标</th>
+              <th>历史基准<br/><span style="font-weight: 400;">baseline</span></th>
+              <th>最近窗口<br/><span style="font-weight: 400;">recent</span></th>
+              <th>变化<br/><span style="font-weight: 400;">delta</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>channel_code=ECOM</td>
+              <td>减免使用率</td>
+              <td>0.00%</td>
+              <td>0.00%</td>
+              <td>
+                  <span class="delta-neutral">+0.00%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>province=山东</td>
+              <td>减免使用率</td>
+              <td>0.00%</td>
+              <td>0.00%</td>
+              <td>
+                  <span class="delta-neutral">+0.00%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>score_band=D</td>
+              <td>减免使用率</td>
+              <td>0.00%</td>
+              <td>0.00%</td>
+              <td>
+                  <span class="delta-neutral">+0.00%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>province=上海</td>
+              <td>减免使用率</td>
+              <td>0.00%</td>
+              <td>0.00%</td>
+              <td>
+                  <span class="delta-neutral">+0.00%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>score_band=A</td>
+              <td>减免使用率</td>
+              <td>0.00%</td>
+              <td>0.00%</td>
+              <td>
+                  <span class="delta-neutral">+0.00%</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="process-group">
+        <h3>投诉率</h3>
+        <table class="soft-table">
+          <thead>
+            <tr>
+              <th>driver</th>
+              <th>过程指标</th>
+              <th>历史基准<br/><span style="font-weight: 400;">baseline</span></th>
+              <th>最近窗口<br/><span style="font-weight: 400;">recent</span></th>
+              <th>变化<br/><span style="font-weight: 400;">delta</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>channel_code=ECOM</td>
+              <td>投诉率</td>
+              <td>0.00%</td>
+              <td>0.00%</td>
+              <td>
+                  <span class="delta-neutral">+0.00%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>province=山东</td>
+              <td>投诉率</td>
+              <td>0.00%</td>
+              <td>0.00%</td>
+              <td>
+                  <span class="delta-neutral">+0.00%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>score_band=D</td>
+              <td>投诉率</td>
+              <td>0.00%</td>
+              <td>0.00%</td>
+              <td>
+                  <span class="delta-neutral">+0.00%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>province=上海</td>
+              <td>投诉率</td>
+              <td>0.00%</td>
+              <td>0.00%</td>
+              <td>
+                  <span class="delta-neutral">+0.00%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>score_band=A</td>
+              <td>投诉率</td>
+              <td>0.00%</td>
+              <td>0.00%</td>
+              <td>
+                  <span class="delta-neutral">+0.00%</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="process-group">
+        <h3>产能压力信号</h3>
+        <table class="soft-table">
+          <thead>
+            <tr>
+              <th>指标</th>
+              <th>维度</th>
+              <th>历史基准<br/><span style="font-weight: 400;">baseline</span></th>
+              <th>最近窗口<br/><span style="font-weight: 400;">recent</span></th>
+              <th>相对变化<br/><span style="font-weight: 400;">relative change</span></th>
+              <th>说明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>华东线路人均案量</strong></td>
+              <td>region = 华东</td>
+              <td>13.54</td>
+              <td>19.10</td>
+              <td>
+                  <span class="delta-positive">+41.13%</span>
+              </td>
+              <td>华东线路人均案量从 13.54 升至 19.10，产能压力上升。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
   </section>
 
   <section class="panel" id="limitations">

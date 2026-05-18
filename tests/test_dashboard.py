@@ -195,6 +195,44 @@ def test_build_context_keeps_raw_numbers() -> None:
     assert drivers[1]["driver_role"] == "客群风险结构"
 
 
+def test_executive_summary_covers_key_narrative() -> None:
+    context = build_dashboard_context(sample_summary())
+    lines = context["executive_summary"]
+    assert lines, "executive_summary should not be empty"
+    joined = "\n".join(lines)
+    assert "8 个异常" in joined
+    assert "6 个 high" in joined
+    assert "2 个 medium" in joined
+    assert "D7 回收率" in joined
+    # accompaniments present
+    assert "AI 外呼覆盖" in joined or "PTP 履约" in joined
+    # primary driver hint
+    assert "channel_code=ECOM" in joined
+
+
+def test_top_drivers_have_role_explanation_and_progress() -> None:
+    context = build_dashboard_context(sample_summary())
+    drivers = context["top_drivers"]
+    # ECOM channel
+    assert "电商" in drivers[0]["role_explanation"]
+    # score_band D (risk layer)
+    assert "风险分层" in drivers[1]["role_explanation"]
+    # progress pct must be a number, primary driver should hit 100%
+    assert drivers[0]["progress_pct"] == 100.0
+    assert 0 < drivers[1]["progress_pct"] < 100
+    assert context["contribution_max"] == 0.1526
+
+
+def test_evidence_chains_cover_all_five_categories() -> None:
+    context = build_dashboard_context(sample_summary())
+    chains = {c["chain_code"]: c for c in context["evidence_chains"]}
+    assert set(chains) == {"contact", "fulfill", "tool", "compliance", "capacity"}
+    assert chains["contact"]["tone"] == "negative"
+    assert chains["fulfill"]["tone"] == "negative"
+    assert chains["compliance"]["tone"] == "negative"  # complaint rate rising is bad
+    assert chains["capacity"]["tone"] == "negative"  # avg_case_per_collector rising
+
+
 def test_render_html_contains_required_sections() -> None:
     context = build_dashboard_context(sample_summary())
     html = render_dashboard_html(context)
@@ -224,6 +262,22 @@ def test_render_html_contains_required_sections() -> None:
     assert "M5 TUI" in html
     assert "M6 Model Lab" in html
     assert "M7 Collection QA" in html
+    # Readability enhancements
+    assert "Executive Summary" in html
+    assert "本期一句话结论" in html
+    assert "contribution-bar" in html
+    assert "evidence-card" in html
+    assert "触达证据" in html
+    assert "履约证据" in html
+    assert "策略工具证据" in html
+    assert "合规证据" in html
+    assert "产能压力证据" in html
+    # Chinese field glossary for the high-priority table
+    assert "历史基准" in html
+    assert "最近窗口" in html
+    assert "相对变化" in html
+    # Role explanation surfaced for ECOM channel
+    assert "电商" in html
 
 
 def test_write_dashboard_creates_html(tmp_path: Path) -> None:
