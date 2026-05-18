@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>{{ project_title }} — {{ subtitle }}</title>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --panel: #ffffff;
+    --ink: #1f2933;
+    --muted: #5c6773;
+    --line: #e3e6ea;
+    --accent: #1f4f8b;
+    --accent-soft: #e8f0f9;
+    --high: #b3261e;
+    --high-soft: #fdecea;
+    --medium: #b06b00;
+    --medium-soft: #fff4d6;
+    --low: #2f6f4d;
+    --low-soft: #e6f4ec;
+    --positive: #2f6f4d;
+    --negative: #b3261e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB",
+      "Helvetica Neue", "Microsoft YaHei", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.55;
+    font-size: 14px;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .page {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 32px 28px 64px;
+  }
+  header.hero {
+    background: linear-gradient(135deg, #1f4f8b 0%, #2f6f8f 100%);
+    color: #fff;
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    box-shadow: 0 6px 18px rgba(31, 79, 139, 0.18);
+  }
+  header.hero .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 12px;
+    opacity: 0.85;
+  }
+  header.hero h1 {
+    margin: 6px 0 4px;
+    font-size: 28px;
+    font-weight: 600;
+  }
+  header.hero .subtitle {
+    font-size: 16px;
+    opacity: 0.92;
+    margin-bottom: 16px;
+  }
+  header.hero .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    font-size: 13px;
+    opacity: 0.92;
+  }
+  header.hero .meta span strong { font-weight: 600; }
+  .disclaimer {
+    margin-top: 18px;
+    background: rgba(255, 255, 255, 0.14);
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    border-left: 3px solid #ffd66b;
+  }
+  .disclaimer .tag {
+    display: inline-block;
+    background: #ffd66b;
+    color: #5b3b00;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-right: 8px;
+    font-size: 12px;
+  }
+  section.panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 22px 24px;
+    margin-bottom: 20px;
+  }
+  section.panel > h2 {
+    margin: 0 0 4px;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  section.panel > .section-hint {
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+  }
+  .stat-card {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 16px;
+    background: #fafbfc;
+  }
+  .stat-card .label {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+  .stat-card .value {
+    font-size: 26px;
+    font-weight: 600;
+    margin-top: 6px;
+  }
+  .stat-card.tone-high { background: var(--high-soft); border-color: #f3c2bd; }
+  .stat-card.tone-high .value { color: var(--high); }
+  .stat-card.tone-medium { background: var(--medium-soft); border-color: #f0d79a; }
+  .stat-card.tone-medium .value { color: var(--medium); }
+  .stat-card.tone-low { background: var(--low-soft); border-color: #b9dac5; }
+  .stat-card.tone-low .value { color: var(--low); }
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 14px;
+  }
+  .meta-row strong { color: var(--ink); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  table th, table td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  table th {
+    background: #f7f9fb;
+    font-weight: 600;
+    color: var(--muted);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .severity-pill {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 999px;
+    letter-spacing: 0.04em;
+  }
+  .severity-pill.high { background: var(--high-soft); color: var(--high); }
+  .severity-pill.medium { background: var(--medium-soft); color: var(--medium); }
+  .severity-pill.low { background: var(--low-soft); color: var(--low); }
+  .delta-positive { color: var(--positive); font-weight: 600; }
+  .delta-negative { color: var(--negative); font-weight: 600; }
+  .delta-neutral { color: var(--muted); }
+  .target-block {
+    background: var(--accent-soft);
+    border: 1px solid #c4d6ed;
+    border-radius: 8px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+  }
+  .target-block h3 {
+    margin: 0 0 6px;
+    font-size: 16px;
+    color: var(--accent);
+  }
+  .target-block .target-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .target-block .target-meta strong { color: var(--ink); }
+  .driver-card {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    background: #fafbfc;
+  }
+  .driver-card .driver-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .driver-card .driver-title {
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .driver-card .driver-rank {
+    color: var(--muted);
+    font-size: 12px;
+    margin-right: 8px;
+  }
+  .driver-card .driver-role {
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .driver-card .driver-contribution {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .driver-card .driver-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+  .driver-card .driver-meta strong { color: var(--ink); }
+  .driver-card p { margin: 8px 0 0; }
+  .process-group {
+    margin-bottom: 18px;
+  }
+  .process-group h3 {
+    font-size: 14px;
+    margin: 0 0 6px;
+    color: var(--accent);
+  }
+  .roadmap {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+  }
+  .roadmap .card {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 16px;
+    background: #fafbfc;
+  }
+  .roadmap .card h3 {
+    margin: 0 0 8px;
+    font-size: 14px;
+    color: var(--accent);
+  }
+  .roadmap ul { margin: 0; padding-left: 18px; }
+  .roadmap li { margin-bottom: 4px; font-size: 13px; }
+  .limitations-list { margin: 0; padding-left: 18px; }
+  .limitations-list li { margin-bottom: 6px; }
+  .limitations-list .source {
+    display: inline-block;
+    color: var(--muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-right: 6px;
+  }
+  .next-steps-list { margin: 0; padding-left: 18px; }
+  .next-steps-list li { margin-bottom: 6px; }
+  .next-steps-list .source-tag {
+    display: inline-block;
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 1px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    margin-right: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  footer.footer {
+    margin-top: 32px;
+    color: var(--muted);
+    font-size: 12px;
+    text-align: center;
+  }
+  .empty {
+    color: var(--muted);
+    font-size: 13px;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+<main class="page">
+
+  <header class="hero">
+    <div class="eyebrow">{{ dashboard_version }}</div>
+    <h1>{{ project_title }}</h1>
+    <div class="subtitle">{{ subtitle }}</div>
+    <div class="meta">
+      <span><strong>报告生成时间</strong>：{{ generated_at_display }}</span>
+      {% if overview.baseline_window %}
+      <span><strong>基线窗口</strong>：{{ overview.baseline_window }}</span>
+      {% endif %}
+      {% if overview.recent_window %}
+      <span><strong>最近窗口</strong>：{{ overview.recent_window }}</span>
+      {% endif %}
+      {% if report_version %}
+      <span><strong>M3 报告版本</strong>：{{ report_version }}</span>
+      {% endif %}
+    </div>
+    <div class="disclaimer">
+      <span class="tag">Demo Disclaimer</span>
+      {{ demo_disclaimer }}
+    </div>
+  </header>
+
+  <section class="panel" id="overview">
+    <h2>1. 异常总览</h2>
+    <div class="section-hint">基于 M3-A 异常检测引擎输出，统计本轮触发的异常数量与严重度分布。</div>
+    <div class="card-grid">
+      {% for card in overview.cards %}
+      <div class="stat-card tone-{{ card.tone }}">
+        <div class="label">{{ card.label }}</div>
+        <div class="value">{{ card.value }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="meta-row">
+      <span><strong>归因目标指标</strong>：{{ attribution_target.metric_name_cn }}（{{ attribution_target.metric_code }}）</span>
+      {% if attribution_target.anomaly_id %}
+      <span><strong>归因目标 anomaly_id</strong>：{{ attribution_target.anomaly_id }}</span>
+      {% endif %}
+    </div>
+    {% if overview.warnings %}
+    <div class="meta-row">
+      <span><strong>warnings</strong>：{{ overview.warnings | join('；') }}</span>
+    </div>
+    {% endif %}
+  </section>
+
+  <section class="panel" id="high-priority">
+    <h2>2. 高优先级异常列表</h2>
+    <div class="section-hint">按 severity 排序展示需要优先处置的异常事件。</div>
+    {% if high_priority_anomalies %}
+    <table>
+      <thead>
+        <tr>
+          <th>指标</th>
+          <th>severity</th>
+          <th>维度</th>
+          <th>baseline</th>
+          <th>recent</th>
+          <th>relative change</th>
+          <th>下一步建议</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for anomaly in high_priority_anomalies %}
+        <tr>
+          <td>
+            <strong>{{ anomaly.metric_name_cn or anomaly.metric_code }}</strong><br/>
+            <span style="color: var(--muted); font-size: 12px;">{{ anomaly.metric_code }}</span>
+          </td>
+          <td>
+            <span class="severity-pill {{ anomaly.severity }}">{{ anomaly.severity }}</span>
+          </td>
+          <td>{{ anomaly.dimension_name }} = {{ anomaly.dimension_value }}</td>
+          <td>{{ anomaly.baseline_value | metric_value }}</td>
+          <td>{{ anomaly.recent_value | metric_value }}</td>
+          <td>
+            {% set rc = anomaly.relative_change %}
+            {% if rc is number %}
+              {% if rc > 0 %}
+              <span class="delta-positive">{{ rc | signed_pct }}</span>
+              {% elif rc < 0 %}
+              <span class="delta-negative">{{ rc | signed_pct }}</span>
+              {% else %}
+              <span class="delta-neutral">{{ rc | signed_pct }}</span>
+              {% endif %}
+            {% else %}
+              N/A
+            {% endif %}
+          </td>
+          <td>{{ anomaly.recommended_next_step or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="empty">本轮无 high severity 异常。</p>
+    {% endif %}
+  </section>
+
+  <section class="panel" id="attribution">
+    <h2>3. M1 D7 回收率下降归因</h2>
+    <div class="section-hint">基于 M3-B 归因引擎对目标指标 {{ attribution_target.metric_code }} 的 Top drivers 进行解读。</div>
+
+    {% if attribution_target.anomaly %}
+    {% set tgt = attribution_target.anomaly %}
+    <div class="target-block">
+      <h3>归因目标异常：{{ tgt.metric_name_cn or tgt.metric_code }}</h3>
+      <div class="target-meta">
+        <span><strong>severity</strong>：<span class="severity-pill {{ tgt.severity }}">{{ tgt.severity }}</span></span>
+        <span><strong>维度</strong>：{{ tgt.dimension_name }} = {{ tgt.dimension_value }}</span>
+        <span><strong>baseline</strong>：{{ tgt.baseline_value | metric_value }}</span>
+        <span><strong>recent</strong>：{{ tgt.recent_value | metric_value }}</span>
+        <span><strong>relative change</strong>：
+          {% if tgt.relative_change is number %}
+            <span class="{% if tgt.relative_change > 0 %}delta-positive{% elif tgt.relative_change < 0 %}delta-negative{% else %}delta-neutral{% endif %}">{{ tgt.relative_change | signed_pct }}</span>
+          {% else %}
+            N/A
+          {% endif %}
+        </span>
+      </div>
+      {% if tgt.explanation %}
+      <p style="margin: 10px 0 0;">{{ tgt.explanation }}</p>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <h3 style="margin: 12px 0 8px; font-size: 15px;">Top 5 drivers</h3>
+    {% if top_drivers %}
+      {% for driver in top_drivers %}
+      <div class="driver-card">
+        <div class="driver-head">
+          <div>
+            <span class="driver-rank">#{{ driver.rank }}</span>
+            <span class="driver-title">{{ driver.dimension_name }} = {{ driver.dimension_value }}</span>
+            <span class="driver-role">{{ driver.driver_role }}</span>
+          </div>
+          <div class="driver-contribution">贡献度 {{ driver.contribution_score | pct }}</div>
+        </div>
+        <div class="driver-meta">
+          <span><strong>baseline</strong>：{{ driver.baseline_value | metric_value }}</span>
+          <span><strong>recent</strong>：{{ driver.recent_value | metric_value }}</span>
+          {% if driver.confidence %}
+          <span><strong>confidence</strong>：{{ driver.confidence }}</span>
+          {% endif %}
+        </div>
+        {% if driver.business_interpretation %}
+        <p><strong>业务解释</strong>：{{ driver.business_interpretation }}</p>
+        {% endif %}
+        {% if driver.recommended_action %}
+        <p><strong>推荐动作</strong>：{{ driver.recommended_action }}</p>
+        {% endif %}
+      </div>
+      {% endfor %}
+    {% else %}
+    <p class="empty">未生成 Top drivers。</p>
+    {% endif %}
+  </section>
+
+  <section class="panel" id="process-evidence">
+    <h2>4. Process evidence / driver linkage</h2>
+    <div class="section-hint">将 Top drivers 与过程指标（PTP 履约 / AI 外呼覆盖 / 减免使用率 / 投诉率）以及产能压力信号对齐。</div>
+
+    {% for group in process_evidence_groups %}
+    <div class="process-group">
+      <h3>{{ group.group_label }}</h3>
+      {% if group.entries %}
+      <table>
+        <thead>
+          <tr>
+            <th>driver</th>
+            <th>过程指标</th>
+            <th>baseline</th>
+            <th>recent</th>
+            <th>delta</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in group.entries %}
+          <tr>
+            <td>{{ entry.driver }}</td>
+            <td>{{ entry.metric_name_cn or entry.metric_code }}</td>
+            <td>{{ entry.baseline_value | metric_value }}</td>
+            <td>{{ entry.recent_value | metric_value }}</td>
+            <td>
+              {% if entry.delta is number %}
+                <span class="{% if entry.delta > 0 %}delta-positive{% elif entry.delta < 0 %}delta-negative{% else %}delta-neutral{% endif %}">{{ entry.delta | signed_value }}</span>
+              {% else %}
+                N/A
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="empty">本轮 driver linkage 中未捕获该过程指标。</p>
+      {% endif %}
+    </div>
+    {% endfor %}
+
+    <div class="process-group">
+      <h3>产能压力信号</h3>
+      {% if capacity_signals %}
+      <table>
+        <thead>
+          <tr>
+            <th>指标</th>
+            <th>维度</th>
+            <th>baseline</th>
+            <th>recent</th>
+            <th>relative change</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in capacity_signals %}
+          <tr>
+            <td><strong>{{ item.metric_name_cn or item.metric_code }}</strong></td>
+            <td>{{ item.dimension_name }} = {{ item.dimension_value }}</td>
+            <td>{{ item.baseline_value | metric_value }}</td>
+            <td>{{ item.recent_value | metric_value }}</td>
+            <td>
+              {% if item.relative_change is number %}
+                <span class="{% if item.relative_change > 0 %}delta-positive{% elif item.relative_change < 0 %}delta-negative{% else %}delta-neutral{% endif %}">{{ item.relative_change | signed_pct }}</span>
+              {% else %}
+                N/A
+              {% endif %}
+            </td>
+            <td>{{ item.explanation or '—' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="empty">本轮未捕获产能维度异常。</p>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="panel" id="limitations">
+    <h2>5. 数据局限与合规说明</h2>
+    <div class="section-hint">Demo 环境使用的合成数据与隐私边界约束。</div>
+    <ul class="limitations-list">
+      {% for item in data_limitations %}
+      <li>
+        <span class="source">{{ item.source }}</span>{{ item.description }}
+      </li>
+      {% endfor %}
+      <li><span class="source">privacy</span>未接入真实客户数据，未触达真实客户，未发送短信 / 外呼，未涉及 P4 明文 PII 字段。</li>
+      <li><span class="source">human_in_loop</span>所有结论均需人工复核，AI 不直接外发、不直接外呼、不绕过审批。</li>
+    </ul>
+  </section>
+
+  <section class="panel" id="next-steps">
+    <h2>6. 下一步建议</h2>
+    <div class="section-hint">本轮异常与归因驱动的可执行建议（来自 M3-C 报告）。</div>
+    {% if next_steps %}
+    <ul class="next-steps-list">
+      {% for item in next_steps %}
+      <li>
+        <span class="source-tag">{{ item.source }}</span>{{ item.next_step }}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty">本轮未输出下一步建议。</p>
+    {% endif %}
+
+    <h3 style="margin: 18px 0 10px; font-size: 14px; color: var(--muted);">后续里程碑路线图</h3>
+    <div class="roadmap">
+      {% for phase in roadmap %}
+      <div class="card">
+        <h3>{{ phase.phase }}</h3>
+        <ul>
+          {% for item in phase.bullets %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <footer class="footer">
+    RiskOps Copilot · {{ subtitle }} · 本页面基于合成数据，仅供 Demo 与作品集展示。
+  </footer>
+</main>
+</body>
+</html>

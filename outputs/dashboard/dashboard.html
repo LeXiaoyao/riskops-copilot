@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RiskOps Copilot — M4 Dashboard &amp; Report MVP</title>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --panel: #ffffff;
+    --ink: #1f2933;
+    --muted: #5c6773;
+    --line: #e3e6ea;
+    --accent: #1f4f8b;
+    --accent-soft: #e8f0f9;
+    --high: #b3261e;
+    --high-soft: #fdecea;
+    --medium: #b06b00;
+    --medium-soft: #fff4d6;
+    --low: #2f6f4d;
+    --low-soft: #e6f4ec;
+    --positive: #2f6f4d;
+    --negative: #b3261e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB",
+      "Helvetica Neue", "Microsoft YaHei", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.55;
+    font-size: 14px;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .page {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 32px 28px 64px;
+  }
+  header.hero {
+    background: linear-gradient(135deg, #1f4f8b 0%, #2f6f8f 100%);
+    color: #fff;
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    box-shadow: 0 6px 18px rgba(31, 79, 139, 0.18);
+  }
+  header.hero .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 12px;
+    opacity: 0.85;
+  }
+  header.hero h1 {
+    margin: 6px 0 4px;
+    font-size: 28px;
+    font-weight: 600;
+  }
+  header.hero .subtitle {
+    font-size: 16px;
+    opacity: 0.92;
+    margin-bottom: 16px;
+  }
+  header.hero .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    font-size: 13px;
+    opacity: 0.92;
+  }
+  header.hero .meta span strong { font-weight: 600; }
+  .disclaimer {
+    margin-top: 18px;
+    background: rgba(255, 255, 255, 0.14);
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    border-left: 3px solid #ffd66b;
+  }
+  .disclaimer .tag {
+    display: inline-block;
+    background: #ffd66b;
+    color: #5b3b00;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-right: 8px;
+    font-size: 12px;
+  }
+  section.panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 22px 24px;
+    margin-bottom: 20px;
+  }
+  section.panel > h2 {
+    margin: 0 0 4px;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  section.panel > .section-hint {
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+  }
+  .stat-card {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 16px;
+    background: #fafbfc;
+  }
+  .stat-card .label {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+  .stat-card .value {
+    font-size: 26px;
+    font-weight: 600;
+    margin-top: 6px;
+  }
+  .stat-card.tone-high { background: var(--high-soft); border-color: #f3c2bd; }
+  .stat-card.tone-high .value { color: var(--high); }
+  .stat-card.tone-medium { background: var(--medium-soft); border-color: #f0d79a; }
+  .stat-card.tone-medium .value { color: var(--medium); }
+  .stat-card.tone-low { background: var(--low-soft); border-color: #b9dac5; }
+  .stat-card.tone-low .value { color: var(--low); }
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 14px;
+  }
+  .meta-row strong { color: var(--ink); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  table th, table td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  table th {
+    background: #f7f9fb;
+    font-weight: 600;
+    color: var(--muted);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .severity-pill {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 999px;
+    letter-spacing: 0.04em;
+  }
+  .severity-pill.high { background: var(--high-soft); color: var(--high); }
+  .severity-pill.medium { background: var(--medium-soft); color: var(--medium); }
+  .severity-pill.low { background: var(--low-soft); color: var(--low); }
+  .delta-positive { color: var(--positive); font-weight: 600; }
+  .delta-negative { color: var(--negative); font-weight: 600; }
+  .delta-neutral { color: var(--muted); }
+  .target-block {
+    background: var(--accent-soft);
+    border: 1px solid #c4d6ed;
+    border-radius: 8px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+  }
+  .target-block h3 {
+    margin: 0 0 6px;
+    font-size: 16px;
+    color: var(--accent);
+  }
+  .target-block .target-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .target-block .target-meta strong { color: var(--ink); }
+  .driver-card {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    background: #fafbfc;
+  }
+  .driver-card .driver-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .driver-card .driver-title {
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .driver-card .driver-rank {
+    color: var(--muted);
+    font-size: 12px;
+    margin-right: 8px;
+  }
+  .driver-card .driver-role {
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .driver-card .driver-contribution {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .driver-card .driver-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+  .driver-card .driver-meta strong { color: var(--ink); }
+  .driver-card p { margin: 8px 0 0; }
+  .process-group {
+    margin-bottom: 18px;
+  }
+  .process-group h3 {
+    font-size: 14px;
+    margin: 0 0 6px;
+    color: var(--accent);
+  }
+  .roadmap {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+  }
+  .roadmap .card {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 16px;
+    background: #fafbfc;
+  }
+  .roadmap .card h3 {
+    margin: 0 0 8px;
+    font-size: 14px;
+    color: var(--accent);
+  }
+  .roadmap ul { margin: 0; padding-left: 18px; }
+  .roadmap li { margin-bottom: 4px; font-size: 13px; }
+  .limitations-list { margin: 0; padding-left: 18px; }
+  .limitations-list li { margin-bottom: 6px; }
+  .limitations-list .source {
+    display: inline-block;
+    color: var(--muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-right: 6px;
+  }
+  .next-steps-list { margin: 0; padding-left: 18px; }
+  .next-steps-list li { margin-bottom: 6px; }
+  .next-steps-list .source-tag {
+    display: inline-block;
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 1px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    margin-right: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  footer.footer {
+    margin-top: 32px;
+    color: var(--muted);
+    font-size: 12px;
+    text-align: center;
+  }
+  .empty {
+    color: var(--muted);
+    font-size: 13px;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+<main class="page">
+
+  <header class="hero">
+    <div class="eyebrow">m4-ab-v1</div>
+    <h1>RiskOps Copilot</h1>
+    <div class="subtitle">M4 Dashboard &amp; Report MVP</div>
+    <div class="meta">
+      <span><strong>报告生成时间</strong>：2026-05-18 08:35:09</span>
+      <span><strong>基线窗口</strong>：2026-03-19~2026-04-17</span>
+      <span><strong>最近窗口</strong>：2026-04-18~2026-05-17</span>
+      <span><strong>M3 报告版本</strong>：m3-c-v1</span>
+    </div>
+    <div class="disclaimer">
+      <span class="tag">Demo Disclaimer</span>
+      本报告基于 synthetic_data / 合成数据生成，仅用于 M3 Demo 展示，不代表真实业务结论。
+    </div>
+  </header>
+
+  <section class="panel" id="overview">
+    <h2>1. 异常总览</h2>
+    <div class="section-hint">基于 M3-A 异常检测引擎输出，统计本轮触发的异常数量与严重度分布。</div>
+    <div class="card-grid">
+      <div class="stat-card tone-neutral">
+        <div class="label">异常总数</div>
+        <div class="value">8</div>
+      </div>
+      <div class="stat-card tone-high">
+        <div class="label">high 级</div>
+        <div class="value">6</div>
+      </div>
+      <div class="stat-card tone-medium">
+        <div class="label">medium 级</div>
+        <div class="value">2</div>
+      </div>
+      <div class="stat-card tone-low">
+        <div class="label">low 级</div>
+        <div class="value">0</div>
+      </div>
+    </div>
+    <div class="meta-row">
+      <span><strong>归因目标指标</strong>：D7 回收率（recovery_rate_d7）</span>
+      <span><strong>归因目标 anomaly_id</strong>：M3A-m1_recovery_rate-overall-ALL</span>
+    </div>
+  </section>
+
+  <section class="panel" id="high-priority">
+    <h2>2. 高优先级异常列表</h2>
+    <div class="section-hint">按 severity 排序展示需要优先处置的异常事件。</div>
+    <table>
+      <thead>
+        <tr>
+          <th>指标</th>
+          <th>severity</th>
+          <th>维度</th>
+          <th>baseline</th>
+          <th>recent</th>
+          <th>relative change</th>
+          <th>下一步建议</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <strong>华东线路人均案量</strong><br/>
+            <span style="color: var(--muted); font-size: 12px;">avg_case_per_collector</span>
+          </td>
+          <td>
+            <span class="severity-pill high">high</span>
+          </td>
+          <td>region = 华东</td>
+          <td>13.54</td>
+          <td>19.10</td>
+          <td>
+              <span class="delta-positive">+41.13%</span>
+          </td>
+          <td>下钻华东各 line_id 的 active_case_count 与 active_collector_count，评估临时增员或分案转移。</td>
+        </tr>
+        <tr>
+          <td>
+            <strong>高余额高风险客群占比</strong><br/>
+            <span style="color: var(--muted); font-size: 12px;">high_balance_high_risk_share</span>
+          </td>
+          <td>
+            <span class="severity-pill high">high</span>
+          </td>
+          <td>balance_segment+risk_level = HIGH+C/D</td>
+          <td>0.59%</td>
+          <td>0.75%</td>
+          <td>
+              <span class="delta-positive">+27.45%</span>
+          </td>
+          <td>进入 M3-B 后拆分余额段、risk_level 和入案批次，识别结构变化贡献。</td>
+        </tr>
+        <tr>
+          <td>
+            <strong>AI 外呼覆盖率</strong><br/>
+            <span style="color: var(--muted); font-size: 12px;">ai_call_coverage</span>
+          </td>
+          <td>
+            <span class="severity-pill high">high</span>
+          </td>
+          <td>action_type = AI_OUTBOUND</td>
+          <td>30.09%</td>
+          <td>17.78%</td>
+          <td>
+              <span class="delta-negative">-40.89%</span>
+          </td>
+          <td>检查 AI 外呼线路容量、分案策略和人工替代触达占比。</td>
+        </tr>
+        <tr>
+          <td>
+            <strong>减免使用率</strong><br/>
+            <span style="color: var(--muted); font-size: 12px;">reduction_usage_rate</span>
+          </td>
+          <td>
+            <span class="severity-pill high">high</span>
+          </td>
+          <td>overall = ALL</td>
+          <td>0.06%</td>
+          <td>0.05%</td>
+          <td>
+              <span class="delta-negative">-27.17%</span>
+          </td>
+          <td>下钻 vendor_id、line_id 与 dpd_bucket，确认减免授权、审批或策略门槛是否变化。</td>
+        </tr>
+        <tr>
+          <td>
+            <strong>PTP 履约率</strong><br/>
+            <span style="color: var(--muted); font-size: 12px;">ptp_keep_rate</span>
+          </td>
+          <td>
+            <span class="severity-pill high">high</span>
+          </td>
+          <td>overall = ALL</td>
+          <td>49.68%</td>
+          <td>43.58%</td>
+          <td>
+              <span class="delta-negative">-12.28%</span>
+          </td>
+          <td>下钻承诺还款客户的风险等级、余额段、催员和减免使用情况。</td>
+        </tr>
+        <tr>
+          <td>
+            <strong>万案投诉率</strong><br/>
+            <span style="color: var(--muted); font-size: 12px;">complaint_per_10k_cases</span>
+          </td>
+          <td>
+            <span class="severity-pill high">high</span>
+          </td>
+          <td>template_id = TPL_RISK_NOTICE</td>
+          <td>54.20</td>
+          <td>122.48</td>
+          <td>
+              <span class="delta-positive">+125.96%</span>
+          </td>
+          <td>下钻该模板的发送供应商、发送时段、投诉等级和具体话术，进入合规复核。</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="panel" id="attribution">
+    <h2>3. M1 D7 回收率下降归因</h2>
+    <div class="section-hint">基于 M3-B 归因引擎对目标指标 recovery_rate_d7 的 Top drivers 进行解读。</div>
+
+    <div class="target-block">
+      <h3>归因目标异常：M1 回收率</h3>
+      <div class="target-meta">
+        <span><strong>severity</strong>：<span class="severity-pill medium">medium</span></span>
+        <span><strong>维度</strong>：overall = ALL</span>
+        <span><strong>baseline</strong>：19.43%</span>
+        <span><strong>recent</strong>：15.30%</span>
+        <span><strong>relative change</strong>：
+            <span class="delta-negative">-21.27%</span>
+        </span>
+      </div>
+      <p style="margin: 10px 0 0;">最近窗口均值 15.30% 低于基线 19.43%，变化 -4.13%。</p>
+    </div>
+
+    <h3 style="margin: 12px 0 8px; font-size: 15px;">Top 5 drivers</h3>
+      <div class="driver-card">
+        <div class="driver-head">
+          <div>
+            <span class="driver-rank">#1</span>
+            <span class="driver-title">channel_code = ECOM</span>
+            <span class="driver-role">渠道结构</span>
+          </div>
+          <div class="driver-contribution">贡献度 15.26%</div>
+        </div>
+        <div class="driver-meta">
+          <span><strong>baseline</strong>：23.90%</span>
+          <span><strong>recent</strong>：6.29%</span>
+          <span><strong>confidence</strong>：medium</span>
+        </div>
+        <p><strong>业务解释</strong>：ECOM 分组的回收率下降对整体异常有可量化贡献。</p>
+        <p><strong>推荐动作</strong>：继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。</p>
+      </div>
+      <div class="driver-card">
+        <div class="driver-head">
+          <div>
+            <span class="driver-rank">#2</span>
+            <span class="driver-title">province = 山东</span>
+            <span class="driver-role">区域结构</span>
+          </div>
+          <div class="driver-contribution">贡献度 6.52%</div>
+        </div>
+        <div class="driver-meta">
+          <span><strong>baseline</strong>：29.45%</span>
+          <span><strong>recent</strong>：12.73%</span>
+          <span><strong>confidence</strong>：medium</span>
+        </div>
+        <p><strong>业务解释</strong>：山东 分组的回收率下降对整体异常有可量化贡献。</p>
+        <p><strong>推荐动作</strong>：继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。</p>
+      </div>
+      <div class="driver-card">
+        <div class="driver-head">
+          <div>
+            <span class="driver-rank">#3</span>
+            <span class="driver-title">score_band = D</span>
+            <span class="driver-role">客群风险结构</span>
+          </div>
+          <div class="driver-contribution">贡献度 5.75%</div>
+        </div>
+        <div class="driver-meta">
+          <span><strong>baseline</strong>：17.83%</span>
+          <span><strong>recent</strong>：5.93%</span>
+          <span><strong>confidence</strong>：medium</span>
+        </div>
+        <p><strong>业务解释</strong>：D 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。</p>
+        <p><strong>推荐动作</strong>：对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。</p>
+      </div>
+      <div class="driver-card">
+        <div class="driver-head">
+          <div>
+            <span class="driver-rank">#4</span>
+            <span class="driver-title">province = 上海</span>
+            <span class="driver-role">区域结构</span>
+          </div>
+          <div class="driver-contribution">贡献度 4.42%</div>
+        </div>
+        <div class="driver-meta">
+          <span><strong>baseline</strong>：22.35%</span>
+          <span><strong>recent</strong>：7.16%</span>
+          <span><strong>confidence</strong>：medium</span>
+        </div>
+        <p><strong>业务解释</strong>：上海 分组的回收率下降对整体异常有可量化贡献。</p>
+        <p><strong>推荐动作</strong>：继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。</p>
+      </div>
+      <div class="driver-card">
+        <div class="driver-head">
+          <div>
+            <span class="driver-rank">#5</span>
+            <span class="driver-title">score_band = A</span>
+            <span class="driver-role">客群风险结构</span>
+          </div>
+          <div class="driver-contribution">贡献度 4.04%</div>
+        </div>
+        <div class="driver-meta">
+          <span><strong>baseline</strong>：36.42%</span>
+          <span><strong>recent</strong>：19.88%</span>
+          <span><strong>confidence</strong>：medium</span>
+        </div>
+        <p><strong>业务解释</strong>：A 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。</p>
+        <p><strong>推荐动作</strong>：对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。</p>
+      </div>
+  </section>
+
+  <section class="panel" id="process-evidence">
+    <h2>4. Process evidence / driver linkage</h2>
+    <div class="section-hint">将 Top drivers 与过程指标（PTP 履约 / AI 外呼覆盖 / 减免使用率 / 投诉率）以及产能压力信号对齐。</div>
+
+    <div class="process-group">
+      <h3>PTP 履约</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>driver</th>
+            <th>过程指标</th>
+            <th>baseline</th>
+            <th>recent</th>
+            <th>delta</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>channel_code=ECOM</td>
+            <td>PTP 履约率</td>
+            <td>0.00%</td>
+            <td>0.00%</td>
+            <td>
+                <span class="delta-neutral">+0.00%</span>
+            </td>
+          </tr>
+          <tr>
+            <td>province=山东</td>
+            <td>PTP 履约率</td>
+            <td>0.00%</td>
+            <td>0.00%</td>
+            <td>
+                <span class="delta-neutral">+0.00%</span>
+            </td>
+          </tr>
+          <tr>
+            <td>score_band=D</td>
+            <td>PTP 履约率</td>
+            <td>0.00%</td>
+            <td>0.00%</td>
+            <td>
+                <span class="delta-neutral">+0.00%</span>
+            </td>
+          </tr>
+          <tr>
+            <td>province=上海</td>
+            <td>PTP 履约率</td>
+            <td>0.00%</td>
+            <td>0.00%</td>
+            <td>
+                <span class="delta-neutral">+0.00%</span>
+            </td>
+          </tr>
+          <tr>
+            <td>score_band=A</td>
+            <td>PTP 履约率</td>
+            <td>0.00%</td>
+            <td>0.00%</td>
+            <td>
+                <span class="delta-neutral">+0.00%</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="process-group">
+      <h3>AI 外呼覆盖</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>driver</th>
+            <th>过程指标</th>
+            <th>baseline</th>
+            <th>recent</th>
+            <th>delta</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>channel_code=ECOM</td>
+            <td>AI 外呼覆盖率</td>
+            <td>46.15%</td>
+            <td>7.14%</td>
+            <td>
+                <span class="delta-negative">-39.01%</span>
+            </td>
+          </tr>
+          <tr>
+            <td>channel_code=ECOM</td>
+            <td>人工触达占比</td>
+            <td>53.85%</td>
+            <td>92.86%</td>
+            <td>
+                <span class="delta-positive">+39.01%</span>
+            </td>
+          </tr>
+          <tr>
+            <td>province=山东</td>
+            <td>AI 外呼覆盖率</td>
+            <td>100.00%</td>
+            <td>0.00%</td>
+            <td>
+                <span class="delta-negative">-100.00%</span>
+            </td>
+          </tr>
+          <tr>
+            <td>province=山东</td>
+            <td>人工触达占比</td>
+            <td>0.00%</td>
+            <td>100.00%</td>
+            <td>
+                <span class="delta-positive">+100.00%</span>
+            </td>
+          </tr>
+          <tr>
+            <td>score_band=D</td>
+            <td>AI 外呼覆盖率</td>
+            <td>0.00%</td>
+            <td>0.00%</td>
+            <td>
+                <span class="delta-neutral">+0.00%</span>
+            </td>
+          </tr>
+          <tr>
+            <td>score_band=D</td>
+            <td>人工触达占比</td>
+            <td>100.00%</td>
+            <td>100.00%</td>
+            <td>
+                <span class="delta-neutral">+0.00%</span>
+            </td>
+          </tr>
+          <tr>
+            <td>province=上海</td>
+            <td>AI 外呼覆盖率</td>
+            <td>33.33%</td>
+            <td>0.00%</td>
+            <td>
+                <span class="delta-negative">-33.33%</span>
+            </td>
+          </tr>
+          <tr>
+            <td>province=上海</td>
+            <td>人工触达占比</td>
+            <td>66.67%</td>
+            <td>100.00%</td>
+            <td>
+                <span class="delta-positive">+33.33%</span>
+            </td>
+          </tr>
+          <tr>
+            <td>score_band=A</td>
+            <td>AI 外呼覆盖率</td>
+            <td>25.00%</td>
+            <td>0.00%</td>
+            <td>
+                <span class="delta-negative">-25.00%</span>
+            </td>
+          </tr>
+          <tr>
+            <td>score_band=A</td>
+            <td>人工触达占比</td>
+            <td>75.00%</td>
+            <td>100.00%</td>
+            <td>
+                <span class="delta-positive">+25.00%</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="process-group">
+      <h3>减免使用率</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>driver</th>
+            <th>过程指标</th>
+            <th>baseline</th>
+            <th>recent</th>
+            <th>delta</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>channel_code=ECOM</td>
+            <td>减免使用率</td>
+            <td>0.00%</td>
+            <td>0.00%</td>
+            <td>
+                <span class="delta-neutral">+0.00%</span>
+            </td>
+          </tr>
+          <tr>
+            <td>province=山东</td>
+            <td>减免使用率</td>
+            <td>0.00%</td>
+            <td>0.00%</td>
+            <td>
+                <span class="delta-neutral">+0.00%</span>
+            </td>
+          </tr>
+          <tr>
+            <td>score_band=D</td>
+            <td>减免使用率</td>
+            <td>0.00%</td>
+            <td>0.00%</td>
+            <td>
+                <span class="delta-neutral">+0.00%</span>
+            </td>
+          </tr>
+          <tr>
+            <td>province=上海</td>
+            <td>减免使用率</td>
+            <td>0.00%</td>
+            <td>0.00%</td>
+            <td>
+                <span class="delta-neutral">+0.00%</span>
+            </td>
+          </tr>
+          <tr>
+            <td>score_band=A</td>
+            <td>减免使用率</td>
+            <td>0.00%</td>
+            <td>0.00%</td>
+            <td>
+                <span class="delta-neutral">+0.00%</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="process-group">
+      <h3>投诉率</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>driver</th>
+            <th>过程指标</th>
+            <th>baseline</th>
+            <th>recent</th>
+            <th>delta</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>channel_code=ECOM</td>
+            <td>投诉率</td>
+            <td>0.00%</td>
+            <td>0.00%</td>
+            <td>
+                <span class="delta-neutral">+0.00%</span>
+            </td>
+          </tr>
+          <tr>
+            <td>province=山东</td>
+            <td>投诉率</td>
+            <td>0.00%</td>
+            <td>0.00%</td>
+            <td>
+                <span class="delta-neutral">+0.00%</span>
+            </td>
+          </tr>
+          <tr>
+            <td>score_band=D</td>
+            <td>投诉率</td>
+            <td>0.00%</td>
+            <td>0.00%</td>
+            <td>
+                <span class="delta-neutral">+0.00%</span>
+            </td>
+          </tr>
+          <tr>
+            <td>province=上海</td>
+            <td>投诉率</td>
+            <td>0.00%</td>
+            <td>0.00%</td>
+            <td>
+                <span class="delta-neutral">+0.00%</span>
+            </td>
+          </tr>
+          <tr>
+            <td>score_band=A</td>
+            <td>投诉率</td>
+            <td>0.00%</td>
+            <td>0.00%</td>
+            <td>
+                <span class="delta-neutral">+0.00%</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="process-group">
+      <h3>产能压力信号</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>指标</th>
+            <th>维度</th>
+            <th>baseline</th>
+            <th>recent</th>
+            <th>relative change</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>华东线路人均案量</strong></td>
+            <td>region = 华东</td>
+            <td>13.54</td>
+            <td>19.10</td>
+            <td>
+                <span class="delta-positive">+41.13%</span>
+            </td>
+            <td>华东线路人均案量从 13.54 升至 19.10，产能压力上升。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" id="limitations">
+    <h2>5. 数据局限与合规说明</h2>
+    <div class="section-hint">Demo 环境使用的合成数据与隐私边界约束。</div>
+    <ul class="limitations-list">
+      <li>
+        <span class="source">synthetic_data</span>本报告基于 synthetic_data / 合成数据生成，仅用于 M3 Demo 展示，不代表真实业务结论。
+      </li>
+      <li>
+        <span class="source">attribution_note</span>按 M1 dpd_bucket 过滤后解释 recovery_rate_d7，未重新定义指标口径。
+      </li>
+      <li>
+        <span class="source">method_boundary</span>贡献度为各维度切片的边际贡献，跨维度可能重叠，不可直接相加为整体下降的解释比例。
+      </li>
+      <li><span class="source">privacy</span>未接入真实客户数据，未触达真实客户，未发送短信 / 外呼，未涉及 P4 明文 PII 字段。</li>
+      <li><span class="source">human_in_loop</span>所有结论均需人工复核，AI 不直接外发、不直接外呼、不绕过审批。</li>
+    </ul>
+  </section>
+
+  <section class="panel" id="next-steps">
+    <h2>6. 下一步建议</h2>
+    <div class="section-hint">本轮异常与归因驱动的可执行建议（来自 M3-C 报告）。</div>
+    <ul class="next-steps-list">
+      <li>
+        <span class="source-tag">attribution</span>继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。
+      </li>
+      <li>
+        <span class="source-tag">attribution</span>对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。
+      </li>
+      <li>
+        <span class="source-tag">anomaly</span>下钻华东各 line_id 的 active_case_count 与 active_collector_count，评估临时增员或分案转移。
+      </li>
+      <li>
+        <span class="source-tag">anomaly</span>进入 M3-B 后拆分余额段、risk_level 和入案批次，识别结构变化贡献。
+      </li>
+      <li>
+        <span class="source-tag">anomaly</span>检查 AI 外呼线路容量、分案策略和人工替代触达占比。
+      </li>
+      <li>
+        <span class="source-tag">anomaly</span>下钻 vendor_id、line_id 与 dpd_bucket，确认减免授权、审批或策略门槛是否变化。
+      </li>
+      <li>
+        <span class="source-tag">anomaly</span>下钻承诺还款客户的风险等级、余额段、催员和减免使用情况。
+      </li>
+      <li>
+        <span class="source-tag">anomaly</span>下钻该模板的发送供应商、发送时段、投诉等级和具体话术，进入合规复核。
+      </li>
+    </ul>
+
+    <h3 style="margin: 18px 0 10px; font-size: 14px; color: var(--muted);">后续里程碑路线图</h3>
+    <div class="roadmap">
+      <div class="card">
+        <h3>M4 后续增强</h3>
+        <ul>
+          <li>经营报告 renderer（Word / PPT）输出客户经营分析报告</li>
+          <li>Dashboard 增加趋势图、下钻 link、对比窗口切换</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>M5 TUI</h3>
+        <ul>
+          <li>Textual TUI 工作台：异常 / 归因 / 报告一键运行</li>
+          <li>命令行交互式选择目标指标 / 维度 / 时间窗口</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>M6 Model Lab</h3>
+        <ul>
+          <li>回收率模型、PTP 履约模型、投诉风险模型实验台</li>
+          <li>AUC / KS / PSI / lift 评估报告与基线对比</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>M7 Collection QA</h3>
+        <ul>
+          <li>催收录音 / 文本质检与合规风险识别</li>
+          <li>话术推荐与 AI 外呼场景化策略</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    RiskOps Copilot · M4 Dashboard &amp; Report MVP · 本页面基于合成数据，仅供 Demo 与作品集展示。
+  </footer>
+</main>
+</body>
+</html>
