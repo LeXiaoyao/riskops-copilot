@@ -37,6 +37,12 @@ Codex must identify the current milestone and must not work outside the requeste
 > 最近一次更新：2026-05-16（M2 commit `6a08f22` 已 push 后）
 > 当前快照：M1 commit `5978a13` + M2 commit `6a08f22` 均已 push 到 GitHub；本地 working tree clean；远程 6 个 commit 与本地完全对齐
 
+### M6-prep 状态说明
+
+- **状态**：M6-prep 规划文档已完成，详见 `docs/m6_prep_plan.md`。
+- **推荐拆解**：M6-A Strategy Scenario Schema、M6-B Offline Strategy Evaluator、M6-C ROI & Cost-Benefit Calculator、M6-D Model Lab Stub / Score Simulation、M6-E Report / CLI Integration。
+- **下一步建议**：从 M6-A 开始，先固定策略情景 schema 和配置边界，再进入 evaluator 与 ROI 计算。
+
 ### 阶段 1：M0 收尾 + GitHub 接入
 
 | 序号 | 任务 | 负责 | 状态 | 依赖 | 备注 |

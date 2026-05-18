@@ -4,9 +4,10 @@ RiskOps Copilot 是一个面向消费金融风控全生命周期的本地化 AI 
 
 ## 当前状态
 
-- **阶段**：M5 CLI Interaction MVP 已完成，准备 v0.5.0 发布
+- **阶段**：M5 CLI Interaction MVP 已完成，v0.5.0 已发布
 - **已完成**：M1 数据底座、M2 指标资产、M3 异常检测与归因、M4 Static Dashboard、M4 Business Report Renderer、M5 CLI Interaction MVP
 - **当前输出**：`outputs/dashboard/dashboard.html`、`outputs/reports/m4_business_report.md`、`outputs/reports/m4_business_report.html`
+- **Next**：M6 Model Lab / Strategy Evaluation Lab planning
 - **未实现**：Interactive TUI、Agent、模型训练、催收质检、真实短信或语音触达、真实客户数据接入
 - **需求基准**：[PRD v6](docs/prd/PRD_v6.md)
 
