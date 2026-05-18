@@ -4,10 +4,10 @@ RiskOps Copilot 是一个面向消费金融风控全生命周期的本地化 AI 
 
 ## 当前状态
 
-- **阶段**：M4 Dashboard & Business Report MVP 已完成，准备 v0.4.0 发布
-- **已完成**：M1 数据底座、M2 指标资产、M3 异常检测与归因、M4 Static Dashboard、M4 Business Report Renderer
+- **阶段**：M5 CLI Interaction MVP 已完成，准备 v0.5.0 发布
+- **已完成**：M1 数据底座、M2 指标资产、M3 异常检测与归因、M4 Static Dashboard、M4 Business Report Renderer、M5 CLI Interaction MVP
 - **当前输出**：`outputs/dashboard/dashboard.html`、`outputs/reports/m4_business_report.md`、`outputs/reports/m4_business_report.html`
-- **未实现**：TUI、Agent、模型训练、催收质检、真实短信或语音触达、真实客户数据接入
+- **未实现**：Interactive TUI、Agent、模型训练、催收质检、真实短信或语音触达、真实客户数据接入
 - **需求基准**：[PRD v6](docs/prd/PRD_v6.md)
 
 ## 技术栈
@@ -48,7 +48,25 @@ RiskOps_Copilot/
 └── tests/                   # 基础结构测试
 ```
 
-## 可用命令
+## M5 CLI 快速入口
+
+```bash
+python scripts/riskops_cli.py --help
+python scripts/riskops_cli.py summary
+python scripts/riskops_cli.py anomalies
+python scripts/riskops_cli.py drivers
+python scripts/riskops_cli.py outputs
+python scripts/riskops_cli.py render-dashboard
+python scripts/riskops_cli.py render-report
+```
+
+- **summary**：显示项目状态、anomaly 总数、数据边界、常用命令入口
+- **anomalies**：高优先级异常列表（severity / baseline / recent / recommended next step）
+- **drivers**：M1 D7 回收率下降 Top 5 drivers + 业务口径边界说明
+- **outputs**：输出文件路径与存在状态
+- **render-dashboard / render-report**：重新渲染 Dashboard 和 Business Report
+
+## 可用命令（全量）
 
 ```bash
 python scripts/generate_synthetic_data.py --help
@@ -61,17 +79,10 @@ python scripts/render_business_report.py
 pytest
 ```
 
-## M4 输出入口
+## 下一步：v0.5.0 发布后
 
-- **Static Dashboard**：运行 `python scripts/render_dashboard.py`，输出 `outputs/dashboard/dashboard.html`
-- **Business Report**：运行 `python scripts/render_business_report.py`，输出 `outputs/reports/m4_business_report.md` 与 `outputs/reports/m4_business_report.html`
-- **边界说明**：M4 输出仅基于 synthetic data / 合成数据和本地 M3 结果，不接外部 API，不接 LLM，不触发真实催收动作。
-
-## 下一步：v0.4.0 发布后
-
-1. 发布 v0.4.0 Dashboard & Business Report MVP。
-2. 进入 M5 TUI / Agent 前，先完成 release notes 与 Demo 路径复核。
-3. 继续保持 P4 明文字段不进入 DWD / DWS / ADS / Dashboard / Report。
+1. 发布 v0.5.0 CLI Interaction MVP。
+2. 继续保持 P4 明文字段不进入 DWD / DWS / ADS / Dashboard / Report。
 
 ## 合规声明
 
