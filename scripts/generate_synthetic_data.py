@@ -5,7 +5,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import sys
-from datetime import date
 from pathlib import Path
 
 import numpy as np
@@ -18,6 +17,7 @@ from riskops.data.m1_spec import sync_metadata_and_schemas
 
 
 OUTPUT_ROOT = ROOT / "synthetic_data"
+DEFAULT_REFERENCE_DATE = "2026-05-18"
 
 SCALE_CONFIG = {
     "small": {"customers": 20_000, "loans": 30_000, "cases": 10_000, "actions": 200_000, "collectors": 420},
@@ -61,6 +61,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--months", type=int, default=18)
     parser.add_argument("--scale", choices=sorted(SCALE_CONFIG), default="small")
     parser.add_argument("--seed", type=int, default=20260515)
+    parser.add_argument("--reference-date", default=DEFAULT_REFERENCE_DATE)
     parser.add_argument("--output-format", choices=["csv", "parquet"], default="parquet")
     parser.add_argument("--with-raw", action="store_true")
     return parser
@@ -252,7 +253,7 @@ def make_repayment(loans: pd.DataFrame, mapping: pd.DataFrame, cases: pd.DataFra
     due_ts = pd.to_datetime(plan["due_date"])
     recent = due_ts >= end_date - pd.Timedelta(days=29)
     m1 = plan["initial_dpd_bucket"].fillna("M1").eq("M1")
-    prob = np.where(m1 & recent, 0.20, np.where(m1, 0.186, 0.27))
+    prob = np.where(m1 & recent, 0.14, np.where(m1, 0.22, 0.27))
     prob = np.where(plan["initial_dpd_bucket"].isna(), 0.30, prob)
     paid = rng.random(len(plan)) < prob
     repay = plan.loc[paid, ["plan_id", "loan_id", "customer_id", "due_date", "due_amount"]].copy().reset_index(drop=True)
@@ -518,7 +519,7 @@ def main() -> int:
     sync_metadata_and_schemas()
     config = SCALE_CONFIG[args.scale]
     rng = np.random.default_rng(args.seed)
-    end_date = pd.Timestamp(date.today())
+    end_date = pd.Timestamp(args.reference_date).normalize()
     start_date = end_date - pd.DateOffset(months=args.months)
 
     dims = make_static_dims(config, rng, end_date)
