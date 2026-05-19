@@ -57,6 +57,11 @@ python scripts/riskops_cli.py summary
 python scripts/riskops_cli.py anomalies
 python scripts/riskops_cli.py drivers
 python scripts/riskops_cli.py outputs
+python scripts/riskops_cli.py scenarios
+python scripts/riskops_cli.py strategy-eval
+python scripts/riskops_cli.py roi
+python scripts/riskops_cli.py model-lab
+python scripts/riskops_cli.py render-model-lab
 python scripts/riskops_cli.py render-dashboard
 python scripts/riskops_cli.py render-report
 ```

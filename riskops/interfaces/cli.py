@@ -9,6 +9,13 @@ from pathlib import Path
 from typing import Any, TextIO
 
 from riskops.engines.dashboard import DashboardInputError, write_dashboard
+from riskops.engines.model_lab.roi_calculator import calculate_roi_results, load_strategy_eval_results, write_roi_outputs
+from riskops.engines.model_lab.scenario_schema import (
+    load_strategy_scenarios,
+    summarize_strategy_scenarios,
+    validate_strategy_scenarios,
+)
+from riskops.engines.model_lab.strategy_evaluator import run_strategy_evaluation
 from riskops.engines.report import BusinessReportInputError, write_business_report
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -16,6 +23,11 @@ DEFAULT_M3_SUMMARY = ROOT / "outputs" / "m3" / "m3_summary.json"
 DEFAULT_DASHBOARD = ROOT / "outputs" / "dashboard" / "dashboard.html"
 DEFAULT_REPORT_MD = ROOT / "outputs" / "reports" / "m4_business_report.md"
 DEFAULT_REPORT_HTML = ROOT / "outputs" / "reports" / "m4_business_report.html"
+DEFAULT_STRATEGY_SCENARIOS = ROOT / "configs" / "strategy_scenarios.yaml"
+DEFAULT_STRATEGY_EVAL_JSON = ROOT / "outputs" / "model_lab" / "strategy_eval_results.json"
+DEFAULT_STRATEGY_EVAL_MD = ROOT / "outputs" / "model_lab" / "strategy_eval_summary.md"
+DEFAULT_ROI_JSON = ROOT / "outputs" / "model_lab" / "roi_results.json"
+DEFAULT_ROI_MD = ROOT / "outputs" / "model_lab" / "roi_summary.md"
 
 OUTPUT_PATHS = [
     DEFAULT_DASHBOARD,
@@ -23,6 +35,10 @@ OUTPUT_PATHS = [
     DEFAULT_REPORT_HTML,
     ROOT / "outputs" / "m3" / "m3_summary.md",
     DEFAULT_M3_SUMMARY,
+    DEFAULT_STRATEGY_EVAL_JSON,
+    DEFAULT_STRATEGY_EVAL_MD,
+    DEFAULT_ROI_JSON,
+    DEFAULT_ROI_MD,
 ]
 
 COMMON_COMMANDS = [
@@ -30,6 +46,11 @@ COMMON_COMMANDS = [
     "python scripts/riskops_cli.py anomalies",
     "python scripts/riskops_cli.py drivers",
     "python scripts/riskops_cli.py outputs",
+    "python scripts/riskops_cli.py scenarios",
+    "python scripts/riskops_cli.py strategy-eval",
+    "python scripts/riskops_cli.py roi",
+    "python scripts/riskops_cli.py model-lab",
+    "python scripts/riskops_cli.py render-model-lab",
     "python scripts/riskops_cli.py render-dashboard",
     "python scripts/riskops_cli.py render-report",
 ]
@@ -59,6 +80,33 @@ def build_parser() -> argparse.ArgumentParser:
 
     outputs = subparsers.add_parser("outputs", help="Show dashboard, report, and M3 output paths.")
     outputs.set_defaults(handler=_handle_outputs)
+
+    scenarios = subparsers.add_parser("scenarios", help="Show M6-A strategy scenarios.")
+    scenarios.add_argument("--config", type=Path, default=DEFAULT_STRATEGY_SCENARIOS)
+    scenarios.set_defaults(handler=_handle_scenarios)
+
+    strategy_eval = subparsers.add_parser("strategy-eval", help="Show M6-B offline strategy evaluation summary.")
+    strategy_eval.add_argument("--input", type=Path, default=DEFAULT_STRATEGY_EVAL_JSON)
+    strategy_eval.set_defaults(handler=_handle_strategy_eval)
+
+    roi = subparsers.add_parser("roi", help="Show M6-C ROI cost-benefit summary.")
+    roi.add_argument("--input", type=Path, default=DEFAULT_ROI_JSON)
+    roi.set_defaults(handler=_handle_roi)
+
+    model_lab = subparsers.add_parser("model-lab", help="Show M6 model lab overview and output paths.")
+    model_lab.add_argument("--scenarios", type=Path, default=DEFAULT_STRATEGY_SCENARIOS)
+    model_lab.add_argument("--strategy-eval", type=Path, default=DEFAULT_STRATEGY_EVAL_JSON)
+    model_lab.add_argument("--roi", type=Path, default=DEFAULT_ROI_JSON)
+    model_lab.set_defaults(handler=_handle_model_lab)
+
+    render_model_lab = subparsers.add_parser("render-model-lab", help="Render M6 strategy eval and ROI outputs.")
+    render_model_lab.add_argument("--scenarios", type=Path, default=DEFAULT_STRATEGY_SCENARIOS)
+    render_model_lab.add_argument("--m3-summary", type=Path, default=DEFAULT_M3_SUMMARY)
+    render_model_lab.add_argument("--strategy-eval-json", type=Path, default=DEFAULT_STRATEGY_EVAL_JSON)
+    render_model_lab.add_argument("--strategy-eval-md", type=Path, default=DEFAULT_STRATEGY_EVAL_MD)
+    render_model_lab.add_argument("--roi-json", type=Path, default=DEFAULT_ROI_JSON)
+    render_model_lab.add_argument("--roi-md", type=Path, default=DEFAULT_ROI_MD)
+    render_model_lab.set_defaults(handler=_handle_render_model_lab)
 
     render_dashboard = subparsers.add_parser("render-dashboard", help="Render outputs/dashboard/dashboard.html.")
     _add_input_arg(render_dashboard)
@@ -216,6 +264,122 @@ def _handle_outputs(_args: argparse.Namespace, out: TextIO) -> None:
         print(f"- {_display_path(path)}：{status}", file=out)
 
 
+def _handle_scenarios(args: argparse.Namespace, out: TextIO) -> None:
+    scenarios = _load_scenarios(args.config)
+    summary = summarize_strategy_scenarios(scenarios)
+
+    _print_title(out, "M6-A Strategy Scenarios")
+    print(f"- scenario count：{summary['scenario_count']}", file=out)
+    print(f"- target metric：{', '.join(summary['target_metric_counts'])}", file=out)
+    print("- compliance boundary：synthetic data only / no real customer data / no real collection action / no SMS / voice / WhatsApp / no LLM decisioning", file=out)
+    print("", file=out)
+    for scenario in scenarios:
+        print(f"- **scenario_id**：{scenario.get('scenario_id')}", file=out)
+        print(f"  **strategy_type**：{scenario.get('strategy_type')}", file=out)
+        print(f"  **target_metric**：{scenario.get('target_metric')}", file=out)
+        print(f"  **description**：{scenario.get('description')}", file=out)
+        print(f"  **boundary**：{_format_boundary(scenario.get('compliance_boundary'))}", file=out)
+
+
+def _handle_strategy_eval(args: argparse.Namespace, out: TextIO) -> None:
+    report = _load_json_object(args.input, "strategy evaluation results")
+    results = [item for item in _as_list(report.get("results")) if isinstance(item, dict)]
+
+    _print_title(out, "M6-B Offline Strategy Evaluation")
+    print("- boundary：offline demo estimate，不是真实策略决策，不产生真实催收动作。", file=out)
+    print(f"- scenario count：{_safe_int(report.get('scenario_count'))}", file=out)
+    print(f"- target metric：{', '.join(_as_dict(report.get('target_metric_counts')).keys())}", file=out)
+    print(f"- priority scenarios：{', '.join(str(item) for item in _as_list(report.get('priority_scenarios'))) or 'none'}", file=out)
+    print("", file=out)
+    for item in results:
+        print(f"- {item.get('scenario_id')}：{item.get('estimated_direction')}", file=out)
+        print(f"  **estimated_delta**：{_format_pct(item.get('estimated_delta'))}", file=out)
+        print(f"  **confidence**：{item.get('confidence')}", file=out)
+    print("", file=out)
+    print("- synthetic data only", file=out)
+    print("- no real customer data", file=out)
+    print("- no LLM decisioning", file=out)
+
+
+def _handle_roi(args: argparse.Namespace, out: TextIO) -> None:
+    report = _load_json_object(args.input, "ROI results")
+    highest = _as_dict(report.get("highest_roi_scenario"))
+    results = [item for item in _as_list(report.get("results")) if isinstance(item, dict)]
+
+    _print_title(out, "M6-C ROI Cost-Benefit")
+    print("- boundary：demo cost assumptions，不是真实财务结论，不产生真实催收动作。", file=out)
+    print(f"- scenario count：{_safe_int(report.get('scenario_count'))}", file=out)
+    print(f"- positive ROI scenarios：{_safe_int(report.get('positive_roi_count'))}", file=out)
+    print(f"- highest ROI scenario：{highest.get('scenario_id') or 'none'}", file=out)
+    print("- demo cost assumptions：assumed_case_base / unit_recovery_value / ai_call_unit_cost / manual_capacity_unit_cost / reduction_cost_rate", file=out)
+    print("", file=out)
+    for item in results:
+        print(f"- {item.get('scenario_id')}", file=out)
+        print(f"  **gross benefit**：{_format_money(item.get('gross_benefit'))}", file=out)
+        print(f"  **action cost**：{_format_money(item.get('action_cost'))}", file=out)
+        print(f"  **net benefit**：{_format_money(item.get('net_benefit'))}", file=out)
+        print(f"  **roi_ratio**：{_format_number(item.get('roi_ratio'))}", file=out)
+    print("", file=out)
+    print("- synthetic data only", file=out)
+    print("- no real customer data", file=out)
+    print("- no real financial conclusion", file=out)
+
+
+def _handle_model_lab(args: argparse.Namespace, out: TextIO) -> None:
+    scenarios = _load_scenarios(args.scenarios)
+    scenario_summary = summarize_strategy_scenarios(scenarios)
+    strategy_eval = _load_json_object(args.strategy_eval, "strategy evaluation results")
+    roi = _load_json_object(args.roi, "ROI results")
+    highest = _as_dict(roi.get("highest_roi_scenario"))
+    priority = _as_list(strategy_eval.get("priority_scenarios"))
+    top_scenario = highest.get("scenario_id") or (str(priority[0]) if priority else "none")
+
+    _print_title(out, "M6 Model Lab Overview")
+    print("- M6-A scenario schema：ready", file=out)
+    print(f"- M6-B strategy eval output：{_display_path(args.strategy_eval)}", file=out)
+    print(f"- M6-B strategy eval summary：{_display_path(DEFAULT_STRATEGY_EVAL_MD)}", file=out)
+    print(f"- M6-C ROI output：{_display_path(args.roi)}", file=out)
+    print(f"- M6-C ROI summary：{_display_path(DEFAULT_ROI_MD)}", file=out)
+    print(f"- scenario count：{scenario_summary['scenario_count']}", file=out)
+    print(f"- target metric：{', '.join(scenario_summary['target_metric_counts'])}", file=out)
+    print(f"- top recommended scenario：{top_scenario}", file=out)
+    print("", file=out)
+    print("demo boundary：", file=out)
+    print("- synthetic data only", file=out)
+    print("- no real customer data", file=out)
+    print("- no real collection action", file=out)
+    print("- no SMS / voice / WhatsApp", file=out)
+    print("- no LLM decisioning", file=out)
+
+
+def _handle_render_model_lab(args: argparse.Namespace, out: TextIO) -> None:
+    scenarios = _load_scenarios(args.scenarios)
+    errors = validate_strategy_scenarios(scenarios)
+    if errors:
+        raise CliInputError(f"strategy scenario validation failed: {errors}")
+
+    try:
+        strategy_eval = run_strategy_evaluation(
+            scenarios_path=args.scenarios,
+            m3_summary_path=args.m3_summary,
+            output_json=args.strategy_eval_json,
+            output_md=args.strategy_eval_md,
+        )
+        roi = calculate_roi_results(load_strategy_eval_results(args.strategy_eval_json))
+        write_roi_outputs(roi, args.roi_json, args.roi_md)
+    except (FileNotFoundError, ValueError) as exc:
+        raise CliInputError(exc) from exc
+
+    print("strategy scenarios validation：PASS", file=out)
+    print(f"strategy_eval_results.json：{_display_path(args.strategy_eval_json)}", file=out)
+    print(f"strategy_eval_summary.md：{_display_path(args.strategy_eval_md)}", file=out)
+    print(f"roi_results.json：{_display_path(args.roi_json)}", file=out)
+    print(f"roi_summary.md：{_display_path(args.roi_md)}", file=out)
+    print(f"scenario count：{strategy_eval['scenario_count']}", file=out)
+    print(f"positive ROI scenarios：{roi['positive_roi_count']}", file=out)
+    print("PASS model lab render", file=out)
+
+
 def _handle_render_dashboard(args: argparse.Namespace, out: TextIO) -> None:
     try:
         context = write_dashboard(args.input, args.output)
@@ -252,6 +416,29 @@ def _load_summary(input_path: Path) -> dict[str, Any]:
         raise CliInputError(f"M3 summary 输入文件不是合法 JSON：{input_path}。错误：{exc}") from exc
     if not isinstance(payload, dict):
         raise CliInputError(f"M3 summary 输入文件结构不符合预期：{input_path} 顶层必须是 JSON object。")
+    return payload
+
+
+def _load_scenarios(config_path: Path) -> list[dict[str, Any]]:
+    try:
+        scenarios = load_strategy_scenarios(config_path)
+    except (FileNotFoundError, ValueError) as exc:
+        raise CliInputError(exc) from exc
+    errors = validate_strategy_scenarios(scenarios)
+    if errors:
+        raise CliInputError(f"strategy scenario validation failed: {errors}")
+    return scenarios
+
+
+def _load_json_object(input_path: Path, label: str) -> dict[str, Any]:
+    if not input_path.exists():
+        raise CliInputError(f"{label} 输入文件不存在：{input_path}。请先运行 render-model-lab。")
+    try:
+        payload = json.loads(input_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise CliInputError(f"{label} 输入文件不是合法 JSON：{input_path}。错误：{exc}") from exc
+    if not isinstance(payload, dict):
+        raise CliInputError(f"{label} 输入文件结构不符合预期：{input_path} 顶层必须是 JSON object。")
     return payload
 
 
@@ -306,6 +493,17 @@ def _format_number(value: Any) -> str:
     if not isinstance(value, int | float):
         return "-"
     return f"{value:.2f}"
+
+
+def _format_money(value: Any) -> str:
+    if not isinstance(value, int | float):
+        return "-"
+    return f"{value:,.2f}"
+
+
+def _format_boundary(value: Any) -> str:
+    boundaries = [str(item) for item in _as_list(value)]
+    return ", ".join(boundaries) if boundaries else "-"
 
 
 def _looks_like_ratio(value: Any) -> bool:
