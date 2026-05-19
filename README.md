@@ -75,6 +75,7 @@ python scripts/build_warehouse.py --help
 python scripts/render_docs.py --help
 python scripts/validate_strategy_scenarios.py
 python scripts/run_strategy_eval.py
+python scripts/run_roi_calculator.py
 python scripts/validate_data_quality.py --help
 python scripts/validate_metric_quality.py --help
 python scripts/render_dashboard.py

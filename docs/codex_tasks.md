@@ -45,7 +45,9 @@ Codex must identify the current milestone and must not work outside the requeste
 - **M6-A 状态**：Strategy Scenario Schema 已完成，包含 `configs/strategy_scenarios.yaml`、schema loader / validator、校验脚本、测试和说明文档。
 - **M6-A 后下一步建议**：进入 M6-B Offline Strategy Evaluator，只读取 M6-A scenario 和 synthetic M3 / ADS 输出做离线评估。
 - **M6-B 状态**：Offline Strategy Evaluator 已完成，包含 evaluator、运行脚本、JSON / Markdown 输出、测试和说明文档。
-- **M6-B 后下一步建议**：进入 M6-C ROI & Cost-Benefit Calculator，在 M6-B delta 基础上增加成本收益测算。
+- **M6-C 状态**：ROI & Cost-Benefit Calculator 已完成，包含 ROI calculator、运行脚本、JSON / Markdown 输出、测试和说明文档。
+- **M6-C 后下一步建议**：进入 M6-E CLI / report integration，把 M6-B / M6-C 输出接入展示入口。
+- **M6-D 状态**：Model Lab Stub / Score Simulation 可后置，不阻塞 M6-E。
 
 ### 阶段 1：M0 收尾 + GitHub 接入
 
