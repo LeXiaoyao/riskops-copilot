@@ -4,10 +4,10 @@ RiskOps Copilot 是一个面向消费金融风控全生命周期的本地化 AI 
 
 ## 当前状态
 
-- **阶段**：M5 CLI Interaction MVP 已完成，v0.5.0 已发布
-- **已完成**：M1 数据底座、M2 指标资产、M3 异常检测与归因、M4 Static Dashboard、M4 Business Report Renderer、M5 CLI Interaction MVP
-- **当前输出**：`outputs/dashboard/dashboard.html`、`outputs/reports/m4_business_report.md`、`outputs/reports/m4_business_report.html`
-- **Next**：M6 Model Lab / Strategy Evaluation Lab planning
+- **阶段**：M6 Model Lab Strategy Evaluation MVP 已完成，v0.6.0 已发布
+- **已完成**：M1 数据底座、M2 指标资产、M3 异常检测与归因、M4 Static Dashboard、M4 Business Report Renderer、M5 CLI Interaction MVP、M6 Model Lab（Strategy Scenario / Offline Evaluator / ROI Calculator / CLI Integration）
+- **当前输出**：`outputs/dashboard/dashboard.html`、`outputs/reports/m4_business_report.md`、`outputs/model_lab/strategy_eval_results.json`、`outputs/model_lab/roi_results.json`
+- **Next**：M6-D Model Lab Stub / M7 Collection QA（待规划）
 - **未实现**：Interactive TUI、Agent、模型训练、催收质检、真实短信或语音触达、真实客户数据接入
 - **需求基准**：[PRD v6](docs/prd/PRD_v6.md)
 
@@ -49,7 +49,7 @@ RiskOps_Copilot/
 └── tests/                   # 基础结构测试
 ```
 
-## M5 CLI 快速入口
+## M6 CLI 快速入口
 
 ```bash
 python scripts/riskops_cli.py --help
@@ -70,6 +70,11 @@ python scripts/riskops_cli.py render-report
 - **anomalies**：高优先级异常列表（severity / baseline / recent / recommended next step）
 - **drivers**：M1 D7 回收率下降 Top 5 drivers + 业务口径边界说明
 - **outputs**：输出文件路径与存在状态
+- **scenarios**：显示 M6-A 5 个策略场景与 compliance boundary
+- **strategy-eval**：显示 M6-B 离线策略评估摘要（offline demo estimate）
+- **roi**：显示 M6-C ROI 成本收益摘要（demo cost assumptions）
+- **model-lab**：M6 总览入口，含所有输出路径与 demo boundary
+- **render-model-lab**：重跑 M6 strategy eval + ROI 输出
 - **render-dashboard / render-report**：重新渲染 Dashboard 和 Business Report
 
 ## 可用命令（全量）
@@ -88,10 +93,10 @@ python scripts/render_business_report.py
 pytest
 ```
 
-## 下一步：v0.5.0 发布后
+## 下一步：v0.6.0 发布后
 
-1. 发布 v0.5.0 CLI Interaction MVP。
-2. 继续保持 P4 明文字段不进入 DWD / DWS / ADS / Dashboard / Report。
+1. 发布 v0.6.0 Model Lab Strategy Evaluation MVP tag + GitHub Release。
+2. 继续保持 P4 明文字段不进入 DWD / DWS / ADS / Dashboard / Report / LLM 上下文。
 
 ## 合规声明
 

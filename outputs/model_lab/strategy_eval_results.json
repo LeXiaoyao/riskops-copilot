@@ -1,6 +1,6 @@
 {
   "report_version": "m6-b-v1",
-  "generated_at": "2026-05-18T07:03:50+00:00",
+  "generated_at": "2026-05-19T06:31:50+00:00",
   "demo_disclaimer": "本报告基于 synthetic data / 合成数据和 M3 规则输出生成，仅用于离线 demo estimate，不代表真实业务结论、真实策略引擎或真实财务结果。",
   "scenario_count": 5,
   "strategy_type_counts": {
