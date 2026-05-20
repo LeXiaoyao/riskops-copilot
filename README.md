@@ -2,7 +2,7 @@
 
 面向消费金融贷后策略运营的 AI/Data Copilot Demo，用合成数据模拟指标监控、异常检测、归因、经营报告、策略评估与 ROI 测算闭环。
 
-> Portfolio demo only：本项目只使用 synthetic data / 合成数据；不包含真实客户数据；不产生真实催收动作；不发送短信、语音或 WhatsApp；不做真实金融结论或 LLM 自动决策。
+> Public demo only：本项目只使用 synthetic data / 合成数据；不包含真实客户数据；不产生真实催收动作；不发送短信、语音或 WhatsApp；不做真实金融结论或 LLM 自动决策。
 
 ## Why This Project
 
@@ -13,7 +13,7 @@
 - **归因靠经验**：渠道、区域、客群、供应商、作业线和触达链路需要反复下钻。
 - **动作缺少量化评估**：发现问题后，AI 外呼补强、人工产能、减免策略、资源再分配是否值得做，缺少统一的离线估算入口。
 
-RiskOps Copilot 把这条链路做成一个本地可运行的作品集 Demo：从合成数据开始，经过指标资产、异常检测、归因、Dashboard、经营报告、CLI，再进入策略情景评估和 ROI 测算。
+RiskOps Copilot 把这条链路做成一个本地可运行的公开 Demo：从合成数据开始，经过指标资产、异常检测、归因、Dashboard、经营报告、CLI，再进入策略情景评估和 ROI 测算。
 
 ## Product Workflow
 
@@ -115,7 +115,7 @@ pytest
 
 ## Boundaries
 
-本项目的边界是作品集可信度的一部分：
+本项目的边界是公开 Demo 可信度的一部分：
 
 - **synthetic data only**：只使用合成数据。
 - **no real customer data**：不接入、不提交、不展示真实客户数据。
@@ -128,7 +128,7 @@ pytest
 ## Next
 
 - **M6-D ML Modeling Readiness / Baseline Model**：在不越过合规边界的前提下，评估是否补一个轻量 baseline model 或继续保持规则化模拟。
-- **Portfolio demo script**：把 README、CLI、Dashboard、Business Report、Model Lab 和 ROI 串成 3-5 分钟面试演示脚本。
+- **Public demo walkthrough**：把 README、CLI、Dashboard、Business Report、Model Lab 和 ROI 串成 3-5 分钟项目演示流程。
 - **Architecture screenshots**：补充架构图、Dashboard 截图和关键输出截图占位，不生成或提交大体积图片。
 
 ## Product Baseline
