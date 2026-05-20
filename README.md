@@ -1,106 +1,137 @@
 # RiskOps Copilot
 
-RiskOps Copilot 是一个面向消费金融风控全生命周期的本地化 AI 智能分析工作台。项目以合成数据为基础，逐步沉淀数据底座、指标资产、分析引擎和报告输出能力。
+面向消费金融贷后策略运营的 AI/Data Copilot Demo，用合成数据模拟指标监控、异常检测、归因、经营报告、策略评估与 ROI 测算闭环。
 
-## 当前状态
+> Portfolio demo only：本项目只使用 synthetic data / 合成数据；不包含真实客户数据；不产生真实催收动作；不发送短信、语音或 WhatsApp；不做真实金融结论或 LLM 自动决策。
 
-- **阶段**：M6 Model Lab Strategy Evaluation MVP 已完成，v0.6.0 已发布
-- **已完成**：M1 数据底座、M2 指标资产、M3 异常检测与归因、M4 Static Dashboard、M4 Business Report Renderer、M5 CLI Interaction MVP、M6 Model Lab（Strategy Scenario / Offline Evaluator / ROI Calculator / CLI Integration）
-- **当前输出**：`outputs/dashboard/dashboard.html`、`outputs/reports/m4_business_report.md`、`outputs/model_lab/strategy_eval_results.json`、`outputs/model_lab/roi_results.json`
-- **Next**：M6-D Model Lab Stub / M7 Collection QA（待规划）
-- **未实现**：Interactive TUI、Agent、模型训练、催收质检、真实短信或语音触达、真实客户数据接入
-- **需求基准**：[PRD v6](docs/prd/PRD_v6.md)
+## Why This Project
 
-## 技术栈
+贷后运营团队面对的典型问题不是“没有数据”，而是数据、指标、异常、归因和动作评估分散在不同工具里：
 
-- **语言**：Python 3.11+
-- **数据底座**：DuckDB、pandas、PyArrow
-- **数据生成**：Faker、NumPy
-- **配置**：PyYAML
-- **测试**：pytest
-- **可视化与报告**：Plotly、Jinja2、openpyxl、python-pptx、python-docx
-- **TUI 框架占位**：Textual
+- **指标多**：回收率、PTP、触达、产能、投诉、减免 ROI 等指标口径容易分散。
+- **异常发现慢**：经营波动往往先靠人工巡检、SQL 和 Excel 发现。
+- **归因靠经验**：渠道、区域、客群、供应商、作业线和触达链路需要反复下钻。
+- **动作缺少量化评估**：发现问题后，AI 外呼补强、人工产能、减免策略、资源再分配是否值得做，缺少统一的离线估算入口。
 
-## 目录结构
+RiskOps Copilot 把这条链路做成一个本地可运行的作品集 Demo：从合成数据开始，经过指标资产、异常检测、归因、Dashboard、经营报告、CLI，再进入策略情景评估和 ROI 测算。
 
-```text
-RiskOps_Copilot/
-├── riskops/                 # Python 主包
-│   ├── data/                # 数据生成、数仓加工、数据质量
-│   ├── metrics/             # 指标与计算器
-│   ├── engines/             # 分析、归因、可视化、报告等引擎占位
-│   ├── agents/              # Agent 目录占位，M0 不实现
-│   └── tui/                 # TUI 目录占位，M0 不实现
-├── synthetic_data/          # 合成数据分层目录
-│   ├── raw_secure/          # P4 明文字段本地目录，不入库
-│   ├── dim/
-│   ├── ods/
-│   ├── dwd/
-│   ├── dws/
-│   └── ads/
-├── metadata/                # 元数据占位
-├── schemas/                 # schema 占位
-├── templates/               # HTML/PPT/Word/Excel 模板占位
-├── configs/                 # 配置占位
-├── docs/                    # PRD、ADR、截图等文档
-├── reports/                 # 生成报告目录，不入库
-├── exports/                 # 导出文件目录，不入库
-├── scripts/                 # M0 占位 CLI
-└── tests/                   # 基础结构测试
+## Product Workflow
+
+```mermaid
+flowchart LR
+    A[Synthetic Data] --> B[Metric Asset]
+    B --> C[Anomaly Detection]
+    C --> D[Attribution]
+    D --> E[Dashboard / Business Report]
+    E --> F[CLI]
+    F --> G[Strategy Scenario]
+    G --> H[Offline Evaluation]
+    H --> I[ROI Calculator]
 ```
 
-## M6 CLI 快速入口
+## What It Demonstrates
+
+- **数据工程能力**：合成贷后数据、分层数仓、数据质量验证和可复现本地输出。
+- **指标体系建设**：以 `metadata/metric_dictionary.yaml` 作为指标口径来源，沉淀贷后经营指标资产。
+- **异常检测**：识别 M1 回收率、AI 外呼覆盖、产能压力、减免使用、PTP 履约和投诉风险等信号。
+- **归因分析**：围绕渠道、区域、客群分层、作业资源和过程证据解释 M1 D7 回收率下降。
+- **经营分析报告**：将异常和归因转成管理者可读的 Markdown / HTML 经营报告。
+- **Dashboard**：输出本地静态 Dashboard，服务快速演示和截图。
+- **CLI 产品化入口**：用命令行串联 summary、drivers、model-lab、roi 和渲染动作。
+- **策略评估**：基于合成数据和 M3 输出做离线策略情景估算，不训练真实模型。
+- **ROI 测算**：基于 demo cost assumptions 估算成本、收益、ROI 和 payback，不代表真实财务结果。
+- **合规边界意识**：明确 synthetic data、no real customer data、no real collection action、no LLM decisioning。
+
+## Demo Quick Start
 
 ```bash
-python scripts/riskops_cli.py --help
 python scripts/riskops_cli.py summary
-python scripts/riskops_cli.py anomalies
 python scripts/riskops_cli.py drivers
-python scripts/riskops_cli.py outputs
-python scripts/riskops_cli.py scenarios
-python scripts/riskops_cli.py strategy-eval
-python scripts/riskops_cli.py roi
 python scripts/riskops_cli.py model-lab
+python scripts/riskops_cli.py roi
 python scripts/riskops_cli.py render-model-lab
-python scripts/riskops_cli.py render-dashboard
-python scripts/riskops_cli.py render-report
-```
-
-- **summary**：显示项目状态、anomaly 总数、数据边界、常用命令入口
-- **anomalies**：高优先级异常列表（severity / baseline / recent / recommended next step）
-- **drivers**：M1 D7 回收率下降 Top 5 drivers + 业务口径边界说明
-- **outputs**：输出文件路径与存在状态
-- **scenarios**：显示 M6-A 5 个策略场景与 compliance boundary
-- **strategy-eval**：显示 M6-B 离线策略评估摘要（offline demo estimate）
-- **roi**：显示 M6-C ROI 成本收益摘要（demo cost assumptions）
-- **model-lab**：M6 总览入口，含所有输出路径与 demo boundary
-- **render-model-lab**：重跑 M6 strategy eval + ROI 输出
-- **render-dashboard / render-report**：重新渲染 Dashboard 和 Business Report
-
-## 可用命令（全量）
-
-```bash
-python scripts/generate_synthetic_data.py --help
-python scripts/build_warehouse.py --help
-python scripts/render_docs.py --help
-python scripts/validate_strategy_scenarios.py
-python scripts/run_strategy_eval.py
-python scripts/run_roi_calculator.py
-python scripts/validate_data_quality.py --help
-python scripts/validate_metric_quality.py --help
-python scripts/render_dashboard.py
-python scripts/render_business_report.py
 pytest
 ```
 
-## 下一步：v0.6.0 发布后
+常用入口说明：
 
-1. 发布 v0.6.0 Model Lab Strategy Evaluation MVP tag + GitHub Release。
-2. 继续保持 P4 明文字段不进入 DWD / DWS / ADS / Dashboard / Report / LLM 上下文。
+- **summary**：查看项目状态、异常数量、数据边界和常用命令。
+- **drivers**：查看 M1 D7 回收率下降 Top 5 drivers 和业务解释边界。
+- **model-lab**：查看 M6 Strategy Evaluation / ROI 总览和 demo boundary。
+- **roi**：查看策略情景的成本收益和 ROI 摘要。
+- **render-model-lab**：重新生成 strategy evaluation 与 ROI 输出。
+- **pytest**：运行当前测试集，验证 Demo 主链路未被破坏。
 
-## 合规声明
+## Key Outputs
 
-- 本项目仅使用合成数据。
-- 不接入真实客户信息。
-- 不真实触达客户，不发送真实短信或语音。
-- 所有外发、审批、催收相关能力在当前阶段均为占位或后续 Mock 演示范围。
+- **Dashboard**：`outputs/dashboard/dashboard.html`
+  - 本地静态看板，用于快速查看贷后经营状态。
+- **Business Report**：`outputs/reports/m4_business_report.md`
+  - 面向经营复盘的异常、归因、过程证据和管理动作建议。
+- **Strategy Evaluation**：`outputs/model_lab/strategy_eval_summary.md`
+  - 5 个离线策略情景的 baseline / scenario / delta / caveats。
+- **ROI Summary**：`outputs/model_lab/roi_summary.md`
+  - 基于 demo cost assumptions 的成本、收益、ROI 和 payback 估算。
+
+## Milestone Status
+
+为避免终端截断，本节不用 Markdown 表格，改用分组列表呈现。
+
+### v0.1.0 数据底座
+
+- **阶段**：M1 Data Foundation
+- **交付**：合成数据、分层数据目录、基础数据生成与隐私边界。
+- **状态**：已发布。
+
+### v0.2.0 指标资产
+
+- **阶段**：M2 Metric Asset Layer
+- **交付**：贷后 26 个指标字典、calculator registry、ADS 字段对齐。
+- **状态**：已发布。
+
+### v0.3.0 异常检测与归因
+
+- **阶段**：M3 Anomaly Detection and Attribution
+- **交付**：异常检测、M1 D7 回收率归因、结构化 M3 summary。
+- **状态**：已发布。
+
+### v0.4.0 Dashboard & Business Report
+
+- **阶段**：M4 Dashboard and Reports
+- **交付**：Static Dashboard、Business Report Renderer、Markdown / HTML 报告输出。
+- **状态**：已发布。
+
+### v0.5.0 CLI Interaction MVP
+
+- **阶段**：M5 CLI / Demo Entry
+- **交付**：统一 CLI 入口、summary、anomalies、drivers、outputs、render-dashboard、render-report。
+- **状态**：已发布。
+
+### v0.6.0 Model Lab Strategy Evaluation MVP
+
+- **阶段**：M6 Strategy Evaluation / ROI
+- **交付**：Strategy Scenario Schema、Offline Strategy Evaluator、ROI Calculator、Model Lab CLI integration。
+- **状态**：已发布。
+
+## Boundaries
+
+本项目的边界是作品集可信度的一部分：
+
+- **synthetic data only**：只使用合成数据。
+- **no real customer data**：不接入、不提交、不展示真实客户数据。
+- **no real financial conclusion**：ROI 和收益只来自 demo assumptions，不代表真实财务结果。
+- **no collection automation**：不产生真实催收动作。
+- **no SMS / voice / WhatsApp**：不发送短信、语音或 WhatsApp。
+- **no LLM decisioning**：不调用 LLM 做自动策略决策。
+- **no production claim**：不宣称真实上线、真实收益或真实催收自动化。
+
+## Next
+
+- **M6-D ML Modeling Readiness / Baseline Model**：在不越过合规边界的前提下，评估是否补一个轻量 baseline model 或继续保持规则化模拟。
+- **Portfolio demo script**：把 README、CLI、Dashboard、Business Report、Model Lab 和 ROI 串成 3-5 分钟面试演示脚本。
+- **Architecture screenshots**：补充架构图、Dashboard 截图和关键输出截图占位，不生成或提交大体积图片。
+
+## Product Baseline
+
+- **当前 PRD**：`docs/prd/PRD_v6.md`
+- **当前发布**：`docs/releases/v0.6.0.md`
