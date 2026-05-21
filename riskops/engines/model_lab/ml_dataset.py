@@ -45,6 +45,13 @@ FEATURE_COLUMNS = [
     "ptp_fulfillment_rate",
 ]
 
+TIME_BATCH_FEATURE_COLUMNS = [
+    "vintage_month",
+    "first_due_date",
+    "case_create_date",
+    "case_create_time",
+]
+
 LEAKAGE_COLUMNS = [
     "repaid_amount_d7",
     "recovery_rate_d7",
@@ -83,7 +90,7 @@ def load_ml_sources(base_dir: str | Path) -> dict[str, pd.DataFrame]:
     return sources
 
 
-def build_d7_recovery_dataset(base_dir: str | Path) -> pd.DataFrame:
+def build_d7_recovery_dataset(base_dir: str | Path, exclude_vintage_month: bool = False) -> pd.DataFrame:
     sources = load_ml_sources(base_dir)
     loan_status = sources["loan_status"].copy()
     loan_status["is_recovered_d7"] = (loan_status["repaid_amount_d7"].fillna(0) > 0).astype(int)
@@ -147,23 +154,28 @@ def build_d7_recovery_dataset(base_dir: str | Path) -> pd.DataFrame:
         if process_column in dataset.columns:
             dataset[process_column] = dataset[process_column].fillna(0.0)
 
-    feature_columns = get_feature_columns(dataset)
+    feature_columns = get_feature_columns(dataset, exclude_vintage_month=exclude_vintage_month)
     dataset = dataset[["loan_id", "is_recovered_d7", *feature_columns]].copy()
     dataset.attrs["metadata"] = {
         "sample_count": int(len(dataset)),
         "positive_rate": float(dataset["is_recovered_d7"].mean()),
         "feature_count": len(feature_columns),
+        "exclude_vintage_month": exclude_vintage_month,
+        "excluded_time_features": get_time_batch_feature_columns() if exclude_vintage_month else [],
     }
     return dataset
 
 
 def split_features_target(dataset: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
-    feature_columns = get_feature_columns(dataset)
+    metadata = dataset.attrs.get("metadata", {})
+    feature_columns = get_feature_columns(dataset, exclude_vintage_month=bool(metadata.get("exclude_vintage_month", False)))
     return dataset[feature_columns].copy(), dataset["is_recovered_d7"].astype(int).copy()
 
 
-def get_feature_columns(dataset: pd.DataFrame) -> list[str]:
+def get_feature_columns(dataset: pd.DataFrame, exclude_vintage_month: bool = False) -> list[str]:
     blocked = set(get_leakage_columns()) | set(get_sensitive_columns()) | {"is_recovered_d7"}
+    if exclude_vintage_month:
+        blocked.update(get_time_batch_feature_columns())
     return [column for column in FEATURE_COLUMNS if column in dataset.columns and column not in blocked]
 
 
@@ -173,6 +185,10 @@ def get_leakage_columns() -> list[str]:
 
 def get_sensitive_columns() -> list[str]:
     return list(SENSITIVE_COLUMNS)
+
+
+def get_time_batch_feature_columns() -> list[str]:
+    return list(TIME_BATCH_FEATURE_COLUMNS)
 
 
 def _read_parquet(path: Path) -> pd.DataFrame:
@@ -252,5 +268,10 @@ def dataset_metadata(dataset: pd.DataFrame) -> dict[str, Any]:
     metadata = dict(dataset.attrs.get("metadata", {}))
     metadata.setdefault("sample_count", int(len(dataset)))
     metadata.setdefault("positive_rate", float(dataset["is_recovered_d7"].mean()))
-    metadata.setdefault("feature_count", len(get_feature_columns(dataset)))
+    metadata.setdefault(
+        "feature_count",
+        len(get_feature_columns(dataset, exclude_vintage_month=bool(metadata.get("exclude_vintage_month", False)))),
+    )
+    metadata.setdefault("exclude_vintage_month", False)
+    metadata.setdefault("excluded_time_features", [])
     return metadata

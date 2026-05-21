@@ -14,7 +14,8 @@
 
 - **sample_count**：30000
 - **positive_rate**：28.0167%
-- **feature_count**：34
+- **feature_count**：33
+- **exclude_vintage_month**：True
 - **grain**：loan_id / 借据级
 
 ## Target Definition
@@ -25,7 +26,7 @@
 
 ## Business Feature Groups
 
-- **loan features**：product_code, channel_code, loan_amount, loan_term, interest_rate, mob, vintage_month, due_amount, dpd_bucket
+- **loan features**：product_code, channel_code, loan_amount, loan_term, interest_rate, mob, due_amount, dpd_bucket
 - **customer synthetic profile features**：age_group, gender, province, city, occupation_type, customer_segment, risk_level_current
 - **postloan score features**：postloan_c_score, score_level
 - **assignment context features**：initial_dpd_bucket, initial_outstanding_amount, balance_segment, current_vendor_id, current_line_id
@@ -44,40 +45,40 @@
 ## Model Comparison
 
 - **logistic**
-  - AUC：0.539783
-  - KS：0.072591
-  - PR-AUC：0.304289
-  - precision：0.300023
-  - recall：0.615897
-  - f1：0.403492
+  - AUC：0.539767
+  - KS：0.079458
+  - PR-AUC：0.302067
+  - precision：0.304643
+  - recall：0.683960
+  - f1：0.421531
 - **random_forest**
-  - AUC：0.540511
-  - KS：0.077699
-  - PR-AUC：0.301325
-  - precision：0.299533
-  - recall：0.427416
-  - f1：0.352226
+  - AUC：0.543278
+  - KS：0.077319
+  - PR-AUC：0.306061
+  - precision：0.307800
+  - recall：0.418848
+  - f1：0.354839
 - **best_model**：random_forest
 
 ## Best Model Metrics
 
 - **model_type**：random_forest
-- **AUC**：0.540511
-- **KS**：0.077699
-- **PR-AUC**：0.301325
-- **precision**：0.299533
-- **recall**：0.427416
-- **f1**：0.352226
-- **confusion_matrix**：tn=3299, fp=2100, fn=1203, tp=898
+- **AUC**：0.543278
+- **KS**：0.077319
+- **PR-AUC**：0.306061
+- **precision**：0.307800
+- **recall**：0.418848
+- **f1**：0.354839
+- **confusion_matrix**：tn=3420, fp=1979, fn=1221, tp=880
 
 ## Feature Diagnostics
 
 - **logistic**
   - top_n：10
-  - vintage_month_top_feature_count：10 / 10
-  - vintage_month_top_feature_share：100.00%
-  - vintage_month_top_importance_share：100.00%
-  - vintage_month_artifact_warning：True
+  - vintage_month_top_feature_count：0 / 10
+  - vintage_month_top_feature_share：0.00%
+  - vintage_month_top_importance_share：0.00%
+  - vintage_month_artifact_warning：False
 - **random_forest**
   - top_n：10
   - vintage_month_top_feature_count：0 / 10
@@ -88,8 +89,8 @@
 - **vintage_month_top_feature_count**：0 / 10
 - **vintage_month_top_feature_share**：0.00%
 - **vintage_month_top_importance_share**：0.00%
-- **vintage_month_artifact_warning**：True
-- **interpretation**：at least one model shows vintage_month dominance and may reflect synthetic batch/time artifact
+- **vintage_month_artifact_warning**：False
+- **interpretation**：vintage_month is present but does not dominate top features
 
 ## Vintage Month Artifact Warning
 
@@ -99,29 +100,29 @@
 
 ## Decile Lift Table
 
-- **decile 1**：sample_count=750, positive_rate=0.304000, lift=1.085198, cumulative_capture_rate=0.108520
-- **decile 2**：sample_count=750, positive_rate=0.317333, lift=1.132794, cumulative_capture_rate=0.221799
-- **decile 3**：sample_count=750, positive_rate=0.281333, lift=1.004284, cumulative_capture_rate=0.322228
-- **decile 4**：sample_count=750, positive_rate=0.296000, lift=1.056640, cumulative_capture_rate=0.427891
-- **decile 5**：sample_count=750, positive_rate=0.308000, lift=1.099476, cumulative_capture_rate=0.537839
-- **decile 6**：sample_count=750, positive_rate=0.312000, lift=1.113755, cumulative_capture_rate=0.649215
-- **decile 7**：sample_count=750, positive_rate=0.288000, lift=1.028082, cumulative_capture_rate=0.752023
-- **decile 8**：sample_count=750, positive_rate=0.242667, lift=0.866254, cumulative_capture_rate=0.838648
-- **decile 9**：sample_count=750, positive_rate=0.228000, lift=0.813898, cumulative_capture_rate=0.920038
-- **decile 10**：sample_count=750, positive_rate=0.224000, lift=0.799619, cumulative_capture_rate=1.000000
+- **decile 1**：sample_count=750, positive_rate=0.334667, lift=1.194669, cumulative_capture_rate=0.119467
+- **decile 2**：sample_count=750, positive_rate=0.274667, lift=0.980485, cumulative_capture_rate=0.217515
+- **decile 3**：sample_count=750, positive_rate=0.312000, lift=1.113755, cumulative_capture_rate=0.328891
+- **decile 4**：sample_count=750, positive_rate=0.305333, lift=1.089957, cumulative_capture_rate=0.437887
+- **decile 5**：sample_count=750, positive_rate=0.308000, lift=1.099476, cumulative_capture_rate=0.547834
+- **decile 6**：sample_count=750, positive_rate=0.288000, lift=1.028082, cumulative_capture_rate=0.650643
+- **decile 7**：sample_count=750, positive_rate=0.272000, lift=0.970966, cumulative_capture_rate=0.747739
+- **decile 8**：sample_count=750, positive_rate=0.256000, lift=0.913851, cumulative_capture_rate=0.839124
+- **decile 9**：sample_count=750, positive_rate=0.220000, lift=0.785340, cumulative_capture_rate=0.917658
+- **decile 10**：sample_count=750, positive_rate=0.230667, lift=0.823417, cumulative_capture_rate=1.000000
 
 ## Feature Importance
 
-- **num__due_amount**：importance=0.101177, signed_weight=0.101177
-- **num__loan_amount**：importance=0.097489, signed_weight=0.097489
-- **num__interest_rate**：importance=0.096204, signed_weight=0.096204
-- **num__mob**：importance=0.061015, signed_weight=0.061015
-- **num__postloan_c_score**：importance=0.056374, signed_weight=0.056374
-- **num__initial_outstanding_amount**：importance=0.037247, signed_weight=0.037247
-- **num__loan_term**：importance=0.035445, signed_weight=0.035445
-- **cat__product_code_P_CASH**：importance=0.015303, signed_weight=0.015303
-- **cat__occupation_type_工薪**：importance=0.014703, signed_weight=0.014703
-- **cat__customer_segment_复借**：importance=0.014681, signed_weight=0.014681
+- **num__due_amount**：importance=0.110011, signed_weight=0.110011
+- **num__interest_rate**：importance=0.106377, signed_weight=0.106377
+- **num__loan_amount**：importance=0.105696, signed_weight=0.105696
+- **num__mob**：importance=0.072739, signed_weight=0.072739
+- **num__postloan_c_score**：importance=0.056222, signed_weight=0.056222
+- **num__loan_term**：importance=0.038436, signed_weight=0.038436
+- **num__initial_outstanding_amount**：importance=0.036135, signed_weight=0.036135
+- **cat__risk_level_current_B**：importance=0.015704, signed_weight=0.015704
+- **cat__customer_segment_复借**：importance=0.015651, signed_weight=0.015651
+- **cat__gender_F**：importance=0.015631, signed_weight=0.015631
 
 ## Why Baseline AUC Is Modest
 
@@ -150,4 +151,4 @@
 - Add segment-level diagnostics for score_level, dpd_bucket, vendor and line stability.
 - Consider removing or bucketing vintage_month in a later robustness check if artifact dominance remains high.
 
-_Generated at 2026-05-21T02:10:42+00:00_
+_Generated at 2026-05-21T02:33:01+00:00_

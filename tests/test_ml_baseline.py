@@ -14,14 +14,18 @@ from riskops.engines.model_lab.ml_dataset import (
     get_feature_columns,
     get_leakage_columns,
     get_sensitive_columns,
+    get_time_batch_feature_columns,
     split_features_target,
 )
 from riskops.engines.model_lab.ml_metrics import (
+    build_vintage_robustness_payload,
     build_decile_lift_table,
     compute_classification_metrics,
     compute_feature_diagnostics,
     render_ml_report,
+    render_robustness_report,
     write_ml_outputs,
+    write_robustness_outputs,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -55,6 +59,15 @@ def test_leakage_fields_do_not_enter_features() -> None:
     feature_columns = set(get_feature_columns(dataset))
 
     assert feature_columns.isdisjoint(get_leakage_columns())
+
+
+def test_exclude_vintage_month_removes_time_batch_features() -> None:
+    dataset = build_d7_recovery_dataset(DATA_DIR, exclude_vintage_month=True)
+    feature_columns = set(get_feature_columns(dataset, exclude_vintage_month=True))
+
+    assert "vintage_month" not in feature_columns
+    assert feature_columns.isdisjoint(get_time_batch_feature_columns())
+    assert dataset.attrs["metadata"]["exclude_vintage_month"] is True
 
 
 def test_business_features_exist_or_are_safely_skipped() -> None:
@@ -214,6 +227,30 @@ def test_cli_can_run(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr
     assert "PASS ML baseline" in result.stdout
     assert (tmp_path / "model_metrics.json").exists()
+    assert (tmp_path / "robustness_check.json").exists()
+    assert (tmp_path / "robustness_check.md").exists()
+
+
+def test_cli_can_run_without_vintage_month(tmp_path: Path) -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(RUNNER),
+            "--data-dir",
+            str(DATA_DIR),
+            "--output-dir",
+            str(tmp_path),
+            "--exclude-vintage-month",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads((tmp_path / "model_metrics.json").read_text(encoding="utf-8"))
+    assert payload["dataset_summary"]["exclude_vintage_month"] is True
+    assert not any("vintage_month" in row["feature"] for row in payload["top_feature_importance"])
 
 
 def test_cli_report_contains_required_disclaimers(tmp_path: Path) -> None:
@@ -236,6 +273,9 @@ def test_cli_report_contains_required_disclaimers(tmp_path: Path) -> None:
     assert "synthetic data" in report
     assert "no real customer data" in report
     assert "no automated decisioning" in report
+    robustness_report = (tmp_path / "robustness_check.md").read_text(encoding="utf-8")
+    assert "synthetic batch/time artifact risk" in robustness_report
+    assert "If not excluded" in robustness_report
 
 
 def test_cli_metrics_json_contains_dataset_summary(tmp_path: Path) -> None:
@@ -260,3 +300,52 @@ def test_cli_metrics_json_contains_dataset_summary(tmp_path: Path) -> None:
     assert {"logistic", "random_forest"} <= set(payload["model_comparison"])
     assert "feature_diagnostics" in payload
     assert {"logistic", "random_forest"} <= set(payload["feature_diagnostics_by_model"])
+    robustness_payload = json.loads((tmp_path / "robustness_check.json").read_text(encoding="utf-8"))
+    assert {"with_vintage", "without_vintage", "delta_auc", "delta_ks", "delta_pr_auc"} <= set(robustness_payload)
+    assert {"auc", "ks", "pr_auc"} <= set(robustness_payload["with_vintage"]["metrics"])
+    assert {"auc", "ks", "pr_auc"} <= set(robustness_payload["without_vintage"]["metrics"])
+
+
+def test_robustness_outputs_can_generate(tmp_path: Path) -> None:
+    metrics = {
+        "auc": 0.54,
+        "ks": 0.07,
+        "pr_auc": 0.30,
+        "precision": 0.30,
+        "recall": 0.60,
+        "f1": 0.40,
+        "threshold": 0.5,
+        "confusion_matrix": {"tn": 1, "fp": 1, "fn": 1, "tp": 1},
+    }
+    with_vintage = {
+        "best_model": "logistic",
+        "metrics": metrics,
+        "dataset_summary": {"sample_count": 10, "positive_rate": 0.3, "feature_count": 2},
+        "model_comparison": {"logistic": metrics},
+        "feature_diagnostics_by_model": {
+            "logistic": {
+                "vintage_month_artifact_warning": True,
+                "top_n": 10,
+                "top_feature_count": 1,
+                "vintage_top_feature_count": 1,
+                "vintage_top_feature_share": 1.0,
+                "vintage_top_importance_share": 1.0,
+            }
+        },
+        "top_feature_importance": [{"feature": "cat__vintage_month_2025-01", "importance": 1.0, "signed_weight": 1.0}],
+        "feature_columns": ["vintage_month"],
+    }
+    without_vintage = {
+        **with_vintage,
+        "feature_diagnostics_by_model": {"logistic": {**with_vintage["feature_diagnostics_by_model"]["logistic"], "vintage_month_artifact_warning": False}},
+        "top_feature_importance": [{"feature": "num__due_amount", "importance": 1.0, "signed_weight": 1.0}],
+        "feature_columns": ["due_amount"],
+    }
+
+    payload = build_vintage_robustness_payload(with_vintage, without_vintage)
+    report = render_robustness_report(payload)
+    paths = write_robustness_outputs(tmp_path, payload, report)
+
+    assert Path(paths["robustness_check"]).exists()
+    assert Path(paths["robustness_report"]).exists()
+    assert "synthetic batch/time artifact risk" in Path(paths["robustness_report"]).read_text(encoding="utf-8")

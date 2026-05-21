@@ -149,6 +149,140 @@ def write_ml_outputs(
     }
 
 
+def write_robustness_outputs(output_dir: str | Path, robustness_payload: dict[str, Any], report_markdown: str) -> dict[str, str]:
+    path = Path(output_dir)
+    path.mkdir(parents=True, exist_ok=True)
+    json_path = path / "robustness_check.json"
+    report_path = path / "robustness_check.md"
+
+    json_path.write_text(json.dumps(robustness_payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    report_path.write_text(report_markdown, encoding="utf-8")
+    return {
+        "robustness_check": str(json_path),
+        "robustness_report": str(report_path),
+    }
+
+
+def build_vintage_robustness_payload(with_vintage: dict[str, Any], without_vintage: dict[str, Any]) -> dict[str, Any]:
+    with_metrics = with_vintage["metrics"]
+    without_metrics = without_vintage["metrics"]
+    return {
+        "check_name": "vintage_month_robustness",
+        "with_vintage": _robustness_run_summary(with_vintage),
+        "without_vintage": _robustness_run_summary(without_vintage),
+        "delta_auc": round(without_metrics["auc"] - with_metrics["auc"], 6),
+        "delta_ks": round(without_metrics["ks"] - with_metrics["ks"], 6),
+        "delta_pr_auc": round(without_metrics["pr_auc"] - with_metrics["pr_auc"], 6),
+        "interpretation": _vintage_robustness_interpretation(with_metrics, without_metrics, with_vintage, without_vintage),
+    }
+
+
+def _robustness_run_summary(run_result: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "best_model": run_result["best_model"],
+        "metrics": run_result["metrics"],
+        "dataset_summary": run_result["dataset_summary"],
+        "model_comparison": run_result["model_comparison"],
+        "feature_diagnostics_by_model": run_result["feature_diagnostics_by_model"],
+        "top_features": run_result["top_feature_importance"][:10],
+    }
+
+
+def _vintage_robustness_interpretation(
+    with_metrics: dict[str, Any],
+    without_metrics: dict[str, Any],
+    with_vintage: dict[str, Any],
+    without_vintage: dict[str, Any],
+) -> str:
+    auc_delta = without_metrics["auc"] - with_metrics["auc"]
+    with_warning = any(
+        diagnostics["vintage_month_artifact_warning"]
+        for diagnostics in with_vintage["feature_diagnostics_by_model"].values()
+    )
+    without_top_features = {
+        _base_feature_name(row["feature"], without_vintage["feature_columns"])
+        for row in without_vintage["top_feature_importance"][:10]
+    }
+    if with_warning and abs(auc_delta) <= 0.01 and "vintage_month" not in without_top_features:
+        return (
+            "vintage_month shows artifact risk in at least one with-vintage model, but removing it leaves performance close; "
+            "the synthetic data signal is weak and the baseline should be presented as a diagnostic demo."
+        )
+    if with_warning and auc_delta < -0.01:
+        return (
+            "performance drops after excluding vintage_month, suggesting the baseline was materially relying on synthetic "
+            "batch/time signal."
+        )
+    return "excluding vintage_month does not reveal a material dependency on the time batch feature."
+
+
+def render_robustness_report(robustness_payload: dict[str, Any]) -> str:
+    with_vintage = robustness_payload["with_vintage"]
+    without_vintage = robustness_payload["without_vintage"]
+    lines = [
+        "# M6-D3 Vintage Robustness Check",
+        "",
+        "## Purpose",
+        "",
+        "- This check compares the same offline baseline with and without `vintage_month`.",
+        "- `vintage_month` is a synthetic batch/time artifact risk because it can encode calendar-generation differences.",
+        "- If not excluded, the model may learn batch differences instead of stable business behavior.",
+        "- This is for interview demonstration: it shows how to identify leakage-like pseudo-signal before overclaiming model quality.",
+        "",
+        "## Synthetic Data Boundary",
+        "",
+        "- Inputs are synthetic offline demo data only.",
+        "- No real customer data is read.",
+        "- No LLM, Agent, automated collection action, deployment, tag or release is involved.",
+        "",
+        "## With Vintage Metrics",
+        "",
+        f"- **best_model**：{with_vintage['best_model']}",
+        f"- **AUC**：{with_vintage['metrics']['auc']:.6f}",
+        f"- **KS**：{with_vintage['metrics']['ks']:.6f}",
+        f"- **PR-AUC**：{with_vintage['metrics']['pr_auc']:.6f}",
+        "",
+        "## Without Vintage Metrics",
+        "",
+        f"- **best_model**：{without_vintage['best_model']}",
+        f"- **AUC**：{without_vintage['metrics']['auc']:.6f}",
+        f"- **KS**：{without_vintage['metrics']['ks']:.6f}",
+        f"- **PR-AUC**：{without_vintage['metrics']['pr_auc']:.6f}",
+        "",
+        "## Metric Deltas",
+        "",
+        f"- **delta_auc**：{robustness_payload['delta_auc']:.6f}",
+        f"- **delta_ks**：{robustness_payload['delta_ks']:.6f}",
+        f"- **delta_pr_auc**：{robustness_payload['delta_pr_auc']:.6f}",
+        "",
+        "## Top Features Before",
+        "",
+    ]
+    for row in with_vintage["top_features"]:
+        lines.append(f"- **{row['feature']}**：importance={row['importance']:.6f}")
+    lines.extend(["", "## Top Features After", ""])
+    for row in without_vintage["top_features"]:
+        lines.append(f"- **{row['feature']}**：importance={row['importance']:.6f}")
+    lines.extend(
+        [
+            "",
+            "## Artifact Warning",
+            "",
+            "- vintage_month remains a synthetic batch/time artifact risk even when the best model is only weakly affected.",
+            "- If excluding vintage_month leaves metrics close, the right conclusion is not that the model is strong; it is that current synthetic data has weak stable signal.",
+            "- If excluding vintage_month causes a large drop, the baseline is mostly using a time-batch shortcut and should not be used as business evidence.",
+            "",
+            "## Interpretation",
+            "",
+            f"- **conclusion**：{robustness_payload['interpretation']}",
+            "",
+            f"_Generated at {datetime.now(UTC).isoformat(timespec='seconds')}_",
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
 def render_ml_report(
     dataset_summary: dict[str, Any],
     metrics: dict[str, Any],
@@ -169,6 +303,9 @@ def render_ml_report(
     any_vintage_warning = any(
         diagnostics["vintage_month_artifact_warning"] for diagnostics in feature_diagnostics_by_model.values()
     )
+    loan_features = "product_code, channel_code, loan_amount, loan_term, interest_rate, mob, due_amount, dpd_bucket"
+    if not dataset_summary.get("exclude_vintage_month", False):
+        loan_features = f"{loan_features}, vintage_month"
     lines = [
         "# M6-D2 D7 Recovery Baseline Diagnostics",
         "",
@@ -187,6 +324,7 @@ def render_ml_report(
         f"- **sample_count**：{dataset_summary['sample_count']}",
         f"- **positive_rate**：{dataset_summary['positive_rate']:.4%}",
         f"- **feature_count**：{dataset_summary['feature_count']}",
+        f"- **exclude_vintage_month**：{dataset_summary.get('exclude_vintage_month', False)}",
         "- **grain**：loan_id / 借据级",
         "",
         "## Target Definition",
@@ -197,7 +335,7 @@ def render_ml_report(
         "",
         "## Business Feature Groups",
         "",
-        "- **loan features**：product_code, channel_code, loan_amount, loan_term, interest_rate, mob, vintage_month, due_amount, dpd_bucket",
+        f"- **loan features**：{loan_features}",
         "- **customer synthetic profile features**：age_group, gender, province, city, occupation_type, customer_segment, risk_level_current",
         "- **postloan score features**：postloan_c_score, score_level",
         "- **assignment context features**：initial_dpd_bucket, initial_outstanding_amount, balance_segment, current_vendor_id, current_line_id",

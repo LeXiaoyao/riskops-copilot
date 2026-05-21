@@ -1,0 +1,278 @@
+{
+  "check_name": "vintage_month_robustness",
+  "with_vintage": {
+    "best_model": "random_forest",
+    "metrics": {
+      "auc": 0.540511,
+      "ks": 0.077699,
+      "pr_auc": 0.301325,
+      "precision": 0.299533,
+      "recall": 0.427416,
+      "f1": 0.352226,
+      "threshold": 0.5,
+      "confusion_matrix": {
+        "tn": 3299,
+        "fp": 2100,
+        "fn": 1203,
+        "tp": 898
+      }
+    },
+    "dataset_summary": {
+      "sample_count": 30000,
+      "positive_rate": 0.2801666666666667,
+      "feature_count": 34,
+      "exclude_vintage_month": false,
+      "excluded_time_features": []
+    },
+    "model_comparison": {
+      "logistic": {
+        "auc": 0.539783,
+        "ks": 0.072591,
+        "pr_auc": 0.304289,
+        "precision": 0.300023,
+        "recall": 0.615897,
+        "f1": 0.403492,
+        "threshold": 0.5,
+        "confusion_matrix": {
+          "tn": 2380,
+          "fp": 3019,
+          "fn": 807,
+          "tp": 1294
+        }
+      },
+      "random_forest": {
+        "auc": 0.540511,
+        "ks": 0.077699,
+        "pr_auc": 0.301325,
+        "precision": 0.299533,
+        "recall": 0.427416,
+        "f1": 0.352226,
+        "threshold": 0.5,
+        "confusion_matrix": {
+          "tn": 3299,
+          "fp": 2100,
+          "fn": 1203,
+          "tp": 898
+        }
+      }
+    },
+    "feature_diagnostics_by_model": {
+      "logistic": {
+        "top_n": 10,
+        "top_feature_count": 10,
+        "vintage_top_feature_count": 10,
+        "vintage_top_feature_share": 1.0,
+        "vintage_top_importance": 1.988805,
+        "top_importance_total": 1.988805,
+        "vintage_top_importance_share": 1.0,
+        "vintage_month_artifact_warning": true,
+        "interpretation": "vintage_month dominates top features and may reflect synthetic batch/time artifact"
+      },
+      "random_forest": {
+        "top_n": 10,
+        "top_feature_count": 10,
+        "vintage_top_feature_count": 0,
+        "vintage_top_feature_share": 0.0,
+        "vintage_top_importance": 0.0,
+        "top_importance_total": 0.529639,
+        "vintage_top_importance_share": 0.0,
+        "vintage_month_artifact_warning": false,
+        "interpretation": "vintage_month is present but does not dominate top features"
+      }
+    },
+    "top_features": [
+      {
+        "feature": "num__due_amount",
+        "importance": 0.1011773491240544,
+        "signed_weight": 0.1011773491240544
+      },
+      {
+        "feature": "num__loan_amount",
+        "importance": 0.09748860222624525,
+        "signed_weight": 0.09748860222624525
+      },
+      {
+        "feature": "num__interest_rate",
+        "importance": 0.09620384926897181,
+        "signed_weight": 0.09620384926897181
+      },
+      {
+        "feature": "num__mob",
+        "importance": 0.061015018073148984,
+        "signed_weight": 0.061015018073148984
+      },
+      {
+        "feature": "num__postloan_c_score",
+        "importance": 0.056374100042618135,
+        "signed_weight": 0.056374100042618135
+      },
+      {
+        "feature": "num__initial_outstanding_amount",
+        "importance": 0.037246964412670266,
+        "signed_weight": 0.037246964412670266
+      },
+      {
+        "feature": "num__loan_term",
+        "importance": 0.0354454494059624,
+        "signed_weight": 0.0354454494059624
+      },
+      {
+        "feature": "cat__product_code_P_CASH",
+        "importance": 0.01530290317094295,
+        "signed_weight": 0.01530290317094295
+      },
+      {
+        "feature": "cat__occupation_type_工薪",
+        "importance": 0.01470349868677286,
+        "signed_weight": 0.01470349868677286
+      },
+      {
+        "feature": "cat__customer_segment_复借",
+        "importance": 0.014681226576048471,
+        "signed_weight": 0.014681226576048471
+      }
+    ]
+  },
+  "without_vintage": {
+    "best_model": "random_forest",
+    "metrics": {
+      "auc": 0.543278,
+      "ks": 0.077319,
+      "pr_auc": 0.306061,
+      "precision": 0.3078,
+      "recall": 0.418848,
+      "f1": 0.354839,
+      "threshold": 0.5,
+      "confusion_matrix": {
+        "tn": 3420,
+        "fp": 1979,
+        "fn": 1221,
+        "tp": 880
+      }
+    },
+    "dataset_summary": {
+      "sample_count": 30000,
+      "positive_rate": 0.2801666666666667,
+      "feature_count": 33,
+      "exclude_vintage_month": true,
+      "excluded_time_features": [
+        "vintage_month",
+        "first_due_date",
+        "case_create_date",
+        "case_create_time"
+      ]
+    },
+    "model_comparison": {
+      "logistic": {
+        "auc": 0.539767,
+        "ks": 0.079458,
+        "pr_auc": 0.302067,
+        "precision": 0.304643,
+        "recall": 0.68396,
+        "f1": 0.421531,
+        "threshold": 0.5,
+        "confusion_matrix": {
+          "tn": 2119,
+          "fp": 3280,
+          "fn": 664,
+          "tp": 1437
+        }
+      },
+      "random_forest": {
+        "auc": 0.543278,
+        "ks": 0.077319,
+        "pr_auc": 0.306061,
+        "precision": 0.3078,
+        "recall": 0.418848,
+        "f1": 0.354839,
+        "threshold": 0.5,
+        "confusion_matrix": {
+          "tn": 3420,
+          "fp": 1979,
+          "fn": 1221,
+          "tp": 880
+        }
+      }
+    },
+    "feature_diagnostics_by_model": {
+      "logistic": {
+        "top_n": 10,
+        "top_feature_count": 10,
+        "vintage_top_feature_count": 0,
+        "vintage_top_feature_share": 0.0,
+        "vintage_top_importance": 0.0,
+        "top_importance_total": 0.772147,
+        "vintage_top_importance_share": 0.0,
+        "vintage_month_artifact_warning": false,
+        "interpretation": "vintage_month is present but does not dominate top features"
+      },
+      "random_forest": {
+        "top_n": 10,
+        "top_feature_count": 10,
+        "vintage_top_feature_count": 0,
+        "vintage_top_feature_share": 0.0,
+        "vintage_top_importance": 0.0,
+        "top_importance_total": 0.572603,
+        "vintage_top_importance_share": 0.0,
+        "vintage_month_artifact_warning": false,
+        "interpretation": "vintage_month is present but does not dominate top features"
+      }
+    },
+    "top_features": [
+      {
+        "feature": "num__due_amount",
+        "importance": 0.11001053796713998,
+        "signed_weight": 0.11001053796713998
+      },
+      {
+        "feature": "num__interest_rate",
+        "importance": 0.10637745833117658,
+        "signed_weight": 0.10637745833117658
+      },
+      {
+        "feature": "num__loan_amount",
+        "importance": 0.10569641245881334,
+        "signed_weight": 0.10569641245881334
+      },
+      {
+        "feature": "num__mob",
+        "importance": 0.07273874103782577,
+        "signed_weight": 0.07273874103782577
+      },
+      {
+        "feature": "num__postloan_c_score",
+        "importance": 0.056221824560106846,
+        "signed_weight": 0.056221824560106846
+      },
+      {
+        "feature": "num__loan_term",
+        "importance": 0.03843595938054509,
+        "signed_weight": 0.03843595938054509
+      },
+      {
+        "feature": "num__initial_outstanding_amount",
+        "importance": 0.03613524798337301,
+        "signed_weight": 0.03613524798337301
+      },
+      {
+        "feature": "cat__risk_level_current_B",
+        "importance": 0.015704135300905062,
+        "signed_weight": 0.015704135300905062
+      },
+      {
+        "feature": "cat__customer_segment_复借",
+        "importance": 0.015651133176547715,
+        "signed_weight": 0.015651133176547715
+      },
+      {
+        "feature": "cat__gender_F",
+        "importance": 0.015631240088008327,
+        "signed_weight": 0.015631240088008327
+      }
+    ]
+  },
+  "delta_auc": 0.002767,
+  "delta_ks": -0.00038,
+  "delta_pr_auc": 0.004736,
+  "interpretation": "vintage_month shows artifact risk in at least one with-vintage model, but removing it leaves performance close; the synthetic data signal is weak and the baseline should be presented as a diagnostic demo."
+}

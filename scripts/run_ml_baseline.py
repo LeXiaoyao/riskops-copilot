@@ -19,11 +19,14 @@ from riskops.engines.model_lab.baseline_model import (
 )
 from riskops.engines.model_lab.ml_dataset import build_d7_recovery_dataset, dataset_metadata, split_features_target
 from riskops.engines.model_lab.ml_metrics import (
+    build_vintage_robustness_payload,
     build_decile_lift_table,
     compute_classification_metrics,
     compute_feature_diagnostics,
     render_ml_report,
+    render_robustness_report,
     write_ml_outputs,
+    write_robustness_outputs,
 )
 
 DEFAULT_DATA_DIR = ROOT / "synthetic_data"
@@ -39,88 +42,138 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--model", choices=["logistic", "random_forest", "both"], default="both")
     parser.add_argument("--test-size", type=float, default=DEFAULT_TEST_SIZE)
     parser.add_argument("--random-seed", type=int, default=DEFAULT_RANDOM_SEED)
+    parser.add_argument("--exclude-vintage-month", action="store_true")
     return parser
+
+
+def _run_baseline(
+    data_dir: Path,
+    model_choice: str,
+    test_size: float,
+    random_seed: int,
+    exclude_vintage_month: bool,
+) -> dict[str, object]:
+    dataset = build_d7_recovery_dataset(data_dir, exclude_vintage_month=exclude_vintage_month)
+    X, y = split_features_target(dataset)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X,
+        y,
+        test_size=test_size,
+        random_state=random_seed,
+        stratify=y,
+    )
+    model_names = ["logistic", "random_forest"] if model_choice == "both" else [model_choice]
+    metrics_by_model = {}
+    scores_by_model = {}
+    feature_importance_by_model = {}
+    for model_name in model_names:
+        if model_name == "logistic":
+            model = train_logistic_baseline(X_train, y_train)
+        else:
+            model = train_random_forest_baseline(X_train, y_train)
+        scores = predict_scores(model, X_test)
+        scores_by_model[model_name] = scores
+        metrics_by_model[model_name] = compute_classification_metrics(y_test, scores)
+        feature_importance_by_model[model_name] = extract_feature_importance(model, list(X.columns))
+
+    best_model = max(
+        metrics_by_model,
+        key=lambda name: (metrics_by_model[name]["auc"], metrics_by_model[name]["pr_auc"], metrics_by_model[name]["ks"]),
+    )
+    feature_importance = feature_importance_by_model[best_model]
+    feature_diagnostics_by_model = {
+        model_name: compute_feature_diagnostics(importance, raw_feature_columns=list(X.columns))
+        for model_name, importance in feature_importance_by_model.items()
+    }
+    summary = dataset_metadata(dataset)
+    return {
+        "model_type": best_model,
+        "requested_model": model_choice,
+        "best_model": best_model,
+        "random_seed": random_seed,
+        "test_size": test_size,
+        "exclude_vintage_month": exclude_vintage_month,
+        "dataset_summary": summary,
+        "metrics": metrics_by_model[best_model],
+        "model_comparison": metrics_by_model,
+        "feature_diagnostics": feature_diagnostics_by_model[best_model],
+        "feature_diagnostics_by_model": feature_diagnostics_by_model,
+        "top_feature_importance": feature_importance.head(10).to_dict("records"),
+        "feature_columns": list(X.columns),
+        "lift_table": build_decile_lift_table(y_test, scores_by_model[best_model]),
+        "feature_importance": feature_importance,
+    }
+
+
+def _write_selected_outputs(output_dir: Path, result: dict[str, object]) -> dict[str, str]:
+    report = render_ml_report(
+        result["dataset_summary"],
+        result["metrics"],
+        result["lift_table"],
+        result["feature_importance"],
+        result["best_model"],
+        model_comparison=result["model_comparison"],
+        best_model=result["best_model"],
+        feature_diagnostics=result["feature_diagnostics"],
+        feature_diagnostics_by_model=result["feature_diagnostics_by_model"],
+        feature_columns=result["feature_columns"],
+    )
+    metrics_payload = {
+        key: value
+        for key, value in result.items()
+        if key not in {"lift_table", "feature_importance", "feature_columns"}
+    }
+    return write_ml_outputs(output_dir, metrics_payload, result["lift_table"], result["feature_importance"], report)
+
+
+def _write_robustness_outputs(output_dir: Path, with_vintage: dict[str, object], without_vintage: dict[str, object]) -> dict[str, str]:
+    robustness_payload = build_vintage_robustness_payload(with_vintage, without_vintage)
+    robustness_report = render_robustness_report(robustness_payload)
+    return write_robustness_outputs(output_dir, robustness_payload, robustness_report)
 
 
 def main() -> int:
     args = build_parser().parse_args()
     try:
-        dataset = build_d7_recovery_dataset(args.data_dir)
-        X, y = split_features_target(dataset)
-        X_train, X_test, y_train, y_test = train_test_split(
-            X,
-            y,
-            test_size=args.test_size,
-            random_state=args.random_seed,
-            stratify=y,
+        selected_result = _run_baseline(
+            args.data_dir,
+            args.model,
+            args.test_size,
+            args.random_seed,
+            exclude_vintage_month=args.exclude_vintage_month,
         )
-        model_names = ["logistic", "random_forest"] if args.model == "both" else [args.model]
-        metrics_by_model = {}
-        scores_by_model = {}
-        feature_importance_by_model = {}
-        for model_name in model_names:
-            if model_name == "logistic":
-                model = train_logistic_baseline(X_train, y_train)
-            else:
-                model = train_random_forest_baseline(X_train, y_train)
-            scores = predict_scores(model, X_test)
-            scores_by_model[model_name] = scores
-            metrics_by_model[model_name] = compute_classification_metrics(y_test, scores)
-            feature_importance_by_model[model_name] = extract_feature_importance(model, list(X.columns))
-
-        best_model = max(
-            metrics_by_model,
-            key=lambda name: (metrics_by_model[name]["auc"], metrics_by_model[name]["pr_auc"], metrics_by_model[name]["ks"]),
+        with_vintage_result = (
+            _run_baseline(args.data_dir, args.model, args.test_size, args.random_seed, exclude_vintage_month=False)
+            if args.exclude_vintage_month
+            else selected_result
         )
-        classification_metrics = metrics_by_model[best_model]
-        lift_table = build_decile_lift_table(y_test, scores_by_model[best_model])
-        feature_importance = feature_importance_by_model[best_model]
-        feature_diagnostics_by_model = {
-            model_name: compute_feature_diagnostics(importance, raw_feature_columns=list(X.columns))
-            for model_name, importance in feature_importance_by_model.items()
-        }
-        feature_diagnostics = feature_diagnostics_by_model[best_model]
-        summary = dataset_metadata(dataset)
-        metrics_payload = {
-            "model_type": best_model,
-            "requested_model": args.model,
-            "best_model": best_model,
-            "random_seed": args.random_seed,
-            "test_size": args.test_size,
-            "dataset_summary": summary,
-            "metrics": classification_metrics,
-            "model_comparison": metrics_by_model,
-            "feature_diagnostics": feature_diagnostics,
-            "feature_diagnostics_by_model": feature_diagnostics_by_model,
-            "top_feature_importance": feature_importance.head(10).to_dict("records"),
-        }
-        report = render_ml_report(
-            summary,
-            classification_metrics,
-            lift_table,
-            feature_importance,
-            best_model,
-            model_comparison=metrics_by_model,
-            best_model=best_model,
-            feature_diagnostics=feature_diagnostics,
-            feature_diagnostics_by_model=feature_diagnostics_by_model,
-            feature_columns=list(X.columns),
+        without_vintage_result = (
+            selected_result
+            if args.exclude_vintage_month
+            else _run_baseline(args.data_dir, args.model, args.test_size, args.random_seed, exclude_vintage_month=True)
         )
-        output_paths = write_ml_outputs(args.output_dir, metrics_payload, lift_table, feature_importance, report)
+        output_paths = _write_selected_outputs(args.output_dir, selected_result)
+        robustness_paths = _write_robustness_outputs(args.output_dir, with_vintage_result, without_vintage_result)
+        output_paths.update(robustness_paths)
     except Exception as exc:
         print("FAIL ML baseline")
         print(f"ERROR {exc}")
         return 1
 
+    summary = selected_result["dataset_summary"]
+    metrics_by_model = selected_result["model_comparison"]
+    classification_metrics = selected_result["metrics"]
+    feature_diagnostics_by_model = selected_result["feature_diagnostics_by_model"]
     print(f"sample count: {summary['sample_count']}")
     print(f"positive rate: {summary['positive_rate']:.6f}")
     print(f"feature count: {summary['feature_count']}")
     print(f"requested model: {args.model}")
+    print(f"exclude vintage month: {args.exclude_vintage_month}")
     for model_name, model_metrics in metrics_by_model.items():
         print(
             f"{model_name}: AUC={model_metrics['auc']:.6f}, KS={model_metrics['ks']:.6f}, PR-AUC={model_metrics['pr_auc']:.6f}"
         )
-    print(f"best model: {best_model}")
+    print(f"best model: {selected_result['best_model']}")
     print(f"AUC: {classification_metrics['auc']:.6f}")
     print(f"KS: {classification_metrics['ks']:.6f}")
     print(f"PR-AUC: {classification_metrics['pr_auc']:.6f}")
