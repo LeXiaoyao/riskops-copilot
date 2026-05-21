@@ -218,6 +218,7 @@
   - 可行性：弱
   - 构造方式：可用 `case_type`、`current_line_id`、`action_type` 近似，但缺少明确人工介入 label
   - 限制：当前字段更像策略分配结果，不是独立 target
+
 - **是否高风险案件**
   - 可行性：中
   - 构造方式：可用 `dim_case.case_type = HIGH_RISK`，当前正样本 810 / 10,000，正样本率 8.10%
@@ -529,3 +530,35 @@
   - 不做 LLM / Agent
   - 不做自动催收动作
   - 不把 ADS 聚合指标硬拼成明细模型特征
+
+## 8. M6-D1 D7 Recovery Prediction Baseline
+
+### 8.1 实现范围
+
+- **任务分类**：真实可跑的 ML baseline，不是 score simulation，也不是规则假模型。
+- **样本粒度**：借据级 `loan_id`。
+- **主表**：`synthetic_data/dws/dws_loan_status_snapshot_di.parquet`。
+- **拼接表**：`dim_loan`、`dim_customer`、`ods_postloan_c_score`、`dim_case_loan_mapping`、`dim_case`。
+- **输出目录**：`outputs/model_lab/ml_baseline/`。
+
+### 8.2 Target 定义
+
+- **target 字段**：`is_recovered_d7`。
+- **构造逻辑**：`1 if repaid_amount_d7 > 0 else 0`。
+- **评估口径**：`repaid_amount_d7` 和 `recovery_rate_d7` 只用于 target / 评估，不进入模型特征。
+
+### 8.3 泄漏与隐私边界
+
+- **泄漏字段排除**：`repaid_amount_d7`、`recovery_rate_d7`、`repay_amount`、`repay_date`、`repay_time`、`loan_status`、`case_status`、`ptp_fulfilled_flag`、`reduction_recovery_rate`。
+- **身份字段排除**：`loan_id`、`customer_id`、`case_id`、`customer_id_hash`、`mobile_masked`、`id_card`、`phone_no`、`customer_name`。
+- **案件拼接控制**：只保留每个 `loan_id` 的一条主借据案件映射，避免一对多样本膨胀。
+- **作业分配字段说明**：`current_vendor_id` 和 `current_line_id` 是合成作业分配线索，不是客户本体风险因素。
+- **合成标签说明**：`protect_flag` 和 `sensitive_flag` 是合成标签，不是真实敏感身份字段。
+
+### 8.4 Baseline 结果快照
+
+- **模型类型**：sklearn LogisticRegression + ColumnTransformer Pipeline。
+- **预处理**：数值变量使用 median impute + StandardScaler；类别变量使用 constant impute + OneHotEncoder。
+- **切分方式**：`train_test_split(test_size=0.25, random_state=20260521, stratify=y)`。
+- **默认运行命令**：`python scripts/run_ml_baseline.py`。
+- **报告文件**：`outputs/model_lab/ml_baseline/ml_baseline_report.md`。
