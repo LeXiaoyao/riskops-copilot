@@ -21,6 +21,7 @@ from riskops.engines.model_lab.ml_dataset import build_d7_recovery_dataset, data
 from riskops.engines.model_lab.ml_metrics import (
     build_decile_lift_table,
     compute_classification_metrics,
+    compute_feature_diagnostics,
     render_ml_report,
     write_ml_outputs,
 )
@@ -32,10 +33,10 @@ DEFAULT_TEST_SIZE = 0.25
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Run M6-D1 D7 recovery prediction ML baseline.")
+    parser = argparse.ArgumentParser(description="Run M6-D2 D7 recovery prediction ML baseline diagnostics.")
     parser.add_argument("--data-dir", type=Path, default=DEFAULT_DATA_DIR)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
-    parser.add_argument("--model", choices=["logistic", "random_forest"], default="logistic")
+    parser.add_argument("--model", choices=["logistic", "random_forest", "both"], default="both")
     parser.add_argument("--test-size", type=float, default=DEFAULT_TEST_SIZE)
     parser.add_argument("--random-seed", type=int, default=DEFAULT_RANDOM_SEED)
     return parser
@@ -53,25 +54,58 @@ def main() -> int:
             random_state=args.random_seed,
             stratify=y,
         )
-        if args.model == "logistic":
-            model = train_logistic_baseline(X_train, y_train)
-        else:
-            model = train_random_forest_baseline(X_train, y_train)
+        model_names = ["logistic", "random_forest"] if args.model == "both" else [args.model]
+        metrics_by_model = {}
+        scores_by_model = {}
+        feature_importance_by_model = {}
+        for model_name in model_names:
+            if model_name == "logistic":
+                model = train_logistic_baseline(X_train, y_train)
+            else:
+                model = train_random_forest_baseline(X_train, y_train)
+            scores = predict_scores(model, X_test)
+            scores_by_model[model_name] = scores
+            metrics_by_model[model_name] = compute_classification_metrics(y_test, scores)
+            feature_importance_by_model[model_name] = extract_feature_importance(model, list(X.columns))
 
-        scores = predict_scores(model, X_test)
-        classification_metrics = compute_classification_metrics(y_test, scores)
-        lift_table = build_decile_lift_table(y_test, scores)
-        feature_importance = extract_feature_importance(model, list(X.columns))
+        best_model = max(
+            metrics_by_model,
+            key=lambda name: (metrics_by_model[name]["auc"], metrics_by_model[name]["pr_auc"], metrics_by_model[name]["ks"]),
+        )
+        classification_metrics = metrics_by_model[best_model]
+        lift_table = build_decile_lift_table(y_test, scores_by_model[best_model])
+        feature_importance = feature_importance_by_model[best_model]
+        feature_diagnostics_by_model = {
+            model_name: compute_feature_diagnostics(importance, raw_feature_columns=list(X.columns))
+            for model_name, importance in feature_importance_by_model.items()
+        }
+        feature_diagnostics = feature_diagnostics_by_model[best_model]
         summary = dataset_metadata(dataset)
         metrics_payload = {
-            "model_type": args.model,
+            "model_type": best_model,
+            "requested_model": args.model,
+            "best_model": best_model,
             "random_seed": args.random_seed,
             "test_size": args.test_size,
             "dataset_summary": summary,
             "metrics": classification_metrics,
+            "model_comparison": metrics_by_model,
+            "feature_diagnostics": feature_diagnostics,
+            "feature_diagnostics_by_model": feature_diagnostics_by_model,
             "top_feature_importance": feature_importance.head(10).to_dict("records"),
         }
-        report = render_ml_report(summary, classification_metrics, lift_table, feature_importance, args.model)
+        report = render_ml_report(
+            summary,
+            classification_metrics,
+            lift_table,
+            feature_importance,
+            best_model,
+            model_comparison=metrics_by_model,
+            best_model=best_model,
+            feature_diagnostics=feature_diagnostics,
+            feature_diagnostics_by_model=feature_diagnostics_by_model,
+            feature_columns=list(X.columns),
+        )
         output_paths = write_ml_outputs(args.output_dir, metrics_payload, lift_table, feature_importance, report)
     except Exception as exc:
         print("FAIL ML baseline")
@@ -81,10 +115,20 @@ def main() -> int:
     print(f"sample count: {summary['sample_count']}")
     print(f"positive rate: {summary['positive_rate']:.6f}")
     print(f"feature count: {summary['feature_count']}")
-    print(f"model type: {args.model}")
+    print(f"requested model: {args.model}")
+    for model_name, model_metrics in metrics_by_model.items():
+        print(
+            f"{model_name}: AUC={model_metrics['auc']:.6f}, KS={model_metrics['ks']:.6f}, PR-AUC={model_metrics['pr_auc']:.6f}"
+        )
+    print(f"best model: {best_model}")
     print(f"AUC: {classification_metrics['auc']:.6f}")
     print(f"KS: {classification_metrics['ks']:.6f}")
     print(f"PR-AUC: {classification_metrics['pr_auc']:.6f}")
+    for model_name, diagnostics in feature_diagnostics_by_model.items():
+        print(
+            f"{model_name} vintage top feature share: {diagnostics['vintage_top_feature_share']:.6f}, "
+            f"artifact warning: {diagnostics['vintage_month_artifact_warning']}"
+        )
     print("output paths:")
     for label, path in output_paths.items():
         print(f"- {label}: {path}")

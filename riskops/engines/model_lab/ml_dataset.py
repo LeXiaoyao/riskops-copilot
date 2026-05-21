@@ -34,6 +34,15 @@ FEATURE_COLUMNS = [
     "sensitive_flag",
     "current_vendor_id",
     "current_line_id",
+    "action_count",
+    "connected_count",
+    "ai_action_count",
+    "ptp_count",
+    "ptp_fulfilled_count",
+    "complaint_count",
+    "connect_rate",
+    "ai_coverage_rate",
+    "ptp_fulfillment_rate",
 ]
 
 LEAKAGE_COLUMNS = [
@@ -69,6 +78,7 @@ def load_ml_sources(base_dir: str | Path) -> dict[str, pd.DataFrame]:
         "case_loan_mapping": _read_parquet(root / "dim" / "dim_case_loan_mapping.parquet"),
         "case": _read_parquet(root / "dim" / "dim_case.parquet"),
         "postloan_c_score": _read_parquet(root / "ods" / "ods_postloan_c_score.parquet"),
+        "collection_process": _read_parquet(root / "dws" / "dws_collection_process_wide_di.parquet"),
     }
     return sources
 
@@ -108,7 +118,6 @@ def build_d7_recovery_dataset(base_dir: str | Path) -> pd.DataFrame:
             "occupation_type",
             "customer_segment",
             "risk_level_current",
-            "sensitive_flag",
         ]
     ]
     dataset = dataset.merge(customer, on="customer_id", how="left", validate="many_to_one")
@@ -116,11 +125,27 @@ def build_d7_recovery_dataset(base_dir: str | Path) -> pd.DataFrame:
     score = _latest_score_by_customer(sources["postloan_c_score"])
     dataset = dataset.merge(score, on="customer_id", how="left", validate="many_to_one")
 
-    case_features = _loan_level_case_features(sources["case_loan_mapping"], sources["case"])
+    case_features = _loan_level_case_features(
+        sources["case_loan_mapping"],
+        sources["case"],
+        sources["collection_process"],
+    )
     dataset = dataset.merge(case_features, on="loan_id", how="left", validate="one_to_one")
     for boolean_column in ["protect_flag", "sensitive_flag"]:
         if boolean_column in dataset.columns:
             dataset[boolean_column] = dataset[boolean_column].map({True: 1.0, False: 0.0})
+    count_columns = [
+        "action_count",
+        "connected_count",
+        "ai_action_count",
+        "ptp_count",
+        "ptp_fulfilled_count",
+        "complaint_count",
+    ]
+    rate_columns = ["connect_rate", "ai_coverage_rate", "ptp_fulfillment_rate"]
+    for process_column in [*count_columns, *rate_columns]:
+        if process_column in dataset.columns:
+            dataset[process_column] = dataset[process_column].fillna(0.0)
 
     feature_columns = get_feature_columns(dataset)
     dataset = dataset[["loan_id", "is_recovered_d7", *feature_columns]].copy()
@@ -163,15 +188,17 @@ def _latest_score_by_customer(score: pd.DataFrame) -> pd.DataFrame:
     return latest[["customer_id", "postloan_c_score", "score_level"]].copy()
 
 
-def _loan_level_case_features(mapping: pd.DataFrame, case: pd.DataFrame) -> pd.DataFrame:
+def _loan_level_case_features(mapping: pd.DataFrame, case: pd.DataFrame, collection_process: pd.DataFrame) -> pd.DataFrame:
     main_mapping = mapping[mapping["main_loan_flag"].fillna(False)].copy()
     main_mapping = main_mapping.sort_values(["loan_id", "mapping_start_date"]).drop_duplicates("loan_id", keep="last")
     case_columns = [
         "case_id",
+        "case_create_time",
         "initial_dpd_bucket",
         "initial_outstanding_amount",
         "balance_segment",
         "protect_flag",
+        "sensitive_flag",
         "current_vendor_id",
         "current_line_id",
     ]
@@ -181,7 +208,44 @@ def _loan_level_case_features(mapping: pd.DataFrame, case: pd.DataFrame) -> pd.D
         how="left",
         validate="many_to_one",
     )
-    return case_features.drop(columns=["case_id"])
+    process_features = _recent_collection_process_features(case_features, collection_process)
+    case_features = case_features.merge(process_features, on="loan_id", how="left", validate="one_to_one")
+    return case_features.drop(columns=["case_id", "case_create_time"])
+
+
+def _recent_collection_process_features(case_features: pd.DataFrame, collection_process: pd.DataFrame, window_days: int = 7) -> pd.DataFrame:
+    process_columns = [
+        "action_count",
+        "connected_count",
+        "ai_action_count",
+        "ptp_count",
+        "ptp_fulfilled_count",
+        "complaint_count",
+    ]
+    if collection_process.empty or case_features.empty:
+        return pd.DataFrame(columns=["loan_id", *process_columns, "connect_rate", "ai_coverage_rate", "ptp_fulfillment_rate"])
+
+    window_base = case_features[["loan_id", "case_id", "case_create_time"]].copy()
+    window_base["observation_date"] = pd.to_datetime(window_base["case_create_time"]).dt.normalize()
+
+    process = collection_process[["stat_date", "case_id", *process_columns]].copy()
+    process["stat_date"] = pd.to_datetime(process["stat_date"]).dt.normalize()
+    process = process.merge(window_base[["loan_id", "case_id", "observation_date"]], on="case_id", how="inner")
+    lower_bound = process["observation_date"] - pd.to_timedelta(window_days - 1, unit="D")
+    process = process[(process["stat_date"] >= lower_bound) & (process["stat_date"] <= process["observation_date"])]
+    if process.empty:
+        return pd.DataFrame(columns=["loan_id", *process_columns, "connect_rate", "ai_coverage_rate", "ptp_fulfillment_rate"])
+
+    aggregated = process.groupby("loan_id", as_index=False)[process_columns].sum()
+    aggregated["connect_rate"] = _safe_rate(aggregated["connected_count"], aggregated["action_count"])
+    aggregated["ai_coverage_rate"] = _safe_rate(aggregated["ai_action_count"], aggregated["action_count"])
+    aggregated["ptp_fulfillment_rate"] = _safe_rate(aggregated["ptp_fulfilled_count"], aggregated["ptp_count"])
+    return aggregated
+
+
+def _safe_rate(numerator: pd.Series, denominator: pd.Series) -> pd.Series:
+    rate = numerator.divide(denominator.where(denominator != 0))
+    return rate.fillna(0.0)
 
 
 def dataset_metadata(dataset: pd.DataFrame) -> dict[str, Any]:

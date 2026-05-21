@@ -81,6 +81,48 @@ def build_decile_lift_table(y_true: pd.Series | np.ndarray, y_score: np.ndarray)
     return pd.DataFrame(rows)
 
 
+def compute_feature_diagnostics(
+    feature_importance: pd.DataFrame,
+    top_n: int = 10,
+    raw_feature_columns: list[str] | None = None,
+) -> dict[str, Any]:
+    top_features = feature_importance.head(top_n).copy()
+    top_features["base_feature"] = [
+        _base_feature_name(feature, raw_feature_columns or []) for feature in top_features["feature"].astype(str)
+    ]
+    vintage_rows = top_features[top_features["base_feature"] == "vintage_month"]
+    total_importance = float(top_features["importance"].sum())
+    vintage_importance = float(vintage_rows["importance"].sum())
+    top_feature_count = int(len(top_features))
+    vintage_top_feature_count = int(len(vintage_rows))
+    vintage_top_feature_share = vintage_top_feature_count / top_feature_count if top_feature_count else 0.0
+    vintage_top_importance_share = vintage_importance / total_importance if total_importance else 0.0
+    artifact_warning = vintage_top_feature_share >= 0.3 or vintage_top_importance_share >= 0.3
+    return {
+        "top_n": top_n,
+        "top_feature_count": top_feature_count,
+        "vintage_top_feature_count": vintage_top_feature_count,
+        "vintage_top_feature_share": round(vintage_top_feature_share, 6),
+        "vintage_top_importance": round(vintage_importance, 6),
+        "top_importance_total": round(total_importance, 6),
+        "vintage_top_importance_share": round(vintage_top_importance_share, 6),
+        "vintage_month_artifact_warning": artifact_warning,
+        "interpretation": (
+            "vintage_month dominates top features and may reflect synthetic batch/time artifact"
+            if artifact_warning
+            else "vintage_month is present but does not dominate top features"
+        ),
+    }
+
+
+def _base_feature_name(transformed_feature: str, raw_feature_columns: list[str]) -> str:
+    feature = transformed_feature.split("__", 1)[1] if "__" in transformed_feature else transformed_feature
+    for raw_feature in sorted(raw_feature_columns, key=len, reverse=True):
+        if feature == raw_feature or feature.startswith(f"{raw_feature}_"):
+            return raw_feature
+    return feature
+
+
 def write_ml_outputs(
     output_dir: str | Path,
     metrics: dict[str, Any],
@@ -113,10 +155,22 @@ def render_ml_report(
     lift_table: pd.DataFrame,
     feature_importance: pd.DataFrame,
     model_type: str,
+    model_comparison: dict[str, Any] | None = None,
+    best_model: str | None = None,
+    feature_diagnostics: dict[str, Any] | None = None,
+    feature_diagnostics_by_model: dict[str, Any] | None = None,
+    feature_columns: list[str] | None = None,
 ) -> str:
     top_features = feature_importance.head(10).to_dict("records")
+    model_comparison = model_comparison or {model_type: metrics}
+    best_model = best_model or model_type
+    feature_diagnostics = feature_diagnostics or compute_feature_diagnostics(feature_importance, raw_feature_columns=feature_columns)
+    feature_diagnostics_by_model = feature_diagnostics_by_model or {model_type: feature_diagnostics}
+    any_vintage_warning = any(
+        diagnostics["vintage_month_artifact_warning"] for diagnostics in feature_diagnostics_by_model.values()
+    )
     lines = [
-        "# M6-D1 D7 Recovery Prediction Baseline",
+        "# M6-D2 D7 Recovery Baseline Diagnostics",
         "",
         "## Demo Disclaimer",
         "",
@@ -126,6 +180,7 @@ def render_ml_report(
         "- no automated decisioning",
         "- no collection automation",
         "- no real financial conclusion",
+        "- synthetic data boundary: all inputs are generated offline demo data under `synthetic_data/`",
         "",
         "## Dataset Summary",
         "",
@@ -140,13 +195,14 @@ def render_ml_report(
         "- **definition**：1 if dws_loan_status_snapshot_di.repaid_amount_d7 > 0 else 0",
         "- **evaluation-only fields**：repaid_amount_d7, recovery_rate_d7",
         "",
-        "## Feature Groups",
+        "## Business Feature Groups",
         "",
         "- **loan features**：product_code, channel_code, loan_amount, loan_term, interest_rate, mob, vintage_month, due_amount, dpd_bucket",
         "- **customer synthetic profile features**：age_group, gender, province, city, occupation_type, customer_segment, risk_level_current",
         "- **postloan score features**：postloan_c_score, score_level",
         "- **assignment context features**：initial_dpd_bucket, initial_outstanding_amount, balance_segment, current_vendor_id, current_line_id",
         "- **synthetic governance labels**：protect_flag, sensitive_flag",
+        "- **recent process window features**：action_count, connected_count, ai_action_count, ptp_count, ptp_fulfilled_count, complaint_count, connect_rate, ai_coverage_rate, ptp_fulfillment_rate",
         "",
         "## Leakage Control",
         "",
@@ -155,21 +211,72 @@ def render_ml_report(
         "- case features are joined through one main loan mapping per loan_id to avoid one-to-many sample inflation.",
         "- current_vendor_id and current_line_id are assignment context signals, not customer intrinsic risk factors.",
         "- protect_flag and sensitive_flag are synthetic labels, not real sensitive identity fields.",
+        "- Process window features are aggregated from the recent 7-day window ending on case_create_date and do not use repayment amount/date fields.",
         "",
-        "## Model Metrics",
-        "",
-        f"- **model_type**：{model_type}",
-        f"- **AUC**：{metrics['auc']:.6f}",
-        f"- **KS**：{metrics['ks']:.6f}",
-        f"- **PR-AUC**：{metrics['pr_auc']:.6f}",
-        f"- **precision**：{metrics['precision']:.6f}",
-        f"- **recall**：{metrics['recall']:.6f}",
-        f"- **f1**：{metrics['f1']:.6f}",
-        f"- **confusion_matrix**：tn={metrics['confusion_matrix']['tn']}, fp={metrics['confusion_matrix']['fp']}, fn={metrics['confusion_matrix']['fn']}, tp={metrics['confusion_matrix']['tp']}",
-        "",
-        "## Decile Lift Table",
+        "## Model Comparison",
         "",
     ]
+    for comparison_model, comparison_metrics in model_comparison.items():
+        lines.extend(
+            [
+                f"- **{comparison_model}**",
+                f"  - AUC：{comparison_metrics['auc']:.6f}",
+                f"  - KS：{comparison_metrics['ks']:.6f}",
+                f"  - PR-AUC：{comparison_metrics['pr_auc']:.6f}",
+                f"  - precision：{comparison_metrics['precision']:.6f}",
+                f"  - recall：{comparison_metrics['recall']:.6f}",
+                f"  - f1：{comparison_metrics['f1']:.6f}",
+            ]
+        )
+    lines.extend(
+        [
+            f"- **best_model**：{best_model}",
+            "",
+            "## Best Model Metrics",
+            "",
+            f"- **model_type**：{model_type}",
+            f"- **AUC**：{metrics['auc']:.6f}",
+            f"- **KS**：{metrics['ks']:.6f}",
+            f"- **PR-AUC**：{metrics['pr_auc']:.6f}",
+            f"- **precision**：{metrics['precision']:.6f}",
+            f"- **recall**：{metrics['recall']:.6f}",
+            f"- **f1**：{metrics['f1']:.6f}",
+            f"- **confusion_matrix**：tn={metrics['confusion_matrix']['tn']}, fp={metrics['confusion_matrix']['fp']}, fn={metrics['confusion_matrix']['fn']}, tp={metrics['confusion_matrix']['tp']}",
+            "",
+            "## Feature Diagnostics",
+            "",
+        ]
+    )
+    for diagnostics_model, diagnostics in feature_diagnostics_by_model.items():
+        lines.extend(
+            [
+                f"- **{diagnostics_model}**",
+                f"  - top_n：{diagnostics['top_n']}",
+                f"  - vintage_month_top_feature_count：{diagnostics['vintage_top_feature_count']} / {diagnostics['top_feature_count']}",
+                f"  - vintage_month_top_feature_share：{diagnostics['vintage_top_feature_share']:.2%}",
+                f"  - vintage_month_top_importance_share：{diagnostics['vintage_top_importance_share']:.2%}",
+                f"  - vintage_month_artifact_warning：{diagnostics['vintage_month_artifact_warning']}",
+            ]
+        )
+    lines.extend(
+        [
+            f"- **top_n**：{feature_diagnostics['top_n']}",
+            f"- **vintage_month_top_feature_count**：{feature_diagnostics['vintage_top_feature_count']} / {feature_diagnostics['top_feature_count']}",
+            f"- **vintage_month_top_feature_share**：{feature_diagnostics['vintage_top_feature_share']:.2%}",
+            f"- **vintage_month_top_importance_share**：{feature_diagnostics['vintage_top_importance_share']:.2%}",
+            f"- **vintage_month_artifact_warning**：{any_vintage_warning}",
+            f"- **interpretation**：{_vintage_warning_interpretation(any_vintage_warning)}",
+            "",
+            "## Vintage Month Artifact Warning",
+            "",
+            "- vintage_month is useful for demo diagnostics because it exposes whether synthetic calendar batches are driving separation.",
+            "- vintage_month should not be the final business explanation core; it may reflect batch/time artifact rather than customer or operation behavior.",
+            "- If vintage_month dominates top features, explain it as a synthetic-data diagnostic finding, not as a deployable policy reason.",
+            "",
+            "## Decile Lift Table",
+            "",
+        ]
+    )
     for row in lift_table.to_dict("records"):
         lines.append(
             f"- **decile {row['decile']}**：sample_count={row['sample_count']}, positive_rate={row['positive_rate']:.6f}, lift={row['lift']:.6f}, cumulative_capture_rate={row['cumulative_capture_rate']:.6f}"
@@ -180,27 +287,41 @@ def render_ml_report(
     lines.extend(
         [
             "",
+            "## Why Baseline AUC Is Modest",
+            "",
+            "- The data is synthetic and optimized for workflow demonstration, not for strong predictive signal.",
+            "- The D7 target is a broad recovery outcome, while many available signals are assignment or process context rather than direct willingness-to-pay features.",
+            "- Recent process features are useful for interview storytelling, but their observation window should be tightened before any production-like interpretation.",
+            "- vintage_month concentration indicates possible synthetic batch effects, so business interpretation should emphasize diagnostics rather than overclaiming predictive power.",
+            "",
             "## Business Interpretation",
             "",
             "- This baseline ranks synthetic loans by probability of D7 recovery and is suitable for offline model-readiness demonstration only.",
             "- Higher-ranked deciles should show higher observed recovery rate if the baseline has usable separation.",
-            "- Assignment context features can help explain operational allocation patterns, but they should not be interpreted as customer risk attributes.",
+            "- Assignment and process features can help explain operational patterns, but they should not be interpreted as customer intrinsic risk attributes.",
             "",
             "## Known Limitations",
             "",
             "- Synthetic data can validate pipeline feasibility, not real-world predictive power.",
             "- The model is not calibrated for production decisioning.",
             "- Missing postloan scores are imputed by the preprocessing pipeline.",
+            "- Process features use a demo-friendly 7-day window ending on case_create_date; if upstream timing is not strict, they should be treated as diagnostic-only.",
             "- No real customer data, LLM context, collection automation or deployment path is involved.",
             "",
             "## Next Steps",
             "",
-            "- Add CLI integration only after M6-D1 outputs are accepted.",
-            "- Add model card / validation checklist before any future production-like discussion.",
-            "- Consider time-based validation in a later M6 task if the synthetic calendar design is expanded.",
+            "- Add time-based validation once the synthetic calendar design supports a stricter observation cutoff.",
+            "- Add segment-level diagnostics for score_level, dpd_bucket, vendor and line stability.",
+            "- Consider removing or bucketing vintage_month in a later robustness check if artifact dominance remains high.",
             "",
             f"_Generated at {datetime.now(UTC).isoformat(timespec='seconds')}_",
             "",
         ]
     )
     return "\n".join(lines)
+
+
+def _vintage_warning_interpretation(any_vintage_warning: bool) -> str:
+    if any_vintage_warning:
+        return "at least one model shows vintage_month dominance and may reflect synthetic batch/time artifact"
+    return "vintage_month is present but does not dominate top features"

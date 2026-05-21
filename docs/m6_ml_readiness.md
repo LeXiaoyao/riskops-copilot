@@ -562,3 +562,34 @@
 - **切分方式**：`train_test_split(test_size=0.25, random_state=20260521, stratify=y)`。
 - **默认运行命令**：`python scripts/run_ml_baseline.py`。
 - **报告文件**：`outputs/model_lab/ml_baseline/ml_baseline_report.md`。
+
+## 9. M6-D2 Feature Engineering & Model Diagnostics
+
+### 9.1 实现范围
+
+- **任务分类**：在 M6-D1 baseline 上做轻量特征增强和诊断，不重做 target、不改数据生成逻辑。
+- **新增特征来源**：继续只读 `synthetic_data/` 下的合成数据表。
+- **模型范围**：保留 LogisticRegression baseline，新增 RandomForestClassifier 离线对照，不保存模型文件。
+- **输出目录**：继续写入 `outputs/model_lab/ml_baseline/`。
+
+### 9.2 业务特征增强
+
+- **评分特征**：`postloan_c_score`、`score_level`。
+- **案件初始特征**：`initial_dpd_bucket`、`initial_outstanding_amount`、`balance_segment`。
+- **分配上下文特征**：`current_vendor_id`、`current_line_id`。
+- **合成治理标签**：`protect_flag`、`sensitive_flag`。
+- **近期过程窗口特征**：`action_count`、`connected_count`、`ai_action_count`、`ptp_count`、`ptp_fulfilled_count`、`complaint_count`、`connect_rate`、`ai_coverage_rate`、`ptp_fulfillment_rate`。
+
+### 9.3 诊断边界
+
+- **vintage_month 诊断**：报告 top features 中 `vintage_month` 的数量占比和重要性占比。
+- **artifact warning**：如果 `vintage_month` 在 top features 中占比过高，标记为可能的 synthetic batch/time artifact。
+- **业务解释边界**：`vintage_month` 可用于 demo 诊断，但不应作为最终业务解释核心。
+- **过程窗口限制**：近期过程特征按 `case_create_date` 截止的 7 天窗口聚合；如果上游动作时间与观察点不严格，报告中按 diagnostic-only limitation 处理。
+
+### 9.4 泄漏控制
+
+- **仍排除 D7 结果字段**：`repaid_amount_d7`、`recovery_rate_d7`。
+- **仍排除还款流水字段**：`repay_amount`、`repay_date`、`repay_time`。
+- **仍排除身份字段**：`loan_id`、`customer_id`、`case_id`、`customer_id_hash`、`mobile_masked` 和 P4 明文字段。
+- **不接入项**：不接真实数据、不接 LLM、不做 Agent、不做自动催收。
