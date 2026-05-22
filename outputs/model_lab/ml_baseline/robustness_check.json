@@ -3,56 +3,60 @@
   "with_vintage": {
     "best_model": "random_forest",
     "metrics": {
-      "auc": 0.540511,
-      "ks": 0.077699,
-      "pr_auc": 0.301325,
-      "precision": 0.299533,
-      "recall": 0.427416,
-      "f1": 0.352226,
+      "auc": 0.615549,
+      "ks": 0.194021,
+      "pr_auc": 0.426304,
+      "precision": 0.466123,
+      "recall": 0.351466,
+      "f1": 0.400755,
       "threshold": 0.5,
       "confusion_matrix": {
-        "tn": 3299,
-        "fp": 2100,
-        "fn": 1203,
-        "tp": 898
+        "tn": 4535,
+        "fp": 851,
+        "fn": 1371,
+        "tp": 743
       }
     },
     "dataset_summary": {
       "sample_count": 30000,
-      "positive_rate": 0.2801666666666667,
-      "feature_count": 34,
+      "positive_rate": 0.2818333333333333,
+      "feature_count": 39,
       "exclude_vintage_month": false,
-      "excluded_time_features": []
+      "excluded_time_features": [],
+      "target_column": "is_recovered_d7",
+      "target_semantic_name": "d7_any_payment_response",
+      "target_definition": "1 if repaid_amount_d7 > 0 else 0",
+      "target_boundary": "Legacy demo target name; positive means any D7 payment response, not full cure, DPD cleared, or complete recovery."
     },
     "model_comparison": {
       "logistic": {
-        "auc": 0.539783,
-        "ks": 0.072591,
-        "pr_auc": 0.304289,
-        "precision": 0.300023,
-        "recall": 0.615897,
-        "f1": 0.403492,
+        "auc": 0.610254,
+        "ks": 0.186356,
+        "pr_auc": 0.420004,
+        "precision": 0.363241,
+        "recall": 0.513245,
+        "f1": 0.425407,
         "threshold": 0.5,
         "confusion_matrix": {
-          "tn": 2380,
-          "fp": 3019,
-          "fn": 807,
-          "tp": 1294
+          "tn": 3484,
+          "fp": 1902,
+          "fn": 1029,
+          "tp": 1085
         }
       },
       "random_forest": {
-        "auc": 0.540511,
-        "ks": 0.077699,
-        "pr_auc": 0.301325,
-        "precision": 0.299533,
-        "recall": 0.427416,
-        "f1": 0.352226,
+        "auc": 0.615549,
+        "ks": 0.194021,
+        "pr_auc": 0.426304,
+        "precision": 0.466123,
+        "recall": 0.351466,
+        "f1": 0.400755,
         "threshold": 0.5,
         "confusion_matrix": {
-          "tn": 3299,
-          "fp": 2100,
-          "fn": 1203,
-          "tp": 898
+          "tn": 4535,
+          "fp": 851,
+          "fn": 1371,
+          "tp": 743
         }
       }
     },
@@ -60,11 +64,11 @@
       "logistic": {
         "top_n": 10,
         "top_feature_count": 10,
-        "vintage_top_feature_count": 10,
-        "vintage_top_feature_share": 1.0,
-        "vintage_top_importance": 1.988805,
-        "top_importance_total": 1.988805,
-        "vintage_top_importance_share": 1.0,
+        "vintage_top_feature_count": 4,
+        "vintage_top_feature_share": 0.4,
+        "vintage_top_importance": 0.947661,
+        "top_importance_total": 2.747672,
+        "vintage_top_importance_share": 0.344896,
         "vintage_month_artifact_warning": true,
         "interpretation": "vintage_month dominates top features and may reflect synthetic batch/time artifact"
       },
@@ -74,7 +78,7 @@
         "vintage_top_feature_count": 0,
         "vintage_top_feature_share": 0.0,
         "vintage_top_importance": 0.0,
-        "top_importance_total": 0.529639,
+        "top_importance_total": 0.551645,
         "vintage_top_importance_share": 0.0,
         "vintage_month_artifact_warning": false,
         "interpretation": "vintage_month is present but does not dominate top features"
@@ -82,115 +86,122 @@
     },
     "top_features": [
       {
-        "feature": "num__due_amount",
-        "importance": 0.1011773491240544,
-        "signed_weight": 0.1011773491240544
+        "feature": "num__postloan_c_score",
+        "importance": 0.12109208997859967,
+        "signed_weight": 0.12109208997859967
       },
       {
         "feature": "num__loan_amount",
-        "importance": 0.09748860222624525,
-        "signed_weight": 0.09748860222624525
+        "importance": 0.07501510313891006,
+        "signed_weight": 0.07501510313891006
+      },
+      {
+        "feature": "num__due_amount",
+        "importance": 0.06811980662963897,
+        "signed_weight": 0.06811980662963897
+      },
+      {
+        "feature": "num__log_due_amount",
+        "importance": 0.06588457074549739,
+        "signed_weight": 0.06588457074549739
       },
       {
         "feature": "num__interest_rate",
-        "importance": 0.09620384926897181,
-        "signed_weight": 0.09620384926897181
-      },
-      {
-        "feature": "num__mob",
-        "importance": 0.061015018073148984,
-        "signed_weight": 0.061015018073148984
-      },
-      {
-        "feature": "num__postloan_c_score",
-        "importance": 0.056374100042618135,
-        "signed_weight": 0.056374100042618135
+        "importance": 0.055985194064174286,
+        "signed_weight": 0.055985194064174286
       },
       {
         "feature": "num__initial_outstanding_amount",
-        "importance": 0.037246964412670266,
-        "signed_weight": 0.037246964412670266
+        "importance": 0.05033869949134347,
+        "signed_weight": 0.05033869949134347
       },
       {
-        "feature": "num__loan_term",
-        "importance": 0.0354454494059624,
-        "signed_weight": 0.0354454494059624
+        "feature": "num__mob",
+        "importance": 0.039539012309915016,
+        "signed_weight": 0.039539012309915016
       },
       {
-        "feature": "cat__product_code_P_CASH",
-        "importance": 0.01530290317094295,
-        "signed_weight": 0.01530290317094295
+        "feature": "num__outstanding_to_loan_ratio",
+        "importance": 0.029064055129141113,
+        "signed_weight": 0.029064055129141113
       },
       {
-        "feature": "cat__occupation_type_工薪",
-        "importance": 0.01470349868677286,
-        "signed_weight": 0.01470349868677286
+        "feature": "cat__score_level_D",
+        "importance": 0.023942491716369484,
+        "signed_weight": 0.023942491716369484
       },
       {
-        "feature": "cat__customer_segment_复借",
-        "importance": 0.014681226576048471,
-        "signed_weight": 0.014681226576048471
+        "feature": "num__ai_coverage_rate",
+        "importance": 0.022663831580779302,
+        "signed_weight": 0.022663831580779302
       }
     ]
   },
   "without_vintage": {
     "best_model": "random_forest",
     "metrics": {
-      "auc": 0.543278,
-      "ks": 0.077319,
-      "pr_auc": 0.306061,
-      "precision": 0.3078,
-      "recall": 0.418848,
-      "f1": 0.354839,
+      "auc": 0.613896,
+      "ks": 0.199485,
+      "pr_auc": 0.425937,
+      "precision": 0.467752,
+      "recall": 0.353359,
+      "f1": 0.402587,
       "threshold": 0.5,
       "confusion_matrix": {
-        "tn": 3420,
-        "fp": 1979,
-        "fn": 1221,
-        "tp": 880
+        "tn": 4536,
+        "fp": 850,
+        "fn": 1367,
+        "tp": 747
       }
     },
     "dataset_summary": {
       "sample_count": 30000,
-      "positive_rate": 0.2801666666666667,
-      "feature_count": 33,
+      "positive_rate": 0.2818333333333333,
+      "feature_count": 38,
       "exclude_vintage_month": true,
       "excluded_time_features": [
         "vintage_month",
         "first_due_date",
+        "observation_date",
+        "stat_date",
+        "due_date",
         "case_create_date",
         "case_create_time"
-      ]
+      ],
+      "target_column": "is_recovered_d7",
+      "target_semantic_name": "d7_any_payment_response",
+      "target_definition": "1 if repaid_amount_d7 > 0 else 0",
+      "target_boundary": "Legacy demo target name; positive means any D7 payment response, not full cure, DPD cleared, or complete recovery."
     },
     "model_comparison": {
       "logistic": {
-        "auc": 0.539767,
-        "ks": 0.079458,
-        "pr_auc": 0.302067,
-        "precision": 0.304643,
-        "recall": 0.68396,
-        "f1": 0.421531,
+        "auc": 0.611519,
+        "ks": 0.187953,
+        "pr_auc": 0.423339,
+        "precision": 0.360501,
+        "recall": 0.504257,
+        "f1": 0.42043,
         "threshold": 0.5,
         "confusion_matrix": {
-          "tn": 2119,
-          "fp": 3280,
-          "fn": 664,
-          "tp": 1437
+          "tn": 3495,
+          "fp": 1891,
+          "fn": 1048,
+          "tp": 1066
         }
       },
       "random_forest": {
-        "auc": 0.543278,
-        "ks": 0.077319,
-        "pr_auc": 0.306061,
-        "precision": 0.3078,
-        "recall": 0.418848,
-        "f1": 0.354839,
+        "auc": 0.613896,
+        "ks": 0.199485,
+        "pr_auc": 0.425937,
+        "precision": 0.467752,
+        "recall": 0.353359,
+        "f1": 0.402587,
         "threshold": 0.5,
         "confusion_matrix": {
-          "tn": 3420,
-          "fp": 1979,
-          "fn": 1221,
-          "tp": 880
+          "tn": 4536,
+          "fp": 850,
+          "fn": 1367,
+          "tp": 747
         }
       }
     },
@@ -201,7 +212,7 @@
         "vintage_top_feature_count": 0,
         "vintage_top_feature_share": 0.0,
         "vintage_top_importance": 0.0,
-        "top_importance_total": 0.772147,
+        "top_importance_total": 2.38611,
         "vintage_top_importance_share": 0.0,
         "vintage_month_artifact_warning": false,
         "interpretation": "vintage_month is present but does not dominate top features"
@@ -212,7 +223,7 @@
         "vintage_top_feature_count": 0,
         "vintage_top_feature_share": 0.0,
         "vintage_top_importance": 0.0,
-        "top_importance_total": 0.572603,
+        "top_importance_total": 0.599687,
         "vintage_top_importance_share": 0.0,
         "vintage_month_artifact_warning": false,
         "interpretation": "vintage_month is present but does not dominate top features"
@@ -220,59 +231,59 @@
     },
     "top_features": [
       {
-        "feature": "num__due_amount",
-        "importance": 0.11001053796713998,
-        "signed_weight": 0.11001053796713998
+        "feature": "num__postloan_c_score",
+        "importance": 0.12201533636721801,
+        "signed_weight": 0.12201533636721801
       },
       {
-        "feature": "num__interest_rate",
-        "importance": 0.10637745833117658,
-        "signed_weight": 0.10637745833117658
+        "feature": "num__log_due_amount",
+        "importance": 0.07802113410576894,
+        "signed_weight": 0.07802113410576894
       },
       {
         "feature": "num__loan_amount",
-        "importance": 0.10569641245881334,
-        "signed_weight": 0.10569641245881334
+        "importance": 0.07761057161112449,
+        "signed_weight": 0.07761057161112449
       },
       {
-        "feature": "num__mob",
-        "importance": 0.07273874103782577,
-        "signed_weight": 0.07273874103782577
+        "feature": "num__due_amount",
+        "importance": 0.07274101344453567,
+        "signed_weight": 0.07274101344453567
       },
       {
-        "feature": "num__postloan_c_score",
-        "importance": 0.056221824560106846,
-        "signed_weight": 0.056221824560106846
-      },
-      {
-        "feature": "num__loan_term",
-        "importance": 0.03843595938054509,
-        "signed_weight": 0.03843595938054509
+        "feature": "num__interest_rate",
+        "importance": 0.06226374869625061,
+        "signed_weight": 0.06226374869625061
       },
       {
         "feature": "num__initial_outstanding_amount",
-        "importance": 0.03613524798337301,
-        "signed_weight": 0.03613524798337301
+        "importance": 0.04837836158639916,
+        "signed_weight": 0.04837836158639916
       },
       {
-        "feature": "cat__risk_level_current_B",
-        "importance": 0.015704135300905062,
-        "signed_weight": 0.015704135300905062
+        "feature": "num__mob",
+        "importance": 0.04625065285594017,
+        "signed_weight": 0.04625065285594017
       },
       {
-        "feature": "cat__customer_segment_复借",
-        "importance": 0.015651133176547715,
-        "signed_weight": 0.015651133176547715
+        "feature": "num__outstanding_to_loan_ratio",
+        "importance": 0.038022628748927624,
+        "signed_weight": 0.038022628748927624
       },
       {
-        "feature": "cat__gender_F",
-        "importance": 0.015631240088008327,
-        "signed_weight": 0.015631240088008327
+        "feature": "cat__score_level_D",
+        "importance": 0.030345807695499324,
+        "signed_weight": 0.030345807695499324
+      },
+      {
+        "feature": "num__loan_term",
+        "importance": 0.0240375408084166,
+        "signed_weight": 0.0240375408084166
       }
     ]
   },
-  "delta_auc": 0.002767,
-  "delta_ks": -0.00038,
-  "delta_pr_auc": 0.004736,
+  "delta_auc": -0.001653,
+  "delta_ks": 0.005464,
+  "delta_pr_auc": -0.000367,
   "interpretation": "vintage_month shows artifact risk in at least one with-vintage model, but removing it leaves performance close; the synthetic data signal is weak and the baseline should be presented as a diagnostic demo."
 }

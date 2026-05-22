@@ -5,6 +5,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
@@ -31,6 +32,7 @@ from riskops.engines.model_lab.ml_metrics import (
 ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "synthetic_data"
 RUNNER = ROOT / "scripts" / "run_ml_baseline.py"
+TARGET_DOC = ROOT / "docs" / "m6_target_definition.md"
 
 
 def test_can_build_d7_recovery_dataset() -> None:
@@ -45,6 +47,31 @@ def test_target_exists_and_has_both_classes() -> None:
 
     assert "is_recovered_d7" in dataset.columns
     assert set(dataset["is_recovered_d7"].unique()) == {0, 1}
+
+
+def test_target_remains_d7_any_payment_response() -> None:
+    dataset = build_d7_recovery_dataset(DATA_DIR)
+    loan_status = pd.read_parquet(DATA_DIR / "dws" / "dws_loan_status_snapshot_di.parquet")
+    expected = loan_status[["loan_id", "repaid_amount_d7"]].copy()
+    expected["expected_target"] = (expected["repaid_amount_d7"].fillna(0) > 0).astype(int)
+    joined = dataset[["loan_id", "is_recovered_d7"]].merge(
+        expected[["loan_id", "expected_target"]],
+        on="loan_id",
+        how="left",
+        validate="one_to_one",
+    )
+
+    assert joined["is_recovered_d7"].equals(joined["expected_target"])
+    assert dataset.attrs["metadata"]["target_semantic_name"] == "d7_any_payment_response"
+
+
+def test_target_definition_document_exists_and_states_boundary() -> None:
+    text = TARGET_DOC.read_text(encoding="utf-8")
+
+    assert "any-payment response" in text
+    assert "not full cure" in text
+    assert "partial payment" in text
+    assert "cure-to-current" in text
 
 
 def test_sensitive_fields_do_not_enter_features() -> None:
@@ -75,6 +102,7 @@ def test_business_features_exist_or_are_safely_skipped() -> None:
     feature_columns = set(get_feature_columns(dataset))
     expected_features = {
         "postloan_c_score",
+        "score_x_connect_rate",
         "score_level",
         "initial_dpd_bucket",
         "initial_outstanding_amount",
@@ -83,19 +111,226 @@ def test_business_features_exist_or_are_safely_skipped() -> None:
         "current_line_id",
         "protect_flag",
         "sensitive_flag",
-        "action_count",
-        "connected_count",
+        "action_count_7d",
+        "connected_count_7d",
+        "connect_rate_7d",
         "ai_action_count",
-        "ptp_count",
-        "ptp_fulfilled_count",
+        "ptp_count_7d",
+        "ptp_rate_7d",
+        "days_since_last_action",
         "complaint_count",
-        "connect_rate",
         "ai_coverage_rate",
-        "ptp_fulfillment_rate",
     }
 
     assert expected_features <= feature_columns
-    assert dataset[["action_count", "connected_count", "ai_action_count", "ptp_count"]].min().min() >= 0
+    assert dataset[["action_count_7d", "connected_count_7d", "ptp_count_7d"]].min().min() >= 0
+
+
+def test_d7_prediction_features_block_outcome_and_ptp_fulfillment_fields() -> None:
+    dataset = build_d7_recovery_dataset(DATA_DIR)
+    feature_columns = set(get_feature_columns(dataset))
+    blocked_features = {
+        "ptp_fulfilled_count",
+        "ptp_fulfillment_rate",
+        "ptp_fulfilled_flag",
+        "repaid_amount_d7",
+        "recovery_rate_d7",
+        "repay_amount",
+        "repay_date",
+        "repay_time",
+    }
+
+    assert feature_columns.isdisjoint(blocked_features)
+
+
+def test_ods_action_window_features_are_numeric_safe() -> None:
+    dataset = build_d7_recovery_dataset(DATA_DIR)
+    finite_features = ["connect_rate_7d", "ptp_rate_7d"]
+
+    for feature in finite_features:
+        assert np.isfinite(dataset[feature]).all(), feature
+    assert dataset["days_since_last_action"].dropna().ge(0).all()
+
+
+def test_ods_action_window_does_not_use_future_actions(monkeypatch) -> None:
+    from riskops.engines.model_lab import ml_dataset
+
+    original_read_parquet = ml_dataset._read_parquet
+
+    def read_parquet_with_future_actions(path: Path) -> pd.DataFrame:
+        frame = original_read_parquet(path)
+        if path.name == "ods_collection_action.parquet":
+            frame = frame.copy()
+            frame["action_time"] = pd.Timestamp("2099-01-01")
+        return frame
+
+    monkeypatch.setattr(ml_dataset, "_read_parquet", read_parquet_with_future_actions)
+    dataset = build_d7_recovery_dataset(DATA_DIR)
+
+    assert dataset["action_count_7d"].eq(0).all()
+    assert dataset["connected_count_7d"].eq(0).all()
+    assert dataset["connect_rate_7d"].eq(0).all()
+    assert dataset["ptp_count_7d"].eq(0).all()
+    assert dataset["ptp_rate_7d"].eq(0).all()
+    assert dataset["days_since_last_action"].isna().all()
+
+
+def test_ptp_window_features_do_not_use_fulfillment_flag(monkeypatch) -> None:
+    from riskops.engines.model_lab import ml_dataset
+
+    baseline = build_d7_recovery_dataset(DATA_DIR)
+    protected_features = ["ptp_count_7d", "ptp_rate_7d"]
+    original_read_parquet = ml_dataset._read_parquet
+
+    def read_parquet_with_changed_ptp_fulfillment(path: Path) -> pd.DataFrame:
+        frame = original_read_parquet(path)
+        if path.name == "ods_collection_action.parquet":
+            frame = frame.copy()
+            frame["ptp_fulfilled_flag"] = ~frame["ptp_fulfilled_flag"].astype(bool)
+        return frame
+
+    monkeypatch.setattr(ml_dataset, "_read_parquet", read_parquet_with_changed_ptp_fulfillment)
+    changed = build_d7_recovery_dataset(DATA_DIR)
+
+    pd.testing.assert_frame_equal(
+        baseline[["loan_id", *protected_features]].sort_values("loan_id").reset_index(drop=True),
+        changed[["loan_id", *protected_features]].sort_values("loan_id").reset_index(drop=True),
+    )
+
+
+def test_score_connect_interaction_feature_enters_dataset_and_is_numeric_safe() -> None:
+    dataset = build_d7_recovery_dataset(DATA_DIR)
+    feature_columns = set(get_feature_columns(dataset))
+
+    assert "score_x_connect_rate" in feature_columns
+    assert np.isfinite(dataset["score_x_connect_rate"].dropna()).all()
+
+
+def test_score_connect_interaction_does_not_depend_on_outcome_or_ptp_fulfillment(monkeypatch) -> None:
+    from riskops.engines.model_lab import ml_dataset
+
+    baseline = build_d7_recovery_dataset(DATA_DIR)
+    original_read_parquet = ml_dataset._read_parquet
+
+    def read_parquet_with_changed_blocked_fields(path: Path) -> pd.DataFrame:
+        frame = original_read_parquet(path)
+        if path.name == "dws_loan_status_snapshot_di.parquet":
+            frame = frame.copy()
+            frame["repaid_amount_d7"] = frame["repaid_amount_d7"].max() + 1
+            frame["recovery_rate_d7"] = 1.0
+        if path.name == "ods_collection_action.parquet":
+            frame = frame.copy()
+            frame["ptp_fulfilled_flag"] = ~frame["ptp_fulfilled_flag"].astype(bool)
+        return frame
+
+    monkeypatch.setattr(ml_dataset, "_read_parquet", read_parquet_with_changed_blocked_fields)
+    changed = build_d7_recovery_dataset(DATA_DIR)
+
+    pd.testing.assert_series_equal(
+        baseline.sort_values("loan_id")["score_x_connect_rate"].reset_index(drop=True),
+        changed.sort_values("loan_id")["score_x_connect_rate"].reset_index(drop=True),
+    )
+    blocked_fields = {
+        "repaid_amount_d7",
+        "recovery_rate_d7",
+        "repay_amount",
+        "repay_date",
+        "repay_time",
+        "ptp_fulfilled_count",
+        "ptp_fulfillment_rate",
+        "ptp_fulfilled_flag",
+    }
+    assert set(get_feature_columns(changed)).isdisjoint(blocked_fields)
+
+
+def test_low_risk_amount_dpd_features_enter_dataset() -> None:
+    dataset = build_d7_recovery_dataset(DATA_DIR)
+    feature_columns = set(get_feature_columns(dataset))
+    expected_features = {
+        "log_due_amount",
+        "outstanding_to_loan_ratio",
+        "days_since_due_date",
+        "dpd_x_log_due_amount",
+    }
+
+    assert expected_features <= feature_columns
+
+
+def test_low_risk_amount_dpd_features_are_numeric_safe() -> None:
+    dataset = build_d7_recovery_dataset(DATA_DIR)
+    numeric_features = [
+        "log_due_amount",
+        "outstanding_to_loan_ratio",
+        "days_since_due_date",
+        "dpd_x_log_due_amount",
+    ]
+
+    for feature in numeric_features:
+        assert np.isfinite(dataset[feature]).all(), feature
+    assert (dataset["days_since_due_date"] >= 0).all()
+
+
+def test_observation_date_uses_loan_status_stat_date() -> None:
+    dataset = build_d7_recovery_dataset(DATA_DIR)
+    loan_status = pd.read_parquet(DATA_DIR / "dws" / "dws_loan_status_snapshot_di.parquet")
+    expected = loan_status[["loan_id", "stat_date"]].copy()
+    expected["expected_observation_date"] = pd.to_datetime(expected["stat_date"]).dt.normalize()
+    joined = dataset[["loan_id", "observation_date"]].merge(
+        expected[["loan_id", "expected_observation_date"]],
+        on="loan_id",
+        how="left",
+        validate="one_to_one",
+    )
+
+    assert pd.to_datetime(joined["observation_date"]).equals(joined["expected_observation_date"])
+
+
+def test_days_since_due_date_uses_observation_and_due_date() -> None:
+    dataset = build_d7_recovery_dataset(DATA_DIR)
+    repayment_plan = pd.read_parquet(DATA_DIR / "ods" / "ods_repayment_plan.parquet")
+    due_dates = repayment_plan[["loan_id", "due_date"]].copy()
+    due_dates["due_date"] = pd.to_datetime(due_dates["due_date"]).dt.normalize()
+    due_dates = due_dates.sort_values(["loan_id", "due_date"]).drop_duplicates("loan_id", keep="first")
+    joined = dataset[["loan_id", "observation_date", "days_since_due_date"]].merge(
+        due_dates,
+        on="loan_id",
+        how="left",
+        validate="one_to_one",
+    )
+    expected_days = (pd.to_datetime(joined["observation_date"]) - joined["due_date"]).dt.days.clip(lower=0).fillna(0).astype(float)
+
+    assert dataset["days_since_due_date"].equals(expected_days)
+    assert {"repaid_amount_d7", "recovery_rate_d7", "repay_amount", "repay_date", "repay_time"}.isdisjoint(dataset.columns)
+
+
+def test_low_risk_amount_dpd_features_do_not_depend_on_d7_outcome_fields(monkeypatch) -> None:
+    from riskops.engines.model_lab import ml_dataset
+
+    baseline = build_d7_recovery_dataset(DATA_DIR)
+    protected_features = [
+        "log_due_amount",
+        "outstanding_to_loan_ratio",
+        "days_since_due_date",
+        "dpd_x_log_due_amount",
+    ]
+    original_read_parquet = ml_dataset._read_parquet
+
+    def read_parquet_with_changed_outcome(path: Path) -> pd.DataFrame:
+        frame = original_read_parquet(path)
+        if path.name == "dws_loan_status_snapshot_di.parquet":
+            frame = frame.copy()
+            frame["repaid_amount_d7"] = frame["repaid_amount_d7"].max() + 1
+            frame["recovery_rate_d7"] = 1.0
+        return frame
+
+    monkeypatch.setattr(ml_dataset, "_read_parquet", read_parquet_with_changed_outcome)
+    changed = build_d7_recovery_dataset(DATA_DIR)
+
+    pd.testing.assert_frame_equal(
+        baseline[["loan_id", *protected_features]].sort_values("loan_id").reset_index(drop=True),
+        changed[["loan_id", *protected_features]].sort_values("loan_id").reset_index(drop=True),
+    )
+    assert {"repay_amount", "repay_date", "repay_time"}.isdisjoint(changed.columns)
 
 
 def test_model_can_train_and_output_scores() -> None:
@@ -202,9 +437,11 @@ def test_report_can_generate(tmp_path: Path) -> None:
 
     assert Path(paths["report"]).exists()
     report_text = Path(paths["report"]).read_text(encoding="utf-8")
-    assert "M6-D2 D7 Recovery Baseline Diagnostics" in report_text
+    assert "M6-D2 D7 Payment Response Baseline Diagnostics" in report_text
     assert "Vintage Month Artifact Warning" in report_text
     assert "synthetic data boundary" in report_text
+    assert "synthetic post-loan C-score proxy" in report_text
+    assert "not a real trained C-card model" in report_text
 
 
 def test_cli_can_run(tmp_path: Path) -> None:

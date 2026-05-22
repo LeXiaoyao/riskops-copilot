@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
 
 
@@ -17,6 +18,9 @@ FEATURE_COLUMNS = [
     "mob",
     "vintage_month",
     "due_amount",
+    "log_due_amount",
+    "days_since_due_date",
+    "dpd_x_log_due_amount",
     "dpd_bucket",
     "age_group",
     "gender",
@@ -26,28 +30,33 @@ FEATURE_COLUMNS = [
     "customer_segment",
     "risk_level_current",
     "postloan_c_score",
+    "score_x_connect_rate",
     "score_level",
     "initial_dpd_bucket",
     "initial_outstanding_amount",
+    "outstanding_to_loan_ratio",
     "balance_segment",
     "protect_flag",
     "sensitive_flag",
     "current_vendor_id",
     "current_line_id",
-    "action_count",
-    "connected_count",
+    "action_count_7d",
+    "connected_count_7d",
+    "connect_rate_7d",
+    "ptp_count_7d",
+    "ptp_rate_7d",
+    "days_since_last_action",
     "ai_action_count",
-    "ptp_count",
-    "ptp_fulfilled_count",
     "complaint_count",
-    "connect_rate",
     "ai_coverage_rate",
-    "ptp_fulfillment_rate",
 ]
 
 TIME_BATCH_FEATURE_COLUMNS = [
     "vintage_month",
     "first_due_date",
+    "observation_date",
+    "stat_date",
+    "due_date",
     "case_create_date",
     "case_create_time",
 ]
@@ -61,6 +70,8 @@ LEAKAGE_COLUMNS = [
     "loan_status",
     "case_status",
     "ptp_fulfilled_flag",
+    "ptp_fulfilled_count",
+    "ptp_fulfillment_rate",
     "reduction_recovery_rate",
 ]
 
@@ -80,12 +91,14 @@ def load_ml_sources(base_dir: str | Path) -> dict[str, pd.DataFrame]:
     root = Path(base_dir)
     sources = {
         "loan_status": _read_parquet(root / "dws" / "dws_loan_status_snapshot_di.parquet"),
+        "repayment_plan": _read_parquet(root / "ods" / "ods_repayment_plan.parquet"),
         "loan": _read_parquet(root / "dim" / "dim_loan.parquet"),
         "customer": _read_parquet(root / "dim" / "dim_customer.parquet"),
         "case_loan_mapping": _read_parquet(root / "dim" / "dim_case_loan_mapping.parquet"),
         "case": _read_parquet(root / "dim" / "dim_case.parquet"),
         "postloan_c_score": _read_parquet(root / "ods" / "ods_postloan_c_score.parquet"),
         "collection_process": _read_parquet(root / "dws" / "dws_collection_process_wide_di.parquet"),
+        "collection_action": _read_parquet(root / "ods" / "ods_collection_action.parquet"),
     }
     return sources
 
@@ -93,9 +106,16 @@ def load_ml_sources(base_dir: str | Path) -> dict[str, pd.DataFrame]:
 def build_d7_recovery_dataset(base_dir: str | Path, exclude_vintage_month: bool = False) -> pd.DataFrame:
     sources = load_ml_sources(base_dir)
     loan_status = sources["loan_status"].copy()
+    loan_status["observation_date"] = pd.to_datetime(loan_status["stat_date"]).dt.normalize()
     loan_status["is_recovered_d7"] = (loan_status["repaid_amount_d7"].fillna(0) > 0).astype(int)
 
-    dataset = loan_status[["loan_id", "customer_id", "product_code", "dpd_bucket", "due_amount", "is_recovered_d7"]].copy()
+    dataset = loan_status[["loan_id", "customer_id", "product_code", "dpd_bucket", "due_amount", "observation_date", "is_recovered_d7"]].copy()
+    dataset["log_due_amount"] = _safe_log1p(dataset["due_amount"])
+
+    due_dates = _loan_due_dates(sources["repayment_plan"])
+    dataset = dataset.merge(due_dates, on="loan_id", how="left", validate="many_to_one")
+    dataset["days_since_due_date"] = _days_between(dataset["observation_date"], dataset["due_date"])
+    dataset["dpd_x_log_due_amount"] = dataset["days_since_due_date"] * dataset["log_due_amount"]
 
     loan = sources["loan"].drop(columns=["product_code"], errors="ignore")
     dataset = dataset.merge(
@@ -138,30 +158,42 @@ def build_d7_recovery_dataset(base_dir: str | Path, exclude_vintage_month: bool 
         sources["collection_process"],
     )
     dataset = dataset.merge(case_features, on="loan_id", how="left", validate="one_to_one")
+    action_features = _recent_action_features_by_loan(
+        dataset[["loan_id", "observation_date"]],
+        sources["case_loan_mapping"],
+        sources["collection_action"],
+    )
+    dataset = dataset.merge(action_features, on="loan_id", how="left", validate="one_to_one")
+    dataset["score_x_connect_rate"] = _safe_score_connect_interaction(dataset["postloan_c_score"], dataset["connect_rate_7d"])
+    dataset["outstanding_to_loan_ratio"] = _safe_rate(dataset["initial_outstanding_amount"], dataset["loan_amount"])
     for boolean_column in ["protect_flag", "sensitive_flag"]:
         if boolean_column in dataset.columns:
             dataset[boolean_column] = dataset[boolean_column].map({True: 1.0, False: 0.0})
     count_columns = [
-        "action_count",
-        "connected_count",
+        "action_count_7d",
+        "connected_count_7d",
         "ai_action_count",
-        "ptp_count",
+        "ptp_count_7d",
         "ptp_fulfilled_count",
         "complaint_count",
     ]
-    rate_columns = ["connect_rate", "ai_coverage_rate", "ptp_fulfillment_rate"]
+    rate_columns = ["connect_rate_7d", "ptp_rate_7d", "ai_coverage_rate", "ptp_fulfillment_rate"]
     for process_column in [*count_columns, *rate_columns]:
         if process_column in dataset.columns:
             dataset[process_column] = dataset[process_column].fillna(0.0)
 
     feature_columns = get_feature_columns(dataset, exclude_vintage_month=exclude_vintage_month)
-    dataset = dataset[["loan_id", "is_recovered_d7", *feature_columns]].copy()
+    dataset = dataset[["loan_id", "observation_date", "is_recovered_d7", *feature_columns]].copy()
     dataset.attrs["metadata"] = {
         "sample_count": int(len(dataset)),
         "positive_rate": float(dataset["is_recovered_d7"].mean()),
         "feature_count": len(feature_columns),
         "exclude_vintage_month": exclude_vintage_month,
         "excluded_time_features": get_time_batch_feature_columns() if exclude_vintage_month else [],
+        "target_column": "is_recovered_d7",
+        "target_semantic_name": "d7_any_payment_response",
+        "target_definition": "1 if repaid_amount_d7 > 0 else 0",
+        "target_boundary": "Legacy demo target name; positive means any D7 payment response, not full cure, DPD cleared, or complete recovery.",
     }
     return dataset
 
@@ -202,6 +234,89 @@ def _latest_score_by_customer(score: pd.DataFrame) -> pd.DataFrame:
         return pd.DataFrame(columns=["customer_id", "postloan_c_score", "score_level"])
     latest = score.sort_values(["customer_id", "score_date"]).drop_duplicates("customer_id", keep="last")
     return latest[["customer_id", "postloan_c_score", "score_level"]].copy()
+
+
+def _loan_due_dates(repayment_plan: pd.DataFrame) -> pd.DataFrame:
+    if repayment_plan.empty:
+        return pd.DataFrame(columns=["loan_id", "due_date"])
+    due_dates = repayment_plan[["loan_id", "due_date"]].copy()
+    due_dates["due_date"] = pd.to_datetime(due_dates["due_date"]).dt.normalize()
+    return due_dates.sort_values(["loan_id", "due_date"]).drop_duplicates("loan_id", keep="first")
+
+
+def _safe_log1p(values: pd.Series) -> pd.Series:
+    numeric = pd.to_numeric(values, errors="coerce").clip(lower=0)
+    result = pd.Series(np.log1p(numeric), index=values.index)
+    return result.replace([np.inf, -np.inf], np.nan)
+
+
+def _days_between(end_date: pd.Series, start_date: pd.Series) -> pd.Series:
+    days = (pd.to_datetime(end_date) - pd.to_datetime(start_date)).dt.days
+    return days.clip(lower=0).fillna(0).astype(float)
+
+
+def _safe_score_connect_interaction(score: pd.Series, connect_rate: pd.Series) -> pd.Series:
+    score_proxy = pd.to_numeric(score, errors="coerce") / 100.0
+    rate = pd.to_numeric(connect_rate, errors="coerce").fillna(0.0)
+    result = score_proxy * rate
+    return result.replace([np.inf, -np.inf], np.nan)
+
+
+def _recent_action_features_by_loan(
+    loan_observation: pd.DataFrame,
+    mapping: pd.DataFrame,
+    action: pd.DataFrame,
+    window_days: int = 7,
+) -> pd.DataFrame:
+    columns = [
+        "loan_id",
+        "action_count_7d",
+        "connected_count_7d",
+        "connect_rate_7d",
+        "ptp_count_7d",
+        "ptp_rate_7d",
+        "days_since_last_action",
+    ]
+    if loan_observation.empty or mapping.empty or action.empty:
+        return pd.DataFrame(columns=columns)
+
+    main_mapping = mapping[mapping["main_loan_flag"].fillna(False)].copy()
+    main_mapping = main_mapping.sort_values(["loan_id", "mapping_start_date"]).drop_duplicates("loan_id", keep="last")
+    base = loan_observation.merge(main_mapping[["loan_id", "case_id"]], on="loan_id", how="left", validate="one_to_one")
+    base["observation_date"] = pd.to_datetime(base["observation_date"]).dt.normalize()
+
+    action_frame = action[["case_id", "action_time", "connected_flag", "ptp_flag"]].copy()
+    action_frame["action_date"] = pd.to_datetime(action_frame["action_time"]).dt.normalize()
+    joined = action_frame.merge(base[["loan_id", "case_id", "observation_date"]], on="case_id", how="inner")
+    historical = joined[joined["action_date"] <= joined["observation_date"]].copy()
+    last_action = historical.groupby("loan_id")["action_date"].max().rename("last_action_date")
+
+    lower_bound = joined["observation_date"] - pd.to_timedelta(window_days - 1, unit="D")
+    window = joined[(joined["action_date"] >= lower_bound) & (joined["action_date"] <= joined["observation_date"])].copy()
+    if window.empty:
+        result = base[["loan_id"]].drop_duplicates().copy()
+        for column in ["action_count_7d", "connected_count_7d", "connect_rate_7d", "ptp_count_7d", "ptp_rate_7d"]:
+            result[column] = 0.0
+    else:
+        aggregated = (
+            window.groupby("loan_id", as_index=False)
+            .agg(
+                action_count_7d=("case_id", "count"),
+                connected_count_7d=("connected_flag", "sum"),
+                ptp_count_7d=("ptp_flag", "sum"),
+            )
+        )
+        aggregated["connect_rate_7d"] = _safe_rate(aggregated["connected_count_7d"], aggregated["action_count_7d"])
+        aggregated["ptp_rate_7d"] = _safe_rate(aggregated["ptp_count_7d"], aggregated["action_count_7d"])
+        result = base[["loan_id"]].drop_duplicates().merge(aggregated, on="loan_id", how="left")
+        for column in ["action_count_7d", "connected_count_7d", "connect_rate_7d", "ptp_count_7d", "ptp_rate_7d"]:
+            result[column] = result[column].fillna(0.0)
+
+    result = result.merge(last_action, on="loan_id", how="left")
+    result = result.merge(base[["loan_id", "observation_date"]], on="loan_id", how="left", validate="one_to_one")
+    result["days_since_last_action"] = _days_between(result["observation_date"], result["last_action_date"])
+    result.loc[result["last_action_date"].isna(), "days_since_last_action"] = np.nan
+    return result[columns]
 
 
 def _loan_level_case_features(mapping: pd.DataFrame, case: pd.DataFrame, collection_process: pd.DataFrame) -> pd.DataFrame:

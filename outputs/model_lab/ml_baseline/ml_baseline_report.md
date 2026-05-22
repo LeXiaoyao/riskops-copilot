@@ -1,4 +1,4 @@
-# M6-D2 D7 Recovery Baseline Diagnostics
+# M6-D2 D7 Payment Response Baseline Diagnostics
 
 ## Demo Disclaimer
 
@@ -13,25 +13,27 @@
 ## Dataset Summary
 
 - **sample_count**：30000
-- **positive_rate**：28.0167%
-- **feature_count**：33
+- **positive_rate**：28.1833%
+- **feature_count**：38
 - **exclude_vintage_month**：True
 - **grain**：loan_id / 借据级
 
 ## Target Definition
 
 - **target**：is_recovered_d7
+- **semantic name**：d7_any_payment_response
 - **definition**：1 if dws_loan_status_snapshot_di.repaid_amount_d7 > 0 else 0
 - **evaluation-only fields**：repaid_amount_d7, recovery_rate_d7
+- **boundary**：this target means any D7 payment response; it is not full cure, not DPD cleared to 0, and not complete recovery. Partial payment is counted as positive.
 
 ## Business Feature Groups
 
 - **loan features**：product_code, channel_code, loan_amount, loan_term, interest_rate, mob, due_amount, dpd_bucket
 - **customer synthetic profile features**：age_group, gender, province, city, occupation_type, customer_segment, risk_level_current
-- **postloan score features**：postloan_c_score, score_level
+- **postloan score features**：postloan_c_score, score_level, score_x_connect_rate
 - **assignment context features**：initial_dpd_bucket, initial_outstanding_amount, balance_segment, current_vendor_id, current_line_id
 - **synthetic governance labels**：protect_flag, sensitive_flag
-- **recent process window features**：action_count, connected_count, ai_action_count, ptp_count, ptp_fulfilled_count, complaint_count, connect_rate, ai_coverage_rate, ptp_fulfillment_rate
+- **recent process window features**：action_count_7d, connected_count_7d, connect_rate_7d, ptp_count_7d, ptp_rate_7d, days_since_last_action, ai_action_count, complaint_count, ai_coverage_rate
 
 ## Leakage Control
 
@@ -40,36 +42,37 @@
 - case features are joined through one main loan mapping per loan_id to avoid one-to-many sample inflation.
 - current_vendor_id and current_line_id are assignment context signals, not customer intrinsic risk factors.
 - protect_flag and sensitive_flag are synthetic labels, not real sensitive identity fields.
-- Process window features are aggregated from the recent 7-day window ending on case_create_date and do not use repayment amount/date fields.
+- postloan_c_score is a synthetic post-loan C-score proxy, not a real trained C-card model.
+- ODS action window features are aggregated from the 7-day window ending on observation_date and do not use repayment amount/date fields or PTP fulfillment fields.
 
 ## Model Comparison
 
 - **logistic**
-  - AUC：0.539767
-  - KS：0.079458
-  - PR-AUC：0.302067
-  - precision：0.304643
-  - recall：0.683960
-  - f1：0.421531
+  - AUC：0.611519
+  - KS：0.187953
+  - PR-AUC：0.423339
+  - precision：0.360501
+  - recall：0.504257
+  - f1：0.420430
 - **random_forest**
-  - AUC：0.543278
-  - KS：0.077319
-  - PR-AUC：0.306061
-  - precision：0.307800
-  - recall：0.418848
-  - f1：0.354839
+  - AUC：0.613896
+  - KS：0.199485
+  - PR-AUC：0.425937
+  - precision：0.467752
+  - recall：0.353359
+  - f1：0.402587
 - **best_model**：random_forest
 
 ## Best Model Metrics
 
 - **model_type**：random_forest
-- **AUC**：0.543278
-- **KS**：0.077319
-- **PR-AUC**：0.306061
-- **precision**：0.307800
-- **recall**：0.418848
-- **f1**：0.354839
-- **confusion_matrix**：tn=3420, fp=1979, fn=1221, tp=880
+- **AUC**：0.613896
+- **KS**：0.199485
+- **PR-AUC**：0.425937
+- **precision**：0.467752
+- **recall**：0.353359
+- **f1**：0.402587
+- **confusion_matrix**：tn=4536, fp=850, fn=1367, tp=747
 
 ## Feature Diagnostics
 
@@ -100,29 +103,29 @@
 
 ## Decile Lift Table
 
-- **decile 1**：sample_count=750, positive_rate=0.334667, lift=1.194669, cumulative_capture_rate=0.119467
-- **decile 2**：sample_count=750, positive_rate=0.274667, lift=0.980485, cumulative_capture_rate=0.217515
-- **decile 3**：sample_count=750, positive_rate=0.312000, lift=1.113755, cumulative_capture_rate=0.328891
-- **decile 4**：sample_count=750, positive_rate=0.305333, lift=1.089957, cumulative_capture_rate=0.437887
-- **decile 5**：sample_count=750, positive_rate=0.308000, lift=1.099476, cumulative_capture_rate=0.547834
-- **decile 6**：sample_count=750, positive_rate=0.288000, lift=1.028082, cumulative_capture_rate=0.650643
-- **decile 7**：sample_count=750, positive_rate=0.272000, lift=0.970966, cumulative_capture_rate=0.747739
-- **decile 8**：sample_count=750, positive_rate=0.256000, lift=0.913851, cumulative_capture_rate=0.839124
-- **decile 9**：sample_count=750, positive_rate=0.220000, lift=0.785340, cumulative_capture_rate=0.917658
-- **decile 10**：sample_count=750, positive_rate=0.230667, lift=0.823417, cumulative_capture_rate=1.000000
+- **decile 1**：sample_count=750, positive_rate=0.578667, lift=2.052980, cumulative_capture_rate=0.205298
+- **decile 2**：sample_count=750, positive_rate=0.386667, lift=1.371807, cumulative_capture_rate=0.342479
+- **decile 3**：sample_count=750, positive_rate=0.217333, lift=0.771050, cumulative_capture_rate=0.419584
+- **decile 4**：sample_count=750, positive_rate=0.233333, lift=0.827815, cumulative_capture_rate=0.502365
+- **decile 5**：sample_count=750, positive_rate=0.250667, lift=0.889309, cumulative_capture_rate=0.591296
+- **decile 6**：sample_count=750, positive_rate=0.246667, lift=0.875118, cumulative_capture_rate=0.678808
+- **decile 7**：sample_count=750, positive_rate=0.262667, lift=0.931883, cumulative_capture_rate=0.771996
+- **decile 8**：sample_count=750, positive_rate=0.234667, lift=0.832545, cumulative_capture_rate=0.855251
+- **decile 9**：sample_count=750, positive_rate=0.232000, lift=0.823084, cumulative_capture_rate=0.937559
+- **decile 10**：sample_count=750, positive_rate=0.176000, lift=0.624409, cumulative_capture_rate=1.000000
 
 ## Feature Importance
 
-- **num__due_amount**：importance=0.110011, signed_weight=0.110011
-- **num__interest_rate**：importance=0.106377, signed_weight=0.106377
-- **num__loan_amount**：importance=0.105696, signed_weight=0.105696
-- **num__mob**：importance=0.072739, signed_weight=0.072739
-- **num__postloan_c_score**：importance=0.056222, signed_weight=0.056222
-- **num__loan_term**：importance=0.038436, signed_weight=0.038436
-- **num__initial_outstanding_amount**：importance=0.036135, signed_weight=0.036135
-- **cat__risk_level_current_B**：importance=0.015704, signed_weight=0.015704
-- **cat__customer_segment_复借**：importance=0.015651, signed_weight=0.015651
-- **cat__gender_F**：importance=0.015631, signed_weight=0.015631
+- **num__postloan_c_score**：importance=0.122015, signed_weight=0.122015
+- **num__log_due_amount**：importance=0.078021, signed_weight=0.078021
+- **num__loan_amount**：importance=0.077611, signed_weight=0.077611
+- **num__due_amount**：importance=0.072741, signed_weight=0.072741
+- **num__interest_rate**：importance=0.062264, signed_weight=0.062264
+- **num__initial_outstanding_amount**：importance=0.048378, signed_weight=0.048378
+- **num__mob**：importance=0.046251, signed_weight=0.046251
+- **num__outstanding_to_loan_ratio**：importance=0.038023, signed_weight=0.038023
+- **cat__score_level_D**：importance=0.030346, signed_weight=0.030346
+- **num__loan_term**：importance=0.024038, signed_weight=0.024038
 
 ## Why Baseline AUC Is Modest
 
@@ -133,7 +136,7 @@
 
 ## Business Interpretation
 
-- This baseline ranks synthetic loans by probability of D7 recovery and is suitable for offline model-readiness demonstration only.
+- This baseline ranks synthetic loans by probability of D7 any-payment response and is suitable for offline model-readiness demonstration only.
 - Higher-ranked deciles should show higher observed recovery rate if the baseline has usable separation.
 - Assignment and process features can help explain operational patterns, but they should not be interpreted as customer intrinsic risk attributes.
 
@@ -143,6 +146,7 @@
 - The model is not calibrated for production decisioning.
 - Missing postloan scores are imputed by the preprocessing pipeline.
 - Process features use a demo-friendly 7-day window ending on case_create_date; if upstream timing is not strict, they should be treated as diagnostic-only.
+- The target is not a cure-to-current label; supporting that target would require synthetic DPD state transitions and warehouse target refinement.
 - No real customer data, LLM context, collection automation or deployment path is involved.
 
 ## Next Steps
@@ -151,4 +155,4 @@
 - Add segment-level diagnostics for score_level, dpd_bucket, vendor and line stability.
 - Consider removing or bucketing vintage_month in a later robustness check if artifact dominance remains high.
 
-_Generated at 2026-05-21T02:33:01+00:00_
+_Generated at 2026-05-22T09:34:55+00:00_

@@ -713,3 +713,13 @@ commit message：（如有 CHANGELOG 更新）M1: 数据底座里程碑收尾 + 
 | 异常埋点幅度 | 严格按 §5.5.3 | 如有冲突必须问 |
 | 性能优化（索引/分区） | 先简单实现，标 TODO | 重大重构必须问 |
 | 新增依赖 | **必须问** Claude 并写 ADR | 总是 |
+
+---
+
+## M6-D5D：Leakage-safe feature engineering 状态
+
+- **状态**：已完成本地实现与验证，未 push、未 tag、未 release。
+- **target 边界**：`is_recovered_d7` 当前是 D7 any-payment response，不是 full cure / 清逾 / 完全回收。
+- **关键改动**：新增金额/逾期派生特征、ODS action 7 日窗口过程特征、`score_x_connect_rate`，并阻断 D7 outcome 与 PTP fulfillment 后验字段进入 prediction feature set。
+- **without-vintage baseline**：AUC 约 0.614，KS 约 0.199，PR-AUC 约 0.426。
+- **后续建议**：M6-D6 / M7 聚焦 synthetic target、generator 和 warehouse refinement，让 process behavior 真正影响 D7 response，并支持 cure-to-current target。
