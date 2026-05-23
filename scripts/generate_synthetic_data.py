@@ -259,7 +259,9 @@ def make_repayment(loans: pd.DataFrame, mapping: pd.DataFrame, cases: pd.DataFra
     repay = plan.loc[paid, ["plan_id", "loan_id", "customer_id", "due_date", "due_amount"]].copy().reset_index(drop=True)
     repay["repay_id"] = [f"RP{i:08d}" for i in range(len(repay))]
     repay["repay_time"] = pd.to_datetime(repay["due_date"]) + pd.to_timedelta(rng.integers(0, 8, len(repay)), unit="D")
-    repay["repay_amount"] = (repay["due_amount"] * rng.uniform(0.92, 1.0, len(repay))).round(2)
+    full_payment = rng.random(len(repay)) < 0.35
+    repay_ratio = np.where(full_payment, rng.uniform(1.0, 1.03, len(repay)), rng.uniform(0.35, 0.92, len(repay)))
+    repay["repay_amount"] = (repay["due_amount"] * repay_ratio).round(2)
     repay["repay_channel"] = rng.choice(["APP", "BANK", "WITHHOLD"], size=len(repay), p=[0.56, 0.22, 0.22])
     repay["repay_status"] = "SUCCESS"
     repay = repay[["repay_id", "plan_id", "loan_id", "customer_id", "repay_time", "repay_amount", "repay_channel", "repay_status"]]
@@ -456,6 +458,8 @@ def make_snapshots(
     cases: pd.DataFrame,
     mapping: pd.DataFrame,
     collectors: pd.DataFrame,
+    repayment_plan: pd.DataFrame,
+    repayment_detail: pd.DataFrame,
     rng: np.random.Generator,
     end_date: pd.Timestamp,
 ) -> dict[str, pd.DataFrame]:
@@ -464,34 +468,131 @@ def make_snapshots(
     case_frames = []
     customer_frames = []
     collector_by_line = {k: v["collector_id"].to_numpy() for k, v in collectors.groupby("line_id")}
+
+    plan_state = repayment_plan[["loan_id", "due_date", "due_amount"]].copy()
+    plan_state["due_date"] = pd.to_datetime(plan_state["due_date"])
+    repayment_state = repayment_detail[repayment_detail["repay_status"].eq("SUCCESS")].copy()
+    repayment_state["repay_date"] = pd.to_datetime(repayment_state["repay_time"]).dt.normalize()
+    case_base = cases[["case_id", "customer_id", "current_vendor_id", "current_line_id", "case_create_time"]].merge(
+        mapping[["case_id", "loan_id"]], on="case_id", how="left"
+    )
+
+    def with_loan_daily_state(source: pd.DataFrame, stat_date: pd.Timestamp) -> pd.DataFrame:
+        frame = source.merge(plan_state, on="loan_id", how="left")
+        repaid_to_date = (
+            repayment_state[repayment_state["repay_date"] <= stat_date]
+            .groupby("loan_id")["repay_amount"]
+            .sum()
+        )
+        frame["cumulative_repaid"] = frame["loan_id"].map(repaid_to_date).fillna(0.0)
+        frame["outstanding_amount"] = (frame["due_amount"] - frame["cumulative_repaid"]).clip(lower=0).round(2)
+        raw_dpd = (stat_date - frame["due_date"]).dt.days.clip(lower=0)
+        frame["dpd"] = np.where(frame["outstanding_amount"] <= 0, 0, raw_dpd).astype(int)
+        frame["dpd_bucket"] = pd.cut(
+            frame["dpd"],
+            bins=[-1, 0, 30, 60, 9999],
+            labels=["CURRENT", "M1", "M2", "M3+"],
+        ).astype(str)
+        frame["loan_status"] = np.select(
+            [
+                frame["outstanding_amount"] <= 0,
+                frame["dpd"].eq(0),
+                frame["dpd"].le(30),
+            ],
+            ["closed", "current", "overdue"],
+            default="in_collection",
+        )
+        return frame
+
     for stat_date in dates:
         loan_sample = loans.sample(n=min(len(loans), 4_000), random_state=int(rng.integers(0, 1_000_000))).copy()
+        loan_sample = with_loan_daily_state(loan_sample[["loan_id", "customer_id"]], stat_date)
         loan_sample["stat_date"] = stat_date.date()
-        loan_sample["dpd"] = (stat_date - pd.to_datetime(loan_sample["first_due_date"])).dt.days.clip(lower=0)
-        loan_sample["dpd_bucket"] = pd.cut(loan_sample["dpd"], bins=[-1, 0, 30, 60, 9999], labels=["CURRENT", "M1", "M2", "M3+"]).astype(str)
-        loan_sample["outstanding_amount"] = (loan_sample["loan_amount"] * rng.uniform(0.25, 0.95, len(loan_sample))).round(2)
         loan_frames.append(loan_sample[["stat_date", "loan_id", "customer_id", "dpd", "dpd_bucket", "outstanding_amount", "loan_status"]])
 
-        active = cases[pd.to_datetime(cases["case_create_time"]).dt.date <= stat_date.date()].copy()
+        active = case_base[pd.to_datetime(case_base["case_create_time"]).dt.date <= stat_date.date()].copy()
         if len(active) > 0:
+            active = with_loan_daily_state(active, stat_date)
             active["stat_date"] = stat_date.date()
             active["vendor_id"] = active["current_vendor_id"]
             active["line_id"] = active["current_line_id"]
             active["collector_id"] = [rng.choice(collector_by_line[line_id]) for line_id in active["line_id"]]
-            active["case_status"] = "ASSIGNED"
-            active["dpd_bucket"] = active["initial_dpd_bucket"]
-            active["outstanding_amount"] = active["initial_outstanding_amount"]
-            case_frames.append(active[["stat_date", "case_id", "customer_id", "vendor_id", "line_id", "collector_id", "case_status", "dpd_bucket", "outstanding_amount"]])
+
+            case_daily = (
+                active.groupby(
+                    ["stat_date", "case_id", "customer_id", "vendor_id", "line_id", "collector_id", "case_create_time"],
+                    as_index=False,
+                )
+                .agg(
+                    outstanding_amount=("outstanding_amount", "sum"),
+                    case_dpd=("dpd", "max"),
+                    cumulative_repaid=("cumulative_repaid", "sum"),
+                )
+            )
+            case_daily["outstanding_amount"] = case_daily["outstanding_amount"].round(2)
+            case_daily["case_dpd"] = np.where(case_daily["outstanding_amount"] <= 0, 0, case_daily["case_dpd"]).astype(int)
+            case_daily["dpd_bucket"] = pd.cut(
+                case_daily["case_dpd"],
+                bins=[-1, 0, 30, 60, 9999],
+                labels=["CURRENT", "M1", "M2", "M3+"],
+            ).astype(str)
+            case_daily["case_status"] = np.select(
+                [
+                    case_daily["outstanding_amount"] <= 0,
+                    case_daily["cumulative_repaid"] > 0,
+                    case_daily["case_dpd"] > 0,
+                ],
+                ["cured", "partially_paid", "in_collection"],
+                default="assigned",
+            )
+            case_age_days = (stat_date - pd.to_datetime(case_daily["case_create_time"])).dt.days
+            case_daily.loc[(case_daily["case_status"].eq("cured")) & (case_age_days > 30), "case_status"] = "closed"
+            case_frames.append(
+                case_daily[
+                    [
+                        "stat_date",
+                        "case_id",
+                        "customer_id",
+                        "vendor_id",
+                        "line_id",
+                        "collector_id",
+                        "case_status",
+                        "dpd_bucket",
+                        "outstanding_amount",
+                    ]
+                ]
+            )
 
             cust = (
-                active.groupby("customer_id")
-                .agg(active_case_count=("case_id", "nunique"), total_outstanding_amount=("initial_outstanding_amount", "sum"))
-                .reset_index()
+                case_daily.assign(active_case_flag=case_daily["outstanding_amount"] > 0)
+                .groupby("customer_id", as_index=False)
+                .agg(
+                    active_case_count=("active_case_flag", "sum"),
+                    total_outstanding_amount=("outstanding_amount", "sum"),
+                    max_dpd=("case_dpd", "max"),
+                )
             )
+            active_loans = (
+                active[active["outstanding_amount"] > 0]
+                .groupby("customer_id", as_index=False)["loan_id"]
+                .nunique()
+                .rename(columns={"loan_id": "active_loan_count"})
+            )
+            cust = cust.merge(active_loans, on="customer_id", how="left")
+            cust["active_loan_count"] = cust["active_loan_count"].fillna(0).astype(int)
+            cust["active_case_count"] = cust["active_case_count"].astype(int)
+            cust["total_outstanding_amount"] = cust["total_outstanding_amount"].round(2)
+            cust["max_dpd"] = np.where(cust["total_outstanding_amount"] <= 0, 0, cust["max_dpd"]).astype(int)
             cust["stat_date"] = stat_date.date()
-            cust["active_loan_count"] = cust["customer_id"].map(mapping.groupby("customer_id")["loan_id"].nunique()).fillna(1).astype(int)
-            cust["max_dpd"] = rng.integers(1, 90, len(cust))
-            cust["risk_level"] = rng.choice(["A", "B", "C", "D"], size=len(cust), p=[0.15, 0.38, 0.35, 0.12])
+            cust["risk_level"] = np.select(
+                [
+                    cust["total_outstanding_amount"] <= 0,
+                    cust["max_dpd"].le(30),
+                    cust["max_dpd"].le(60),
+                ],
+                ["A", "B", "C"],
+                default="D",
+            )
             customer_frames.append(cust[["stat_date", "customer_id", "active_loan_count", "active_case_count", "total_outstanding_amount", "max_dpd", "risk_level"]])
     return {
         "ods_loan_daily_snapshot": pd.concat(loan_frames, ignore_index=True),
@@ -529,7 +630,16 @@ def main() -> int:
     repayment = make_repayment(loans, mapping, cases, rng, end_date)
     actions = make_actions(config, cases, dims["dim_collector"], rng, end_date)
     other_ods = make_other_ods(cases, customers, actions["ods_collection_action"], actions["ods_sms_send_log"], rng, end_date)
-    snapshots = make_snapshots(loans, cases, mapping, dims["dim_collector"], rng, end_date)
+    snapshots = make_snapshots(
+        loans,
+        cases,
+        mapping,
+        dims["dim_collector"],
+        repayment["ods_repayment_plan"],
+        repayment["ods_repayment_detail"],
+        rng,
+        end_date,
+    )
     cases.loc[cases["case_id"].isin(other_ods["ods_complaint"]["case_id"]), "complaint_flag"] = True
 
     dim_tables = {
