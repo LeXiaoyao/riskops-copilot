@@ -79,8 +79,14 @@ def test_loan_daily_snapshot_repayment_state_foundation() -> None:
 
     repaid_loan_ids = set(repayment["loan_id"])
     after_repayment = loan_snapshot[loan_snapshot["loan_id"].isin(repaid_loan_ids)].sort_values(["loan_id", "stat_date"])
-    increases = after_repayment.groupby("loan_id")["outstanding_amount"].diff().fillna(0) > 0.01
+    outstanding_delta = after_repayment.groupby("loan_id")["outstanding_amount"].diff().fillna(0)
+    increases = outstanding_delta > 0.01
     assert not increases.any()
+    assert (outstanding_delta < -0.01).any()
+
+    prior_outstanding = after_repayment.groupby("loan_id")["outstanding_amount"].shift()
+    cleared_after_repayment = after_repayment["outstanding_amount"].le(0.01) & prior_outstanding.gt(0.01)
+    assert cleared_after_repayment.any()
 
 
 @pytest.mark.skipif(not data_is_available(), reason="synthetic data has not been generated and built")
@@ -92,6 +98,8 @@ def test_case_daily_snapshot_state_foundation() -> None:
     assert case_snapshot["case_status"].notna().all()
     closed = case_snapshot["case_status"].isin(["cured", "closed"])
     assert (case_snapshot.loc[closed, "outstanding_amount"] <= 0.01).all()
+    assert case_snapshot["case_status"].eq("partially_paid").any()
+    assert closed.any()
 
 
 @pytest.mark.skipif(not data_is_available(), reason="synthetic data has not been generated and built")
@@ -103,6 +111,7 @@ def test_customer_daily_snapshot_state_foundation() -> None:
     assert (customer_snapshot["total_outstanding_amount"] >= 0).all()
     assert (customer_snapshot["max_dpd"] >= 0).all()
     assert (customer_snapshot.loc[customer_snapshot["total_outstanding_amount"].le(0), "max_dpd"] == 0).all()
+    assert customer_snapshot["total_outstanding_amount"].le(0.01).any()
 
     case_outstanding = (
         case_snapshot.groupby(["stat_date", "customer_id"], as_index=False)["outstanding_amount"]
