@@ -206,6 +206,49 @@ def test_score_connect_interaction_feature_enters_dataset_and_is_numeric_safe() 
     assert np.isfinite(dataset["score_x_connect_rate"].dropna()).all()
 
 
+def test_score_date_guard_uses_past_score_before_future_score(monkeypatch) -> None:
+    from riskops.engines.model_lab import ml_dataset
+
+    loan_status = pd.read_parquet(DATA_DIR / "dws" / "dws_loan_status_snapshot_di.parquet")
+    target = loan_status[["loan_id", "customer_id", "stat_date"]].iloc[0]
+    observation_date = pd.to_datetime(target["stat_date"]).normalize()
+    original_read_parquet = ml_dataset._read_parquet
+
+    def read_parquet_with_past_and_future_scores(path: Path) -> pd.DataFrame:
+        frame = original_read_parquet(path)
+        if path.name == "ods_postloan_c_score.parquet":
+            frame = frame[frame["customer_id"] != target["customer_id"]].copy()
+            injected = pd.DataFrame(
+                [
+                    {
+                        "score_id": "SCORE_TEST_PAST",
+                        "customer_id": target["customer_id"],
+                        "score_date": (observation_date - pd.Timedelta(days=3)).date(),
+                        "postloan_c_score": 401.0,
+                        "score_level": "D",
+                    },
+                    {
+                        "score_id": "SCORE_TEST_FUTURE",
+                        "customer_id": target["customer_id"],
+                        "score_date": (observation_date + pd.Timedelta(days=3)).date(),
+                        "postloan_c_score": 849.0,
+                        "score_level": "A",
+                    },
+                ]
+            )
+            frame = pd.concat([frame, injected], ignore_index=True)
+        return frame
+
+    monkeypatch.setattr(ml_dataset, "_read_parquet", read_parquet_with_past_and_future_scores)
+    dataset = build_d7_recovery_dataset(DATA_DIR)
+    row = dataset.loc[dataset["loan_id"] == target["loan_id"]].iloc[0]
+
+    assert row["postloan_c_score"] == 401.0
+    assert row["score_level"] == "D"
+    assert dataset.attrs["metadata"]["future_score_blocked_count"] >= 1
+    assert "score_date_fallback_count" in dataset.attrs["metadata"]
+
+
 def test_score_connect_interaction_does_not_depend_on_outcome_or_ptp_fulfillment(monkeypatch) -> None:
     from riskops.engines.model_lab import ml_dataset
 
@@ -442,6 +485,7 @@ def test_report_can_generate(tmp_path: Path) -> None:
     assert "synthetic data boundary" in report_text
     assert "synthetic post-loan C-score proxy" in report_text
     assert "not a real trained C-card model" in report_text
+    assert "score_date_fallback_count" in report_text
 
 
 def test_cli_can_run(tmp_path: Path) -> None:
@@ -534,6 +578,8 @@ def test_cli_metrics_json_contains_dataset_summary(tmp_path: Path) -> None:
     payload = json.loads((tmp_path / "model_metrics.json").read_text(encoding="utf-8"))
     assert payload["dataset_summary"]["sample_count"] == 30000
     assert payload["dataset_summary"]["feature_count"] > 0
+    assert "score_date_fallback_count" in payload["dataset_summary"]
+    assert "future_score_blocked_count" in payload["dataset_summary"]
     assert {"logistic", "random_forest"} <= set(payload["model_comparison"])
     assert "feature_diagnostics" in payload
     assert {"logistic", "random_forest"} <= set(payload["feature_diagnostics_by_model"])

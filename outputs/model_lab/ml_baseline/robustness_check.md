@@ -15,49 +15,49 @@
 
 ## With Vintage Metrics
 
-- **best_model**：random_forest
-- **AUC**：0.567209
-- **KS**：0.107892
-- **PR-AUC**：0.313021
+- **best_model**：logistic
+- **AUC**：0.573920
+- **KS**：0.110316
+- **PR-AUC**：0.322443
 
 ## Without Vintage Metrics
 
 - **best_model**：logistic
-- **AUC**：0.569109
-- **KS**：0.106997
-- **PR-AUC**：0.320282
+- **AUC**：0.575035
+- **KS**：0.110654
+- **PR-AUC**：0.322921
 
 ## Metric Deltas
 
-- **delta_auc**：0.001900
-- **delta_ks**：-0.000895
-- **delta_pr_auc**：0.007261
+- **delta_auc**：0.001115
+- **delta_ks**：0.000338
+- **delta_pr_auc**：0.000478
 
 ## Top Features Before
 
-- **num__loan_amount**：importance=0.088075
-- **num__log_due_amount**：importance=0.083766
-- **num__due_amount**：importance=0.083356
-- **num__interest_rate**：importance=0.080847
-- **num__mob**：importance=0.053922
-- **num__postloan_c_score**：importance=0.045241
-- **num__initial_outstanding_amount**：importance=0.035322
-- **num__outstanding_to_loan_ratio**：importance=0.034984
-- **num__loan_term**：importance=0.029996
-- **cat__risk_level_current_D**：importance=0.019214
+- **cat__score_level_D**：importance=0.535414
+- **cat__vintage_month_2026-04**：importance=0.433551
+- **cat__risk_level_current_D**：importance=0.304228
+- **cat__dpd_bucket_M3+**：importance=0.284929
+- **cat__initial_dpd_bucket_M3+**：importance=0.284929
+- **cat__vintage_month_2024-01**：importance=0.219354
+- **cat__risk_level_current_A**：importance=0.204263
+- **cat__vintage_month_2023-07**：importance=0.186497
+- **cat__vintage_month_2025-12**：importance=0.184880
+- **cat__occupation_type_小微业主**：importance=0.182918
 
 ## Top Features After
 
-- **cat__risk_level_current_D**：importance=0.359167
-- **cat__risk_level_current_A**：importance=0.246327
-- **cat__balance_segment_HIGH**：importance=0.137339
-- **cat__risk_level_current_B**：importance=0.135838
-- **num__connect_rate_7d**：importance=0.120332
-- **cat__current_vendor_id_V_B**：importance=0.117085
-- **cat__dpd_bucket_M3+**：importance=0.110088
-- **cat__initial_dpd_bucket_M3+**：importance=0.110088
-- **cat__occupation_type_自由职业**：importance=0.098029
-- **cat__age_group_46-55**：importance=0.091239
+- **cat__score_level_D**：importance=0.525156
+- **cat__risk_level_current_D**：importance=0.303313
+- **cat__dpd_bucket_M3+**：importance=0.290116
+- **cat__initial_dpd_bucket_M3+**：importance=0.290116
+- **cat__risk_level_current_A**：importance=0.205458
+- **cat__occupation_type_小微业主**：importance=0.184695
+- **cat__balance_segment_HIGH**：importance=0.149290
+- **cat__score_level_A**：importance=0.140724
+- **cat__score_level___MISSING__**：importance=0.139286
+- **cat__risk_level_current_C**：importance=0.120643
 
 ## Artifact Warning
 
@@ -69,4 +69,4 @@
 
 - **conclusion**：vintage_month shows artifact risk in at least one with-vintage model, but removing it leaves performance close; the synthetic data signal is weak and the baseline should be presented as a diagnostic demo.
 
-_Generated at 2026-05-24T03:14:30+00:00_
+_Generated at 2026-05-24T07:43:23+00:00_

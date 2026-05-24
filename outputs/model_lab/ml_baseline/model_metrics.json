@@ -7,7 +7,7 @@
   "exclude_vintage_month": true,
   "dataset_summary": {
     "sample_count": 30000,
-    "positive_rate": 0.27366666666666667,
+    "positive_rate": 0.2749333333333333,
     "feature_count": 38,
     "exclude_vintage_month": true,
     "excluded_time_features": [
@@ -22,52 +22,57 @@
     "target_column": "is_recovered_d7",
     "target_semantic_name": "d7_any_payment_response",
     "target_definition": "1 if repaid_amount_d7 > 0 else 0",
-    "target_boundary": "Legacy demo target name; positive means any D7 payment response, not full cure, DPD cleared, or complete recovery."
+    "target_boundary": "Legacy demo target name; positive means any D7 payment response, not full cure, DPD cleared, or complete recovery.",
+    "score_date_guard": "latest_score_on_or_before_observation_date_with_missing_impute_fallback",
+    "score_date_fallback_count": 27493,
+    "score_date_missing_count": 27493,
+    "future_score_blocked_count": 12536,
+    "score_date_fallback_strategy": "missing_impute"
   },
   "metrics": {
-    "auc": 0.569109,
-    "ks": 0.106997,
-    "pr_auc": 0.320282,
-    "precision": 0.308945,
-    "recall": 0.619094,
-    "f1": 0.412194,
+    "auc": 0.575035,
+    "ks": 0.110654,
+    "pr_auc": 0.322921,
+    "precision": 0.313784,
+    "recall": 0.607177,
+    "f1": 0.413748,
     "threshold": 0.5,
     "confusion_matrix": {
-      "tn": 2604,
-      "fp": 2843,
-      "fn": 782,
-      "tp": 1271
+      "tn": 2700,
+      "fp": 2738,
+      "fn": 810,
+      "tp": 1252
     }
   },
   "model_comparison": {
     "logistic": {
-      "auc": 0.569109,
-      "ks": 0.106997,
-      "pr_auc": 0.320282,
-      "precision": 0.308945,
-      "recall": 0.619094,
-      "f1": 0.412194,
+      "auc": 0.575035,
+      "ks": 0.110654,
+      "pr_auc": 0.322921,
+      "precision": 0.313784,
+      "recall": 0.607177,
+      "f1": 0.413748,
       "threshold": 0.5,
       "confusion_matrix": {
-        "tn": 2604,
-        "fp": 2843,
-        "fn": 782,
-        "tp": 1271
+        "tn": 2700,
+        "fp": 2738,
+        "fn": 810,
+        "tp": 1252
       }
     },
     "random_forest": {
-      "auc": 0.566544,
-      "ks": 0.106333,
-      "pr_auc": 0.314291,
-      "precision": 0.321903,
-      "recall": 0.425231,
-      "f1": 0.366422,
+      "auc": 0.565002,
+      "ks": 0.101906,
+      "pr_auc": 0.3134,
+      "precision": 0.320667,
+      "recall": 0.466537,
+      "f1": 0.380087,
       "threshold": 0.5,
       "confusion_matrix": {
-        "tn": 3608,
-        "fp": 1839,
-        "fn": 1180,
-        "tp": 873
+        "tn": 3400,
+        "fp": 2038,
+        "fn": 1100,
+        "tp": 962
       }
     }
   },
@@ -77,7 +82,7 @@
     "vintage_top_feature_count": 0,
     "vintage_top_feature_share": 0.0,
     "vintage_top_importance": 0.0,
-    "top_importance_total": 1.525532,
+    "top_importance_total": 2.348797,
     "vintage_top_importance_share": 0.0,
     "vintage_month_artifact_warning": false,
     "interpretation": "vintage_month is present but does not dominate top features"
@@ -89,7 +94,7 @@
       "vintage_top_feature_count": 0,
       "vintage_top_feature_share": 0.0,
       "vintage_top_importance": 0.0,
-      "top_importance_total": 1.525532,
+      "top_importance_total": 2.348797,
       "vintage_top_importance_share": 0.0,
       "vintage_month_artifact_warning": false,
       "interpretation": "vintage_month is present but does not dominate top features"
@@ -100,7 +105,7 @@
       "vintage_top_feature_count": 0,
       "vintage_top_feature_share": 0.0,
       "vintage_top_importance": 0.0,
-      "top_importance_total": 0.603186,
+      "top_importance_total": 0.580585,
       "vintage_top_importance_share": 0.0,
       "vintage_month_artifact_warning": false,
       "interpretation": "vintage_month is present but does not dominate top features"
@@ -108,54 +113,54 @@
   },
   "top_feature_importance": [
     {
+      "feature": "cat__score_level_D",
+      "importance": 0.5251564424136752,
+      "signed_weight": -0.5251564424136752
+    },
+    {
       "feature": "cat__risk_level_current_D",
-      "importance": 0.3591673911905534,
-      "signed_weight": -0.3591673911905534
-    },
-    {
-      "feature": "cat__risk_level_current_A",
-      "importance": 0.2463270447230256,
-      "signed_weight": 0.2463270447230256
-    },
-    {
-      "feature": "cat__balance_segment_HIGH",
-      "importance": 0.13733919484417634,
-      "signed_weight": -0.13733919484417634
-    },
-    {
-      "feature": "cat__risk_level_current_B",
-      "importance": 0.13583758565145623,
-      "signed_weight": 0.13583758565145623
-    },
-    {
-      "feature": "num__connect_rate_7d",
-      "importance": 0.12033211127785486,
-      "signed_weight": 0.12033211127785486
-    },
-    {
-      "feature": "cat__current_vendor_id_V_B",
-      "importance": 0.1170847516867803,
-      "signed_weight": -0.1170847516867803
+      "importance": 0.3033128116267468,
+      "signed_weight": -0.3033128116267468
     },
     {
       "feature": "cat__dpd_bucket_M3+",
-      "importance": 0.11008772613009564,
-      "signed_weight": -0.11008772613009564
+      "importance": 0.2901155029263691,
+      "signed_weight": -0.2901155029263691
     },
     {
       "feature": "cat__initial_dpd_bucket_M3+",
-      "importance": 0.11008772613009564,
-      "signed_weight": -0.11008772613009564
+      "importance": 0.2901155029263691,
+      "signed_weight": -0.2901155029263691
     },
     {
-      "feature": "cat__occupation_type_自由职业",
-      "importance": 0.0980292736995843,
-      "signed_weight": -0.0980292736995843
+      "feature": "cat__risk_level_current_A",
+      "importance": 0.20545783123946285,
+      "signed_weight": 0.20545783123946285
     },
     {
-      "feature": "cat__age_group_46-55",
-      "importance": 0.09123932020472866,
-      "signed_weight": -0.09123932020472866
+      "feature": "cat__occupation_type_小微业主",
+      "importance": 0.18469525647585047,
+      "signed_weight": -0.18469525647585047
+    },
+    {
+      "feature": "cat__balance_segment_HIGH",
+      "importance": 0.14928989645134616,
+      "signed_weight": -0.14928989645134616
+    },
+    {
+      "feature": "cat__score_level_A",
+      "importance": 0.14072448565119947,
+      "signed_weight": 0.14072448565119947
+    },
+    {
+      "feature": "cat__score_level___MISSING__",
+      "importance": 0.1392862906070388,
+      "signed_weight": 0.1392862906070388
+    },
+    {
+      "feature": "cat__risk_level_current_C",
+      "importance": 0.12064335764710861,
+      "signed_weight": -0.12064335764710861
     }
   ]
 }

@@ -149,8 +149,11 @@ def build_d7_recovery_dataset(base_dir: str | Path, exclude_vintage_month: bool 
     ]
     dataset = dataset.merge(customer, on="customer_id", how="left", validate="many_to_one")
 
-    score = _latest_score_by_customer(sources["postloan_c_score"])
-    dataset = dataset.merge(score, on="customer_id", how="left", validate="many_to_one")
+    score, score_metadata = _score_by_customer_asof_observation(
+        dataset[["loan_id", "customer_id", "observation_date"]],
+        sources["postloan_c_score"],
+    )
+    dataset = dataset.merge(score, on="loan_id", how="left", validate="one_to_one")
 
     case_features = _loan_level_case_features(
         sources["case_loan_mapping"],
@@ -194,6 +197,7 @@ def build_d7_recovery_dataset(base_dir: str | Path, exclude_vintage_month: bool 
         "target_semantic_name": "d7_any_payment_response",
         "target_definition": "1 if repaid_amount_d7 > 0 else 0",
         "target_boundary": "Legacy demo target name; positive means any D7 payment response, not full cure, DPD cleared, or complete recovery.",
+        **score_metadata,
     }
     return dataset
 
@@ -229,11 +233,49 @@ def _read_parquet(path: Path) -> pd.DataFrame:
     return pd.read_parquet(path)
 
 
-def _latest_score_by_customer(score: pd.DataFrame) -> pd.DataFrame:
-    if score.empty:
-        return pd.DataFrame(columns=["customer_id", "postloan_c_score", "score_level"])
-    latest = score.sort_values(["customer_id", "score_date"]).drop_duplicates("customer_id", keep="last")
-    return latest[["customer_id", "postloan_c_score", "score_level"]].copy()
+def _score_by_customer_asof_observation(
+    loan_observation: pd.DataFrame,
+    score: pd.DataFrame,
+) -> tuple[pd.DataFrame, dict[str, Any]]:
+    columns = ["loan_id", "postloan_c_score", "score_level"]
+    if loan_observation.empty or score.empty:
+        return (
+            pd.DataFrame(columns=columns),
+            {
+                "score_date_guard": "latest_score_on_or_before_observation_date_with_missing_impute_fallback",
+                "score_date_fallback_count": int(len(loan_observation)),
+                "score_date_missing_count": int(len(loan_observation)),
+                "future_score_blocked_count": 0,
+                "score_date_fallback_strategy": "missing_impute",
+            },
+        )
+
+    base = loan_observation[["loan_id", "customer_id", "observation_date"]].copy()
+    base["observation_date"] = pd.to_datetime(base["observation_date"]).dt.normalize()
+    score_frame = score[["customer_id", "score_date", "postloan_c_score", "score_level"]].copy()
+    score_frame["score_date"] = pd.to_datetime(score_frame["score_date"]).dt.normalize()
+    candidates = base.merge(score_frame, on="customer_id", how="left")
+
+    future_score_blocked_count = int(
+        candidates[candidates["score_date"] > candidates["observation_date"]]["loan_id"].nunique()
+    )
+
+    historical = candidates[candidates["score_date"] <= candidates["observation_date"]].copy()
+    historical = historical.sort_values(["loan_id", "score_date"]).drop_duplicates("loan_id", keep="last")
+    historical = historical[columns]
+
+    fallback_loan_ids = base.loc[~base["loan_id"].isin(historical["loan_id"]), "loan_id"]
+    result = base[["loan_id"]].merge(historical, on="loan_id", how="left", validate="one_to_one")
+    fallback_count = int(len(fallback_loan_ids))
+    missing_count = int(result["postloan_c_score"].isna().sum())
+    metadata = {
+        "score_date_guard": "latest_score_on_or_before_observation_date_with_missing_impute_fallback",
+        "score_date_fallback_count": fallback_count,
+        "score_date_missing_count": missing_count,
+        "future_score_blocked_count": future_score_blocked_count,
+        "score_date_fallback_strategy": "missing_impute",
+    }
+    return result[columns], metadata
 
 
 def _loan_due_dates(repayment_plan: pd.DataFrame) -> pd.DataFrame:
