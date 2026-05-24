@@ -14,6 +14,7 @@ from riskops.engines.model_lab.ml_dataset import (
     build_d7_recovery_dataset,
     get_feature_columns,
     get_leakage_columns,
+    get_outcome_columns,
     get_sensitive_columns,
     get_time_batch_feature_columns,
     split_features_target,
@@ -42,6 +43,15 @@ def test_can_build_d7_recovery_dataset() -> None:
     assert dataset.attrs["metadata"]["sample_count"] == 30000
 
 
+def test_can_build_state_recovery_feasibility_dataset() -> None:
+    dataset = build_d7_recovery_dataset(DATA_DIR, target="state_recovery")
+
+    assert len(dataset) > 0
+    assert dataset.attrs["metadata"]["target"] == "state_recovery"
+    assert dataset.attrs["metadata"]["target_column"] == "is_state_recovered_d7"
+    assert "is_state_recovered_d7" in dataset.columns
+
+
 def test_target_exists_and_has_both_classes() -> None:
     dataset = build_d7_recovery_dataset(DATA_DIR)
 
@@ -63,6 +73,7 @@ def test_target_remains_d7_any_payment_response() -> None:
 
     assert joined["is_recovered_d7"].equals(joined["expected_target"])
     assert dataset.attrs["metadata"]["target_semantic_name"] == "d7_any_payment_response"
+    assert dataset.attrs["metadata"]["target_column"] == "is_recovered_d7"
 
 
 def test_target_definition_document_exists_and_states_boundary() -> None:
@@ -141,6 +152,16 @@ def test_d7_prediction_features_block_outcome_and_ptp_fulfillment_fields() -> No
     }
 
     assert feature_columns.isdisjoint(blocked_features)
+
+
+def test_d7_state_recovery_outcome_fields_are_blocked_from_features() -> None:
+    dataset = build_d7_recovery_dataset(DATA_DIR, target="state_recovery")
+    X, y = split_features_target(dataset)
+    blocked_columns = set(get_leakage_columns()) | set(get_outcome_columns())
+
+    assert set(X.columns).isdisjoint(blocked_columns)
+    assert set(get_feature_columns(dataset)).isdisjoint(blocked_columns)
+    assert y.name == "is_state_recovered_d7"
 
 
 def test_ods_action_window_features_are_numeric_safe() -> None:
@@ -532,6 +553,30 @@ def test_cli_can_run_without_vintage_month(tmp_path: Path) -> None:
     payload = json.loads((tmp_path / "model_metrics.json").read_text(encoding="utf-8"))
     assert payload["dataset_summary"]["exclude_vintage_month"] is True
     assert not any("vintage_month" in row["feature"] for row in payload["top_feature_importance"])
+
+
+def test_cli_state_recovery_outputs_feasibility_only(tmp_path: Path) -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(RUNNER),
+            "--data-dir",
+            str(DATA_DIR),
+            "--output-dir",
+            str(tmp_path),
+            "--target",
+            "state_recovery",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "PASS ML target feasibility" in result.stdout
+    assert "training skipped: state_recovery is feasibility-only" in result.stdout
+    assert "output paths: none" in result.stdout
+    assert not any(tmp_path.iterdir())
 
 
 def test_cli_report_contains_required_disclaimers(tmp_path: Path) -> None:

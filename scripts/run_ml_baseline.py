@@ -39,6 +39,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run M6-D2 D7 recovery prediction ML baseline diagnostics.")
     parser.add_argument("--data-dir", type=Path, default=DEFAULT_DATA_DIR)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
+    parser.add_argument("--target", choices=["any_payment", "state_recovery"], default="any_payment")
     parser.add_argument("--model", choices=["logistic", "random_forest", "both"], default="both")
     parser.add_argument("--test-size", type=float, default=DEFAULT_TEST_SIZE)
     parser.add_argument("--random-seed", type=int, default=DEFAULT_RANDOM_SEED)
@@ -48,12 +49,13 @@ def build_parser() -> argparse.ArgumentParser:
 
 def _run_baseline(
     data_dir: Path,
+    target: str,
     model_choice: str,
     test_size: float,
     random_seed: int,
     exclude_vintage_month: bool,
 ) -> dict[str, object]:
-    dataset = build_d7_recovery_dataset(data_dir, exclude_vintage_month=exclude_vintage_month)
+    dataset = build_d7_recovery_dataset(data_dir, exclude_vintage_month=exclude_vintage_month, target=target)
     X, y = split_features_target(dataset)
     X_train, X_test, y_train, y_test = train_test_split(
         X,
@@ -93,6 +95,7 @@ def _run_baseline(
         "random_seed": random_seed,
         "test_size": test_size,
         "exclude_vintage_month": exclude_vintage_month,
+        "target": target,
         "dataset_summary": summary,
         "metrics": metrics_by_model[best_model],
         "model_comparison": metrics_by_model,
@@ -132,25 +135,89 @@ def _write_robustness_outputs(output_dir: Path, with_vintage: dict[str, object],
     return write_robustness_outputs(output_dir, robustness_payload, robustness_report)
 
 
+def _state_target_positive_count(dataset) -> int:
+    target_column = dataset.attrs.get("metadata", {}).get("target_column", "is_state_recovered_d7")
+    return int(dataset[target_column].sum()) if target_column in dataset.columns else 0
+
+
+def _build_state_recovery_feasibility_summary(dataset) -> dict[str, object]:
+    metadata = dataset.attrs.get("metadata", {})
+    target_column = metadata.get("target_column", "is_state_recovered_d7")
+    return {
+        "target": metadata.get("target", "state_recovery"),
+        "target_column": target_column,
+        "sample_count": int(len(dataset)),
+        "positive_count": _state_target_positive_count(dataset),
+        "positive_rate": float(dataset[target_column].mean()) if target_column in dataset.columns and len(dataset) else 0.0,
+        "strict_cure_positive_count": int(dataset["is_cured_d7"].sum()) if "is_cured_d7" in dataset.columns else 0,
+        "state_recovery_positive_count": int(dataset["is_state_recovered_d7"].sum())
+        if "is_state_recovered_d7" in dataset.columns
+        else 0,
+        "full_recovery_positive_count": int(dataset["is_fully_recovered_d7"].sum())
+        if "is_fully_recovered_d7" in dataset.columns
+        else 0,
+        "decision": "feasibility_only_skip_training",
+        "snapshot_strategy": metadata.get("d7_state_snapshot_strategy"),
+        "d7_state_complete_count": metadata.get("d7_state_complete_count"),
+        "d7_state_missing_count": metadata.get("d7_state_missing_count"),
+    }
+
+
 def main() -> int:
     args = build_parser().parse_args()
     try:
+        if args.target == "state_recovery":
+            feasibility_dataset = build_d7_recovery_dataset(
+                args.data_dir,
+                exclude_vintage_month=args.exclude_vintage_month,
+                target=args.target,
+            )
+            summary = _build_state_recovery_feasibility_summary(feasibility_dataset)
+            print(f"sample count: {summary['sample_count']}")
+            print(f"target: {summary['target']}")
+            print(f"target column: {summary['target_column']}")
+            print(f"positive rate: {summary['positive_rate']:.6f}")
+            print(f"positive count: {summary['positive_count']}")
+            print(f"strict cure positive count: {summary['strict_cure_positive_count']}")
+            print(f"state recovery positive count: {summary['state_recovery_positive_count']}")
+            print(f"full recovery positive count: {summary['full_recovery_positive_count']}")
+            print(f"d7 state complete count: {summary['d7_state_complete_count']}")
+            print(f"d7 state missing count: {summary['d7_state_missing_count']}")
+            print("training skipped: state_recovery is feasibility-only")
+            print("output paths: none")
+            print("PASS ML target feasibility")
+            return 0
         selected_result = _run_baseline(
             args.data_dir,
+            args.target,
             args.model,
             args.test_size,
             args.random_seed,
             exclude_vintage_month=args.exclude_vintage_month,
         )
         with_vintage_result = (
-            _run_baseline(args.data_dir, args.model, args.test_size, args.random_seed, exclude_vintage_month=False)
+            _run_baseline(
+                args.data_dir,
+                args.target,
+                args.model,
+                args.test_size,
+                args.random_seed,
+                exclude_vintage_month=False,
+            )
             if args.exclude_vintage_month
             else selected_result
         )
         without_vintage_result = (
             selected_result
             if args.exclude_vintage_month
-            else _run_baseline(args.data_dir, args.model, args.test_size, args.random_seed, exclude_vintage_month=True)
+            else _run_baseline(
+                args.data_dir,
+                args.target,
+                args.model,
+                args.test_size,
+                args.random_seed,
+                exclude_vintage_month=True,
+            )
         )
         output_paths = _write_selected_outputs(args.output_dir, selected_result)
         robustness_paths = _write_robustness_outputs(args.output_dir, with_vintage_result, without_vintage_result)
@@ -165,6 +232,8 @@ def main() -> int:
     classification_metrics = selected_result["metrics"]
     feature_diagnostics_by_model = selected_result["feature_diagnostics_by_model"]
     print(f"sample count: {summary['sample_count']}")
+    print(f"target: {args.target}")
+    print(f"target column: {summary['target_column']}")
     print(f"positive rate: {summary['positive_rate']:.6f}")
     print(f"feature count: {summary['feature_count']}")
     print(f"requested model: {args.model}")
