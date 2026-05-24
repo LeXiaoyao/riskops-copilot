@@ -44,22 +44,38 @@ flowchart LR
 
 ## Demo Quick Start
 
+这些命令读取或重新渲染本地 synthetic demo outputs；项目不包含真实客户数据，不用于生产风控决策。当前模型目标是 **D7 any-payment response**，不是 cure-to-current、全额回收或生产催收结果建模。
+
 ```bash
+python scripts/riskops_cli.py --help
 python scripts/riskops_cli.py summary
+python scripts/riskops_cli.py anomalies
 python scripts/riskops_cli.py drivers
-python scripts/riskops_cli.py model-lab
+python scripts/riskops_cli.py outputs
+python scripts/riskops_cli.py scenarios
+python scripts/riskops_cli.py strategy-eval
 python scripts/riskops_cli.py roi
+python scripts/riskops_cli.py model-lab
 python scripts/riskops_cli.py render-model-lab
+python scripts/riskops_cli.py render-dashboard
+python scripts/riskops_cli.py render-report
 pytest
 ```
 
 常用入口说明：
 
+- **--help**：查看当前 CLI 支持的全部 demo 入口。
 - **summary**：查看项目状态、异常数量、数据边界和常用命令。
+- **anomalies**：查看高优先级异常列表。
 - **drivers**：查看 M1 D7 回收率下降 Top 5 drivers 和业务解释边界。
-- **model-lab**：查看 M6 Strategy Evaluation / ROI 总览和 demo boundary。
+- **outputs**：查看 Dashboard、报告和 M3 输出路径。
+- **scenarios**：查看 M6-A 离线策略情景。
+- **strategy-eval**：查看 M6-B 离线策略评估摘要。
 - **roi**：查看策略情景的成本收益和 ROI 摘要。
+- **model-lab**：查看 M6 Strategy Evaluation / ROI 总览和 demo boundary。
 - **render-model-lab**：重新生成 strategy evaluation 与 ROI 输出。
+- **render-dashboard**：重新生成本地静态 Dashboard。
+- **render-report**：重新生成 Markdown / HTML 经营报告。
 - **pytest**：运行当前测试集，验证 Demo 主链路未被破坏。
 
 ## Key Outputs

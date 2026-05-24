@@ -142,24 +142,38 @@ For public positioning, this README only describes completed demo milestones and
 
 ## Quick Start
 
-Run the main local demo commands:
+Run the local CLI against synthetic demo outputs only. The project contains no real customer data, is not production risk decisioning, and the current model target is **D7 any-payment response**, not cure-to-current, full recovery, or production collection outcome modeling.
 
 ```bash
+python scripts/riskops_cli.py --help
 python scripts/riskops_cli.py summary
+python scripts/riskops_cli.py anomalies
 python scripts/riskops_cli.py drivers
-python scripts/riskops_cli.py model-lab
+python scripts/riskops_cli.py outputs
+python scripts/riskops_cli.py scenarios
+python scripts/riskops_cli.py strategy-eval
 python scripts/riskops_cli.py roi
+python scripts/riskops_cli.py model-lab
 python scripts/riskops_cli.py render-model-lab
+python scripts/riskops_cli.py render-dashboard
+python scripts/riskops_cli.py render-report
 pytest
 ```
 
 Common entry points:
 
+- **--help**: list all currently supported demo CLI entry points.
 - **summary**: project status, anomaly count, data boundary, and common commands.
+- **anomalies**: high-priority anomaly list.
 - **drivers**: top M1 D7 recovery drivers with interpretation boundaries.
-- **model-lab**: M6 strategy evaluation / ROI overview and demo boundary.
+- **outputs**: dashboard, report, and M3 output paths.
+- **scenarios**: M6-A offline strategy scenarios.
+- **strategy-eval**: M6-B offline strategy evaluation summary.
 - **roi**: strategy scenario cost-benefit and ROI summary.
+- **model-lab**: M6 strategy evaluation / ROI overview and demo boundary.
 - **render-model-lab**: regenerate strategy evaluation and ROI outputs.
+- **render-dashboard**: regenerate the local static dashboard.
+- **render-report**: regenerate the Markdown / HTML business report.
 - **pytest**: run the current test suite.
 
 ---
