@@ -231,7 +231,17 @@ def make_cases(config: dict[str, int], loans: pd.DataFrame, rng: np.random.Gener
     return case.drop(columns=["loan_id"]), mapping
 
 
-def make_repayment(loans: pd.DataFrame, mapping: pd.DataFrame, cases: pd.DataFrame, rng: np.random.Generator, end_date: pd.Timestamp) -> dict[str, pd.DataFrame]:
+def make_repayment(
+    loans: pd.DataFrame,
+    customers: pd.DataFrame,
+    mapping: pd.DataFrame,
+    cases: pd.DataFrame,
+    actions: pd.DataFrame,
+    complaints: pd.DataFrame,
+    scores: pd.DataFrame,
+    rng: np.random.Generator,
+    end_date: pd.Timestamp,
+) -> dict[str, pd.DataFrame]:
     n = len(loans)
     plan = pd.DataFrame(
         {
@@ -248,13 +258,145 @@ def make_repayment(loans: pd.DataFrame, mapping: pd.DataFrame, cases: pd.DataFra
     plan["due_amount"] = (plan["due_principal"] + plan["due_interest"] + plan["due_fee"]).round(2)
     plan["plan_status"] = "DUE"
 
-    case_map = mapping.merge(cases[["case_id", "initial_dpd_bucket", "case_create_time"]], on="case_id", how="left")
-    plan = plan.merge(case_map[["loan_id", "initial_dpd_bucket", "case_create_time"]], on="loan_id", how="left")
+    case_map = mapping.merge(
+        cases[
+            [
+                "case_id",
+                "initial_dpd_bucket",
+                "case_create_time",
+                "initial_outstanding_amount",
+                "balance_segment",
+                "current_vendor_id",
+                "current_line_id",
+                "protect_flag",
+                "sensitive_flag",
+                "complaint_flag",
+            ]
+        ],
+        on="case_id",
+        how="left",
+    )
+    plan = plan.merge(
+        case_map[
+            [
+                "loan_id",
+                "case_id",
+                "initial_dpd_bucket",
+                "case_create_time",
+                "initial_outstanding_amount",
+                "balance_segment",
+                "current_vendor_id",
+                "current_line_id",
+                "protect_flag",
+                "sensitive_flag",
+                "complaint_flag",
+            ]
+        ],
+        on="loan_id",
+        how="left",
+    )
+    plan = plan.merge(
+        customers[["customer_id", "risk_level_current", "blacklist_flag"]],
+        on="customer_id",
+        how="left",
+    )
+
+    score = scores[["customer_id", "score_date", "postloan_c_score"]].copy()
+    score["score_date"] = pd.to_datetime(score["score_date"])
+    plan = plan.merge(score, on="customer_id", how="left")
+    plan.loc[pd.to_datetime(plan["score_date"]) > pd.to_datetime(plan["due_date"]), "postloan_c_score"] = np.nan
+
+    action_features = plan[["loan_id", "case_id", "due_date"]].merge(actions, on="case_id", how="left")
+    action_features["action_time"] = pd.to_datetime(action_features["action_time"])
+    action_features["due_date"] = pd.to_datetime(action_features["due_date"])
+    in_window = action_features["action_time"].notna() & (
+        action_features["action_time"].between(action_features["due_date"] - pd.Timedelta(days=7), action_features["due_date"])
+    )
+    action_features = action_features[in_window]
+    action_features = (
+        action_features.groupby("loan_id", as_index=False)
+        .agg(
+            action_count_7d=("action_id", "count"),
+            connected_count_7d=("connected_flag", "sum"),
+            ptp_count_7d=("ptp_flag", "sum"),
+            ai_action_count_7d=("ai_outbound_flag", "sum"),
+        )
+    )
+    plan = plan.merge(action_features, on="loan_id", how="left")
+    for col in ["action_count_7d", "connected_count_7d", "ptp_count_7d", "ai_action_count_7d"]:
+        plan[col] = plan[col].fillna(0).astype(int)
+    plan["connect_rate_7d"] = np.divide(
+        plan["connected_count_7d"],
+        plan["action_count_7d"],
+        out=np.zeros(len(plan), dtype=float),
+        where=plan["action_count_7d"].to_numpy() > 0,
+    )
+    plan["ptp_rate_7d"] = np.divide(
+        plan["ptp_count_7d"],
+        plan["connected_count_7d"],
+        out=np.zeros(len(plan), dtype=float),
+        where=plan["connected_count_7d"].to_numpy() > 0,
+    )
+
+    complaint_features = plan[["loan_id", "case_id", "due_date"]].merge(complaints, on="case_id", how="left")
+    complaint_features["complaint_time"] = pd.to_datetime(complaint_features["complaint_time"])
+    complaint_features["due_date"] = pd.to_datetime(complaint_features["due_date"])
+    complaint_features = complaint_features[
+        complaint_features["complaint_time"].notna() & (complaint_features["complaint_time"] <= complaint_features["due_date"])
+    ]
+    complaint_features = complaint_features.groupby("loan_id", as_index=False)["complaint_id"].count().rename(
+        columns={"complaint_id": "complaint_count_pre_due"}
+    )
+    plan = plan.merge(complaint_features, on="loan_id", how="left")
+    plan["complaint_count_pre_due"] = plan["complaint_count_pre_due"].fillna(0).astype(int)
+
     due_ts = pd.to_datetime(plan["due_date"])
     recent = due_ts >= end_date - pd.Timedelta(days=29)
     m1 = plan["initial_dpd_bucket"].fillna("M1").eq("M1")
-    prob = np.where(m1 & recent, 0.14, np.where(m1, 0.22, 0.27))
-    prob = np.where(plan["initial_dpd_bucket"].isna(), 0.30, prob)
+    prob = np.full(len(plan), 0.23, dtype=float)
+    prob += np.where(plan["initial_dpd_bucket"].isna(), 0.06, 0.0)
+    prob += np.where(m1, 0.015, np.where(plan["initial_dpd_bucket"].eq("M2"), -0.025, -0.055))
+    prob += np.where(m1 & recent, -0.07, np.where(recent, -0.015, 0.0))
+
+    risk_effect = plan["risk_level_current"].map({"A": 0.045, "B": 0.025, "C": -0.015, "D": -0.055}).fillna(0.0)
+    prob += risk_effect.to_numpy()
+    score_effect = ((plan["postloan_c_score"].fillna(620) - 620) / 100).clip(-2, 2) * 0.025
+    prob += score_effect.to_numpy()
+
+    due_amount_rank = plan["due_amount"].rank(pct=True)
+    prob += np.where(due_amount_rank <= 0.35, 0.02, np.where(due_amount_rank >= 0.80, -0.035, 0.0))
+    prob += np.where(plan["balance_segment"].eq("HIGH"), -0.025, 0.0)
+
+    action_count = plan["action_count_7d"]
+    prob += np.where(action_count.eq(0), -0.015, np.where(action_count.between(1, 4), 0.015, 0.0))
+    prob += np.where(action_count >= 9, -0.055, 0.0)
+    prob += plan["connect_rate_7d"].to_numpy() * 0.075
+    prob += np.where(plan["ptp_count_7d"] > 0, 0.07, 0.0)
+    prob += plan["ptp_rate_7d"].to_numpy() * 0.035
+
+    low_risk = plan["risk_level_current"].isin(["A", "B"])
+    high_risk = plan["risk_level_current"].isin(["C", "D"])
+    ai_touched = plan["ai_action_count_7d"] > 0
+    prob += np.where(ai_touched & low_risk, 0.02, 0.0)
+    prob += np.where(ai_touched & high_risk & plan["connected_count_7d"].eq(0), -0.01, 0.0)
+
+    prob += np.where(plan["complaint_count_pre_due"] > 0, -0.07, 0.0)
+    complaint_flag = plan["complaint_flag"].eq(True)
+    protect_flag = plan["protect_flag"].eq(True)
+    sensitive_flag = plan["sensitive_flag"].eq(True)
+    blacklist_flag = plan["blacklist_flag"].eq(True)
+    prob += np.where(complaint_flag, -0.02, 0.0)
+    prob += np.where(protect_flag, -0.035, 0.0)
+    prob += np.where(sensitive_flag, -0.025, 0.0)
+    prob += np.where(blacklist_flag, -0.08, 0.0)
+
+    vendor_effect = plan["current_vendor_id"].map({"V_A": 0.008, "V_B": -0.01, "V_C": 0.0, "V_AI": 0.006}).fillna(0.0)
+    line_effect = plan["current_line_id"].map({"L_EAST_M2": -0.008, "L_AI_M1": 0.006}).fillna(0.0)
+    prob += vendor_effect.to_numpy() + line_effect.to_numpy()
+    month_angle = (due_ts.dt.month.to_numpy() - 1) / 12 * 2 * np.pi
+    prob += np.sin(month_angle) * 0.008
+    prob = np.clip(prob, 0.04, 0.55)
+
     paid = rng.random(len(plan)) < prob
     repay = plan.loc[paid, ["plan_id", "loan_id", "customer_id", "due_date", "due_amount"]].copy().reset_index(drop=True)
     repay["repay_id"] = [f"RP{i:08d}" for i in range(len(repay))]
@@ -265,7 +407,9 @@ def make_repayment(loans: pd.DataFrame, mapping: pd.DataFrame, cases: pd.DataFra
     repay["repay_channel"] = rng.choice(["APP", "BANK", "WITHHOLD"], size=len(repay), p=[0.56, 0.22, 0.22])
     repay["repay_status"] = "SUCCESS"
     repay = repay[["repay_id", "plan_id", "loan_id", "customer_id", "repay_time", "repay_amount", "repay_channel", "repay_status"]]
-    plan = plan.drop(columns=["initial_dpd_bucket", "case_create_time"])
+    plan = plan[
+        ["plan_id", "loan_id", "customer_id", "period_no", "due_date", "due_principal", "due_interest", "due_fee", "due_amount", "plan_status"]
+    ]
     return {"ods_repayment_plan": plan, "ods_repayment_detail": repay}
 
 
@@ -627,9 +771,20 @@ def main() -> int:
     customers = make_customers(config, rng)
     loans = make_loans(config, customers, rng, start_date, end_date)
     cases, mapping = make_cases(config, loans, rng, end_date)
-    repayment = make_repayment(loans, mapping, cases, rng, end_date)
     actions = make_actions(config, cases, dims["dim_collector"], rng, end_date)
     other_ods = make_other_ods(cases, customers, actions["ods_collection_action"], actions["ods_sms_send_log"], rng, end_date)
+    cases.loc[cases["case_id"].isin(other_ods["ods_complaint"]["case_id"]), "complaint_flag"] = True
+    repayment = make_repayment(
+        loans,
+        customers,
+        mapping,
+        cases,
+        actions["ods_collection_action"],
+        other_ods["ods_complaint"],
+        other_ods["ods_postloan_c_score"],
+        rng,
+        end_date,
+    )
     snapshots = make_snapshots(
         loans,
         cases,
@@ -640,7 +795,6 @@ def main() -> int:
         rng,
         end_date,
     )
-    cases.loc[cases["case_id"].isin(other_ods["ods_complaint"]["case_id"]), "complaint_flag"] = True
 
     dim_tables = {
         **dims,
