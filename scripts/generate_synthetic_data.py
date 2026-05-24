@@ -515,18 +515,6 @@ def make_other_ods(
     decision = decision.rename(columns={"current_vendor_id": "vendor_id", "current_line_id": "line_id"})
     decision = decision[["decision_id", "case_id", "customer_id", "vendor_id", "line_id", "collector_id", "strategy_id", "decision_time", "decision_reason"]]
 
-    score_n = min(len(customers), max(5_000, len(customers) // 2))
-    score_customers = customers.sample(n=score_n, random_state=int(rng.integers(0, 1_000_000)))
-    score = pd.DataFrame(
-        {
-            "score_id": [f"SCORE{i:08d}" for i in range(score_n)],
-            "customer_id": score_customers["customer_id"].to_numpy(),
-            "score_date": (end_date - pd.to_timedelta(rng.integers(0, 180, score_n), unit="D")).date,
-            "postloan_c_score": rng.normal(620, 70, score_n).clip(300, 850).round(1),
-        }
-    )
-    score["score_level"] = pd.cut(score["postloan_c_score"], bins=[0, 560, 640, 720, 900], labels=["D", "C", "B", "A"]).astype(str)
-
     note_actions = actions.sample(n=min(len(actions), max(10_000, len(actions) // 5)), random_state=int(rng.integers(0, 1_000_000)))
     note = pd.DataFrame(
         {
@@ -587,6 +575,73 @@ def make_other_ods(
             "complaint_level": rng.choice(["LOW", "MEDIUM", "HIGH"], size=len(complaint_source), p=[0.70, 0.25, 0.05]),
         }
     )
+
+    score_n = min(len(customers), max(5_000, len(customers) // 2))
+    score_customers = customers.sample(n=score_n, random_state=int(rng.integers(0, 1_000_000))).reset_index(drop=True)
+    case_signal = cases.copy()
+    case_signal["case_create_time"] = pd.to_datetime(case_signal["case_create_time"])
+    case_signal["complaint_flag"] = case_signal["complaint_flag"].eq(True) | case_signal["case_id"].isin(complaint["case_id"])
+    latest_case = (
+        case_signal.sort_values(["customer_id", "case_create_time"])
+        .drop_duplicates("customer_id", keep="last")[
+            [
+                "customer_id",
+                "case_create_time",
+                "initial_dpd_bucket",
+                "initial_outstanding_amount",
+                "balance_segment",
+                "complaint_flag",
+                "protect_flag",
+                "sensitive_flag",
+            ]
+        ]
+        .copy()
+    )
+    score_base = score_customers[
+        ["customer_id", "risk_level_current", "customer_segment", "blacklist_flag", "sensitive_flag"]
+    ].merge(latest_case, on="customer_id", how="left", suffixes=("_customer", "_case"))
+
+    risk_effect = score_base["risk_level_current"].map({"A": 55, "B": 25, "C": -30, "D": -75}).fillna(0.0)
+    segment_effect = score_base["customer_segment"].map({"优质": 35, "复借": 18, "新客": -5, "风险关注": -35}).fillna(0.0)
+    dpd_effect = score_base["initial_dpd_bucket"].map({"M1": 18, "M2": -30, "M3+": -70}).fillna(0.0)
+    balance_effect = score_base["balance_segment"].map({"NORMAL": 10, "HIGH": -35}).fillna(0.0)
+    outstanding_rank = score_base["initial_outstanding_amount"].rank(pct=True)
+    outstanding_effect = pd.Series(
+        np.where(outstanding_rank <= 0.35, 16, np.where(outstanding_rank >= 0.80, -22, 0)),
+        index=score_base.index,
+    ).where(score_base["initial_outstanding_amount"].notna(), 0)
+    complaint_effect = np.where(score_base["complaint_flag"].eq(True), -35, 0)
+    protect_effect = np.where(score_base["protect_flag"].eq(True), -28, 0)
+    sensitive_any = score_base["sensitive_flag_customer"].eq(True) | score_base["sensitive_flag_case"].eq(True)
+    sensitive_effect = np.where(sensitive_any, -22, 0)
+    blacklist_effect = np.where(score_base["blacklist_flag"].eq(True), -90, 0)
+    noise = rng.normal(0, 38, score_n)
+    raw_score = (
+        635
+        + risk_effect.to_numpy()
+        + segment_effect.to_numpy()
+        + dpd_effect.to_numpy()
+        + balance_effect.to_numpy()
+        + outstanding_effect.to_numpy()
+        + complaint_effect
+        + protect_effect
+        + sensitive_effect
+        + blacklist_effect
+        + noise
+    )
+    case_score_dates = pd.to_datetime(score_base["case_create_time"]) - pd.to_timedelta(rng.integers(1, 22, score_n), unit="D")
+    fallback_score_dates = end_date - pd.to_timedelta(rng.integers(30, 181, score_n), unit="D")
+    score_dates = case_score_dates.where(score_base["case_create_time"].notna(), fallback_score_dates)
+    score_dates = pd.Series(score_dates).mask(pd.Series(score_dates) > end_date, end_date)
+    score = pd.DataFrame(
+        {
+            "score_id": [f"SCORE{i:08d}" for i in range(score_n)],
+            "customer_id": score_base["customer_id"].to_numpy(),
+            "score_date": pd.to_datetime(score_dates).dt.date.to_numpy(),
+            "postloan_c_score": np.clip(raw_score, 300, 850).round(1),
+        }
+    )
+    score["score_level"] = pd.cut(score["postloan_c_score"], bins=[0, 560, 640, 720, 900], labels=["D", "C", "B", "A"]).astype(str)
     return {
         "ods_case_flow": flow,
         "ods_assignment_decision_log": decision,

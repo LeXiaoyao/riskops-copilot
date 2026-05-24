@@ -7,6 +7,7 @@ import pandas as pd
 import pytest
 
 from riskops.engines.model_lab.ml_dataset import build_d7_recovery_dataset
+from scripts.generate_synthetic_data import DEFAULT_REFERENCE_DATE
 from scripts.validate_data_quality import (
     DATA_ROOT,
     validate_case_mapping,
@@ -137,3 +138,64 @@ def test_ml_target_remains_d7_any_payment_response() -> None:
     assert checked["is_recovered_d7"].equals(checked["expected_target"])
     assert "is_cured" not in dataset.columns
     assert "cure_target" not in dataset.columns
+
+
+@pytest.mark.skipif(not data_is_available(), reason="synthetic data has not been generated and built")
+def test_postloan_c_score_proxy_distribution_and_directionality() -> None:
+    score = pd.read_parquet(DATA_ROOT / "ods" / "ods_postloan_c_score.parquet")
+    customers = pd.read_parquet(DATA_ROOT / "dim" / "dim_customer.parquet")
+    cases = pd.read_parquet(DATA_ROOT / "dim" / "dim_case.parquet")
+
+    assert score["postloan_c_score"].between(300, 850).all()
+    assert score["postloan_c_score"].mean() >= 580
+    assert score["postloan_c_score"].mean() <= 680
+    assert set(score["score_level"].dropna().unique()) == {"A", "B", "C", "D"}
+    assert score["score_level"].value_counts(normalize=True).max() < 0.65
+    assert pd.to_datetime(score["score_date"]).max() <= pd.Timestamp(DEFAULT_REFERENCE_DATE)
+
+    scored_customers = score.merge(
+        customers[["customer_id", "risk_level_current", "customer_segment", "blacklist_flag", "sensitive_flag"]],
+        on="customer_id",
+        how="left",
+        validate="one_to_one",
+    )
+    risk_mean = scored_customers.groupby("risk_level_current")["postloan_c_score"].mean()
+    assert risk_mean["A"] > risk_mean["B"] > risk_mean["C"] > risk_mean["D"]
+    segment_mean = scored_customers.groupby("customer_segment")["postloan_c_score"].mean()
+    assert segment_mean["优质"] > segment_mean["复借"] > segment_mean["新客"] > segment_mean["风险关注"]
+
+    latest_case = (
+        cases.assign(case_create_time=pd.to_datetime(cases["case_create_time"]))
+        .sort_values(["customer_id", "case_create_time"])
+        .drop_duplicates("customer_id", keep="last")
+    )
+    scored_cases = score.merge(
+        latest_case[
+            [
+                "customer_id",
+                "initial_dpd_bucket",
+                "balance_segment",
+                "complaint_flag",
+                "protect_flag",
+                "sensitive_flag",
+            ]
+        ],
+        on="customer_id",
+        how="left",
+        validate="one_to_one",
+    )
+    dpd_mean = scored_cases.groupby("initial_dpd_bucket")["postloan_c_score"].mean()
+    assert dpd_mean["M1"] > dpd_mean["M2"] > dpd_mean["M3+"]
+    balance_mean = scored_cases.groupby("balance_segment")["postloan_c_score"].mean()
+    assert balance_mean["NORMAL"] > balance_mean["HIGH"]
+
+    _assert_flag_direction(scored_cases, "complaint_flag")
+    _assert_flag_direction(scored_cases, "protect_flag")
+    _assert_flag_direction(scored_cases, "sensitive_flag")
+    _assert_flag_direction(scored_customers, "blacklist_flag")
+
+
+def _assert_flag_direction(frame: pd.DataFrame, flag_column: str, min_count: int = 10) -> None:
+    grouped = frame.dropna(subset=[flag_column]).groupby(flag_column)["postloan_c_score"].agg(["count", "mean"])
+    if True in grouped.index and False in grouped.index and grouped.loc[True, "count"] >= min_count:
+        assert grouped.loc[False, "mean"] > grouped.loc[True, "mean"]
