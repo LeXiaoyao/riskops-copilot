@@ -3,23 +3,23 @@
   "with_vintage": {
     "best_model": "random_forest",
     "metrics": {
-      "auc": 0.615549,
-      "ks": 0.194021,
-      "pr_auc": 0.426304,
-      "precision": 0.466123,
-      "recall": 0.351466,
-      "f1": 0.400755,
+      "auc": 0.567209,
+      "ks": 0.107892,
+      "pr_auc": 0.313021,
+      "precision": 0.319689,
+      "recall": 0.441305,
+      "f1": 0.37078,
       "threshold": 0.5,
       "confusion_matrix": {
-        "tn": 4535,
-        "fp": 851,
-        "fn": 1371,
-        "tp": 743
+        "tn": 3519,
+        "fp": 1928,
+        "fn": 1147,
+        "tp": 906
       }
     },
     "dataset_summary": {
       "sample_count": 30000,
-      "positive_rate": 0.2818333333333333,
+      "positive_rate": 0.27366666666666667,
       "feature_count": 39,
       "exclude_vintage_month": false,
       "excluded_time_features": [],
@@ -30,33 +30,33 @@
     },
     "model_comparison": {
       "logistic": {
-        "auc": 0.610254,
-        "ks": 0.186356,
-        "pr_auc": 0.420004,
-        "precision": 0.363241,
-        "recall": 0.513245,
-        "f1": 0.425407,
+        "auc": 0.565129,
+        "ks": 0.098265,
+        "pr_auc": 0.31398,
+        "precision": 0.306957,
+        "recall": 0.610326,
+        "f1": 0.408476,
         "threshold": 0.5,
         "confusion_matrix": {
-          "tn": 3484,
-          "fp": 1902,
-          "fn": 1029,
-          "tp": 1085
+          "tn": 2618,
+          "fp": 2829,
+          "fn": 800,
+          "tp": 1253
         }
       },
       "random_forest": {
-        "auc": 0.615549,
-        "ks": 0.194021,
-        "pr_auc": 0.426304,
-        "precision": 0.466123,
-        "recall": 0.351466,
-        "f1": 0.400755,
+        "auc": 0.567209,
+        "ks": 0.107892,
+        "pr_auc": 0.313021,
+        "precision": 0.319689,
+        "recall": 0.441305,
+        "f1": 0.37078,
         "threshold": 0.5,
         "confusion_matrix": {
-          "tn": 4535,
-          "fp": 851,
-          "fn": 1371,
-          "tp": 743
+          "tn": 3519,
+          "fp": 1928,
+          "fn": 1147,
+          "tp": 906
         }
       }
     },
@@ -64,11 +64,11 @@
       "logistic": {
         "top_n": 10,
         "top_feature_count": 10,
-        "vintage_top_feature_count": 4,
-        "vintage_top_feature_share": 0.4,
-        "vintage_top_importance": 0.947661,
-        "top_importance_total": 2.747672,
-        "vintage_top_importance_share": 0.344896,
+        "vintage_top_feature_count": 6,
+        "vintage_top_feature_share": 0.6,
+        "vintage_top_importance": 2.176267,
+        "top_importance_total": 3.059477,
+        "vintage_top_importance_share": 0.71132,
         "vintage_month_artifact_warning": true,
         "interpretation": "vintage_month dominates top features and may reflect synthetic batch/time artifact"
       },
@@ -78,7 +78,7 @@
         "vintage_top_feature_count": 0,
         "vintage_top_feature_share": 0.0,
         "vintage_top_importance": 0.0,
-        "top_importance_total": 0.551645,
+        "top_importance_total": 0.554722,
         "vintage_top_importance_share": 0.0,
         "vintage_month_artifact_warning": false,
         "interpretation": "vintage_month is present but does not dominate top features"
@@ -86,77 +86,77 @@
     },
     "top_features": [
       {
-        "feature": "num__postloan_c_score",
-        "importance": 0.12109208997859967,
-        "signed_weight": 0.12109208997859967
-      },
-      {
         "feature": "num__loan_amount",
-        "importance": 0.07501510313891006,
-        "signed_weight": 0.07501510313891006
-      },
-      {
-        "feature": "num__due_amount",
-        "importance": 0.06811980662963897,
-        "signed_weight": 0.06811980662963897
+        "importance": 0.08807459122947216,
+        "signed_weight": 0.08807459122947216
       },
       {
         "feature": "num__log_due_amount",
-        "importance": 0.06588457074549739,
-        "signed_weight": 0.06588457074549739
+        "importance": 0.08376614367456882,
+        "signed_weight": 0.08376614367456882
+      },
+      {
+        "feature": "num__due_amount",
+        "importance": 0.08335573014796102,
+        "signed_weight": 0.08335573014796102
       },
       {
         "feature": "num__interest_rate",
-        "importance": 0.055985194064174286,
-        "signed_weight": 0.055985194064174286
-      },
-      {
-        "feature": "num__initial_outstanding_amount",
-        "importance": 0.05033869949134347,
-        "signed_weight": 0.05033869949134347
+        "importance": 0.08084665915277722,
+        "signed_weight": 0.08084665915277722
       },
       {
         "feature": "num__mob",
-        "importance": 0.039539012309915016,
-        "signed_weight": 0.039539012309915016
+        "importance": 0.05392166150977229,
+        "signed_weight": 0.05392166150977229
+      },
+      {
+        "feature": "num__postloan_c_score",
+        "importance": 0.045240692561381184,
+        "signed_weight": 0.045240692561381184
+      },
+      {
+        "feature": "num__initial_outstanding_amount",
+        "importance": 0.03532248880281267,
+        "signed_weight": 0.03532248880281267
       },
       {
         "feature": "num__outstanding_to_loan_ratio",
-        "importance": 0.029064055129141113,
-        "signed_weight": 0.029064055129141113
+        "importance": 0.03498361405873444,
+        "signed_weight": 0.03498361405873444
       },
       {
-        "feature": "cat__score_level_D",
-        "importance": 0.023942491716369484,
-        "signed_weight": 0.023942491716369484
+        "feature": "num__loan_term",
+        "importance": 0.02999609880649162,
+        "signed_weight": 0.02999609880649162
       },
       {
-        "feature": "num__ai_coverage_rate",
-        "importance": 0.022663831580779302,
-        "signed_weight": 0.022663831580779302
+        "feature": "cat__risk_level_current_D",
+        "importance": 0.019214042318954804,
+        "signed_weight": 0.019214042318954804
       }
     ]
   },
   "without_vintage": {
-    "best_model": "random_forest",
+    "best_model": "logistic",
     "metrics": {
-      "auc": 0.613896,
-      "ks": 0.199485,
-      "pr_auc": 0.425937,
-      "precision": 0.467752,
-      "recall": 0.353359,
-      "f1": 0.402587,
+      "auc": 0.569109,
+      "ks": 0.106997,
+      "pr_auc": 0.320282,
+      "precision": 0.308945,
+      "recall": 0.619094,
+      "f1": 0.412194,
       "threshold": 0.5,
       "confusion_matrix": {
-        "tn": 4536,
-        "fp": 850,
-        "fn": 1367,
-        "tp": 747
+        "tn": 2604,
+        "fp": 2843,
+        "fn": 782,
+        "tp": 1271
       }
     },
     "dataset_summary": {
       "sample_count": 30000,
-      "positive_rate": 0.2818333333333333,
+      "positive_rate": 0.27366666666666667,
       "feature_count": 38,
       "exclude_vintage_month": true,
       "excluded_time_features": [
@@ -175,33 +175,33 @@
     },
     "model_comparison": {
       "logistic": {
-        "auc": 0.611519,
-        "ks": 0.187953,
-        "pr_auc": 0.423339,
-        "precision": 0.360501,
-        "recall": 0.504257,
-        "f1": 0.42043,
+        "auc": 0.569109,
+        "ks": 0.106997,
+        "pr_auc": 0.320282,
+        "precision": 0.308945,
+        "recall": 0.619094,
+        "f1": 0.412194,
         "threshold": 0.5,
         "confusion_matrix": {
-          "tn": 3495,
-          "fp": 1891,
-          "fn": 1048,
-          "tp": 1066
+          "tn": 2604,
+          "fp": 2843,
+          "fn": 782,
+          "tp": 1271
         }
       },
       "random_forest": {
-        "auc": 0.613896,
-        "ks": 0.199485,
-        "pr_auc": 0.425937,
-        "precision": 0.467752,
-        "recall": 0.353359,
-        "f1": 0.402587,
+        "auc": 0.566544,
+        "ks": 0.106333,
+        "pr_auc": 0.314291,
+        "precision": 0.321903,
+        "recall": 0.425231,
+        "f1": 0.366422,
         "threshold": 0.5,
         "confusion_matrix": {
-          "tn": 4536,
-          "fp": 850,
-          "fn": 1367,
-          "tp": 747
+          "tn": 3608,
+          "fp": 1839,
+          "fn": 1180,
+          "tp": 873
         }
       }
     },
@@ -212,7 +212,7 @@
         "vintage_top_feature_count": 0,
         "vintage_top_feature_share": 0.0,
         "vintage_top_importance": 0.0,
-        "top_importance_total": 2.38611,
+        "top_importance_total": 1.525532,
         "vintage_top_importance_share": 0.0,
         "vintage_month_artifact_warning": false,
         "interpretation": "vintage_month is present but does not dominate top features"
@@ -223,7 +223,7 @@
         "vintage_top_feature_count": 0,
         "vintage_top_feature_share": 0.0,
         "vintage_top_importance": 0.0,
-        "top_importance_total": 0.599687,
+        "top_importance_total": 0.603186,
         "vintage_top_importance_share": 0.0,
         "vintage_month_artifact_warning": false,
         "interpretation": "vintage_month is present but does not dominate top features"
@@ -231,59 +231,59 @@
     },
     "top_features": [
       {
-        "feature": "num__postloan_c_score",
-        "importance": 0.12201533636721801,
-        "signed_weight": 0.12201533636721801
+        "feature": "cat__risk_level_current_D",
+        "importance": 0.3591673911905534,
+        "signed_weight": -0.3591673911905534
       },
       {
-        "feature": "num__log_due_amount",
-        "importance": 0.07802113410576894,
-        "signed_weight": 0.07802113410576894
+        "feature": "cat__risk_level_current_A",
+        "importance": 0.2463270447230256,
+        "signed_weight": 0.2463270447230256
       },
       {
-        "feature": "num__loan_amount",
-        "importance": 0.07761057161112449,
-        "signed_weight": 0.07761057161112449
+        "feature": "cat__balance_segment_HIGH",
+        "importance": 0.13733919484417634,
+        "signed_weight": -0.13733919484417634
       },
       {
-        "feature": "num__due_amount",
-        "importance": 0.07274101344453567,
-        "signed_weight": 0.07274101344453567
+        "feature": "cat__risk_level_current_B",
+        "importance": 0.13583758565145623,
+        "signed_weight": 0.13583758565145623
       },
       {
-        "feature": "num__interest_rate",
-        "importance": 0.06226374869625061,
-        "signed_weight": 0.06226374869625061
+        "feature": "num__connect_rate_7d",
+        "importance": 0.12033211127785486,
+        "signed_weight": 0.12033211127785486
       },
       {
-        "feature": "num__initial_outstanding_amount",
-        "importance": 0.04837836158639916,
-        "signed_weight": 0.04837836158639916
+        "feature": "cat__current_vendor_id_V_B",
+        "importance": 0.1170847516867803,
+        "signed_weight": -0.1170847516867803
       },
       {
-        "feature": "num__mob",
-        "importance": 0.04625065285594017,
-        "signed_weight": 0.04625065285594017
+        "feature": "cat__dpd_bucket_M3+",
+        "importance": 0.11008772613009564,
+        "signed_weight": -0.11008772613009564
       },
       {
-        "feature": "num__outstanding_to_loan_ratio",
-        "importance": 0.038022628748927624,
-        "signed_weight": 0.038022628748927624
+        "feature": "cat__initial_dpd_bucket_M3+",
+        "importance": 0.11008772613009564,
+        "signed_weight": -0.11008772613009564
       },
       {
-        "feature": "cat__score_level_D",
-        "importance": 0.030345807695499324,
-        "signed_weight": 0.030345807695499324
+        "feature": "cat__occupation_type_自由职业",
+        "importance": 0.0980292736995843,
+        "signed_weight": -0.0980292736995843
       },
       {
-        "feature": "num__loan_term",
-        "importance": 0.0240375408084166,
-        "signed_weight": 0.0240375408084166
+        "feature": "cat__age_group_46-55",
+        "importance": 0.09123932020472866,
+        "signed_weight": -0.09123932020472866
       }
     ]
   },
-  "delta_auc": -0.001653,
-  "delta_ks": 0.005464,
-  "delta_pr_auc": -0.000367,
+  "delta_auc": 0.0019,
+  "delta_ks": -0.000895,
+  "delta_pr_auc": 0.007261,
   "interpretation": "vintage_month shows artifact risk in at least one with-vintage model, but removing it leaves performance close; the synthetic data signal is weak and the baseline should be presented as a diagnostic demo."
 }
