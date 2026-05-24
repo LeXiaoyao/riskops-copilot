@@ -1,4 +1,4 @@
-"""Lightweight CLI interaction MVP for M5."""
+"""RiskOps Copilot demo CLI entry point."""
 
 from __future__ import annotations
 
@@ -62,7 +62,7 @@ class CliInputError(RuntimeError):
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="RiskOps Copilot M5 CLI interaction MVP.",
+        description="RiskOps Copilot demo CLI — M6 model lab + M7 state recovery feasibility guard (synthetic data only).",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -168,7 +168,7 @@ def _handle_summary(args: argparse.Namespace, out: TextIO) -> None:
     attribution = _as_dict(summary.get("m1_d7_attribution_summary"))
 
     _print_title(out, "RiskOps Copilot")
-    print("- 当前阶段：M5 TUI / CLI Interaction MVP", file=out)
+    print("- 当前阶段：M6/M7 RiskOps demo — model lab + state recovery feasibility guard", file=out)
     print("- 当前 demo 数据边界：synthetic data / 合成数据，不接真实数据，不接 LLM。", file=out)
     print("- anomaly 总数：{}".format(_safe_int(overview.get("anomaly_count"))), file=out)
     print("- high / medium / low：{} / {} / {}".format(

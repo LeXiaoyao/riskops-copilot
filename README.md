@@ -141,11 +141,32 @@ pytest
 - **no LLM decisioning**：不调用 LLM 做自动策略决策。
 - **no production claim**：不宣称真实上线、真实收益或真实催收自动化。
 
-## Next
+## Current
 
-- **M6-D ML Modeling Readiness / Baseline Model**：在不越过合规边界的前提下，评估是否补一个轻量 baseline model 或继续保持规则化模拟。
-- **Public demo walkthrough**：把 README、CLI、Dashboard、Business Report、Model Lab 和 ROI 串成 3-5 分钟项目演示流程。
-- **Architecture screenshots**：补充架构图、Dashboard 截图和关键输出截图占位，不生成或提交大体积图片。
+- **Synthetic RiskOps demo** with D7 any-payment ML baseline (M6 model lab)。
+- **C-score availability guard**：训练时强制 `score_date <= snapshot_date`，避免 future-leak。
+- **Leakage-safe feature engineering**：只使用截至 snapshot 当日已可观测的特征。
+- **State recovery target feasibility guard**（M7-A）：诊断 / 可行性检查，不是 production cure model。
+
+## Current Boundary
+
+- synthetic demo only，不接真实客户数据。
+- 不做真实风控决策，不发起真实催收动作。
+- 当前 trainable baseline 仍是 **D7 any-payment response**。
+- state recovery 当前是 feasibility / leakage guard，不是完整 cure baseline。
+
+## Next Technical Focus
+
+- model card：把 baseline 的目标、特征、指标、边界写成可读卡片。
+- dashboard explainability：在 Dashboard 上补可解释性入口。
+- state recovery data foundation improvement：继续夯实状态数据底座。
+- config-driven pipeline：把 pipeline 的关键参数从代码挪到配置。
+
+## Project Entry Points
+
+- **Architecture**：[docs/architecture.md](docs/architecture.md)
+- **ML Lab**：D7 any-payment baseline + leakage guard + score_date guard + vintage robustness
+- **State Recovery**：feasibility guard only, not a production cure model
 
 ## Product Baseline
 

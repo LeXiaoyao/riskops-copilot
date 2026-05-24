@@ -134,9 +134,30 @@ For public positioning, this README only describes completed demo milestones and
 
 ## Current Status
 
-> Project is at **v0.6.0 Model Lab Strategy Evaluation MVP**. It is a local synthetic demo, not a production service.
+> Project is a local synthetic demo, not a production service.
 >
-> The current model target is **D7 any-payment response**, not cure-to-current, full recovery, DPD clearance, or production-ready collection outcome modeling.
+> The current trainable baseline target is **D7 any-payment response**, not cure-to-current, full recovery, DPD clearance, or production-ready collection outcome modeling.
+
+**Current capabilities:**
+
+- Synthetic RiskOps demo with a D7 any-payment ML baseline (M6 model lab).
+- C-score availability guard: training enforces `score_date <= snapshot_date` to prevent future leakage.
+- Leakage-safe feature engineering: only features observable as of the snapshot day.
+- State recovery target feasibility guard (M7-A): diagnostic only, **not** a production cure model.
+
+**Current boundary:**
+
+- Synthetic demo only, no real customer data.
+- Not production risk decisioning, no real collection action.
+- Current trainable baseline target is **D7 any-payment response**.
+- State recovery is a feasibility / leakage guard, not a complete cure baseline.
+
+**Next technical focus:**
+
+- Model card describing target, features, metrics, and boundaries of the baseline.
+- Dashboard explainability entry points.
+- State recovery data foundation improvements.
+- Config-driven pipeline (move key parameters out of code).
 
 ---
 
@@ -175,6 +196,14 @@ Common entry points:
 - **render-dashboard**: regenerate the local static dashboard.
 - **render-report**: regenerate the Markdown / HTML business report.
 - **pytest**: run the current test suite.
+
+---
+
+## Project Entry Points
+
+- **Architecture**: [docs/architecture.md](docs/architecture.md)
+- **ML Lab**: D7 any-payment baseline + leakage guard + score_date guard + vintage robustness
+- **State Recovery**: feasibility guard only, not a production cure model
 
 ---
 
