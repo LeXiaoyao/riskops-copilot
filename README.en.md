@@ -1,6 +1,6 @@
 # RiskOps Copilot
 
-**A unified AI workbench for consumer finance risk operations: data analytics, metric attribution, risk modeling, and business reporting automation**
+**A synthetic demo for consumer finance post-loan risk operations: data analytics, metric attribution, offline strategy evaluation, and business reporting automation**
 
 English | [简体中文](README.md)
 
@@ -9,7 +9,9 @@ English | [简体中文](README.md)
 [![PRD](https://img.shields.io/badge/PRD-v6-green)](docs/prd/PRD_v6.md)
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue)](https://www.python.org/)
 
-> **RiskOps Copilot** is a local-first AI analytics workbench that productizes the repetitive **analysis, attribution, reporting, QA, and script-writing** work across consumer finance risk operations — covering origination (pre-loan), in-life (mid-loan), collections (post-loan), compliance QA, and office document automation.
+> Public demo only: this project uses synthetic data only; it contains no real customer data, produces no real collection action, sends no SMS / voice / WhatsApp messages, and is not production risk decisioning.
+>
+> **RiskOps Copilot** is a local-first analytics demo that productizes repetitive **analysis, attribution, reporting, offline strategy evaluation, and ROI estimation** work for post-loan risk operations.
 >
 > Phase 1 focuses on a **post-loan show-room**: using synthetic data to tell a full story — M1 recovery rate drops → auto-attribute to customer mix, vendor performance, line capacity, process metrics, discount policy, and complaint-prone scripts → produce HTML weekly reports, PPT outlines, and collector script suggestions.
 
@@ -20,14 +22,14 @@ English | [简体中文](README.md)
 ```
 Synthetic Data → Data Foundation (DIM/ODS/DWD/DWS/ADS + privacy grading P0-P4)
               → Metric Assets (metric dictionary + lineage + version)
-              → Engines (anomaly detection / attribution / visualization / report / QA / script)
-              → AI Agent Orchestration (main agent + risk / collection / compliance / report experts)
-              → Output Layer (TUI + HTML + Excel + PPT + Word + Feishu drafts)
+              → Engines (anomaly detection / attribution / visualization / report)
+              → Model Lab (offline strategy evaluation / ROI calculator / baseline diagnostics)
+              → Output Layer (CLI + static dashboard + Markdown / HTML reports)
 ```
 
-**What it is NOT**: not a chatbot, not generic BI, not enterprise SaaS, no real production data, no real outbound call / SMS sending.
+**What it is NOT**: not a chatbot, not generic BI, not enterprise SaaS, no real production data, no real customer data, no real outbound call / SMS sending, and no production risk decisioning.
 
-**What it IS**: a **vertical AI workbench demo** that tells a coherent business story, runs end-to-end, and produces screenshot-worthy artifacts for a portfolio. Also a personal knowledge asset for risk methodology.
+**What it IS**: a **vertical synthetic demo** that tells a coherent business story, runs end-to-end, and demonstrates risk operations methodology with local artifacts.
 
 ---
 
@@ -41,8 +43,8 @@ Synthetic Data → Data Foundation (DIM/ODS/DWD/DWS/ADS + privacy grading P0-P4)
 | **Attribution** | Six-layer decomposition (asset structure / customer mix / strategy / resource / process / compliance), Top-N contribution ranking + waterfall |
 | **Visualization** | 10 consulting-grade charts (trend / funnel / waterfall / matrix / heatmap / radar), dual themes: `dark_dashboard` + `consulting_report` |
 | **Reporting** | One command outputs HTML / Markdown / Excel / PPT outline / Word / Feishu-ready draft |
-| **Collection Copilot** | Text QA (11 dimensions + red-line scanning), compliant script recommendation, mock approval & sending with audit trail |
-| **AI Agents** | Main orchestrator + 4 expert skill modules: risk analyst / collection strategy / compliance QA / report writer |
+| **Model Lab** | Offline strategy evaluation, ROI calculator, and D7 any-payment response baseline diagnostics |
+| **Boundary Controls** | Synthetic data only, no real customer data, no collection automation, no production risk decisioning |
 
 ---
 
@@ -70,8 +72,8 @@ Synthetic Data → Data Foundation (DIM/ODS/DWD/DWS/ADS + privacy grading P0-P4)
 | [CHANGELOG](CHANGELOG.md) | Change log | Continuously updated |
 | Data Dictionary | Rendered from `metadata/*.yaml` | M1 deliverable |
 | Metric Dictionary | Rendered from `metadata/metric_dictionary.yaml` | M2 deliverable |
-| Demo Script | 5-min live demo guide | M7 deliverable |
-| Interview Pitch | Portfolio packaging | M7 deliverable |
+| Demo Script | 5-min live demo guide | Available |
+| Interview Pitch | Portfolio packaging | Available |
 
 ---
 
@@ -117,72 +119,48 @@ Full design in [PRD v6 §4.3](docs/prd/PRD_v6.md#43-工程目录结构v6-新增�
 
 ---
 
-## Roadmap
+## Milestone Status
 
-| Phase | Theme | Status |
-|---|---|---|
-| **Phase 1** | Post-loan show-room: M1 recovery attribution + Collection Copilot + Office automation | In progress |
-| Phase 2 | Pre-loan + in-life risk copilot (application funnel, vintage, scorecard, limit management) | Planned |
-| Phase 3 | Model & strategy closed loop (Champion/Challenger, Playbook) | Planned |
-| Phase 4 | ASR & QA enhancement | Planned |
-| Phase 5 | Office automation enhancement (Feishu API, knowledge base) | Planned |
-| Phase 6 | Remote data sources & enterprise-ready foundation | Planned |
+For public positioning, this README only describes completed demo milestones and does not commit to future roadmap delivery.
 
-### Phase 1 Milestones
-
-- **M0 Kickoff**: PRD v6 frozen, tech stack locked, scaffolding ← *current*
-- **M1 Data Foundation**: synthetic data + 5-layer warehouse + metadata YAML
-- **M2 Metric Assets**: metric dictionary v1.0 + calculation engine
-- **M3 Core Engines**: anomaly detection + attribution + visualization
-- **M4 Report & TUI**: 5-format reports + TUI main flow
-- **M5 Collection Copilot**: QA + script + approval
-- **M6 Agent Integration**: orchestrator + 4 experts
-- **M7 Demo Packaging**: README + screenshots + demo video
-
-See [PRD v6 §10 Phase 1 Delivery Plan](docs/prd/PRD_v6.md#10-第一期交付计划).
+- **v0.1.0 Data Foundation**: synthetic data, layered warehouse layout, data generation, and privacy boundary.
+- **v0.2.0 Metric Asset Layer**: post-loan metric dictionary, metric lineage, and calculator registry.
+- **v0.3.0 Anomaly Detection and Attribution**: anomaly detection and M1 D7 recovery attribution summary.
+- **v0.4.0 Dashboard and Reports**: static dashboard and business report renderers.
+- **v0.5.0 CLI Interaction MVP**: unified CLI entrypoint for summary, anomalies, drivers, outputs, dashboard, and reports.
+- **v0.6.0 Model Lab Strategy Evaluation MVP**: offline strategy evaluation, ROI calculator, and model-lab CLI integration.
 
 ---
 
 ## Current Status
 
-> Project is at **M0 Kickoff** stage: master PRD (v6), scaffolding, and repository initialized. **No runnable release yet.**
+> Project is at **v0.6.0 Model Lab Strategy Evaluation MVP**. It is a local synthetic demo, not a production service.
 >
-> Each milestone completion will publish a corresponding version (0.1.0 → 1.0.0).
+> The current model target is **D7 any-payment response**, not cure-to-current, full recovery, DPD clearance, or production-ready collection outcome modeling.
 
 ---
 
 ## Quick Start
 
-> Phase 1 code is not yet implemented. Below is the **target experience preview**, available after M4.
+Run the main local demo commands:
 
 ```bash
-# Clone
-git clone https://github.com/LeXiaoyao/riskops-copilot.git
-cd riskops-copilot
-
-# Install deps (after M0)
-uv sync   # or poetry install
-
-# Generate synthetic data (after M1)
-python scripts/generate_synthetic_data.py --months 18 --scale medium
-
-# Launch TUI (after M4)
-riskops
+python scripts/riskops_cli.py summary
+python scripts/riskops_cli.py drivers
+python scripts/riskops_cli.py model-lab
+python scripts/riskops_cli.py roi
+python scripts/riskops_cli.py render-model-lab
+pytest
 ```
 
-Expected demo flow:
+Common entry points:
 
-```
-> /load synthetic_data/
-> /dashboard postloan         # operations dashboard
-> /anomaly M1_D7_recovery     # anomaly detection
-> /explain M1_D7_recovery     # multi-dim attribution
-> /vendor review              # vendor review
-> /roi reduction_policy_A     # discount ROI
-> /qc call_001.txt            # collection QA
-> /script case_10086          # script recommendation
-> /report weekly --format html,xlsx,ppt-outline
-```
+- **summary**: project status, anomaly count, data boundary, and common commands.
+- **drivers**: top M1 D7 recovery drivers with interpretation boundaries.
+- **model-lab**: M6 strategy evaluation / ROI overview and demo boundary.
+- **roi**: strategy scenario cost-benefit and ROI summary.
+- **render-model-lab**: regenerate strategy evaluation and ROI outputs.
+- **pytest**: run the current test suite.
 
 ---
 

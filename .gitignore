@@ -112,9 +112,19 @@ logs/
 # ---------- AI / Claude Code 本地状态 ----------
 .claude/
 .aider*
+.codex/
+
+# ---------- Private notes / local planning ----------
+private_notes/
+notes_private/
+RiskOps_Private_Notes/
+*_private_notes/
+*.private.md
 
 # ---------- 其他临时文件 ----------
 *.bak
 *.tmp
 .cache/
+.ruff_cache/
+.mypy_cache/
 tmp/
