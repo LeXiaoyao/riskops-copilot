@@ -33,63 +33,60 @@ Synthetic Data → Data Foundation (DIM/ODS/DWD/DWS/ADS + privacy grading P0-P4)
 
 ---
 
-## Phase 1 Capabilities
+## Current Demo Capabilities
+
+The table below lists what the public demo actually ships today. Items beyond this scope (collection QA, script recommendation, TUI console, Feishu draft, PPT / Word report, etc.) are described in PRD v6 but are **planned, not delivered**.
 
 | Module | Capabilities |
 |---|---|
-| **Data Foundation** | 18 months of synthetic post-loan data, 5-layer warehouse (DIM/ODS/DWD/DWS/ADS), complete primary-key relationships, P0-P4 privacy grading |
-| **Metric Assets** | 23+ core post-loan metrics across result / process / compliance / ROI domains, YAML as single source of truth, with owner / lineage / version |
-| **Anomaly Detection** | Statistical rules detecting trend / sudden-change / structural / process anomalies, with drill-down suggestions |
-| **Attribution** | Six-layer decomposition (asset structure / customer mix / strategy / resource / process / compliance), Top-N contribution ranking + waterfall |
-| **Visualization** | 10 consulting-grade charts (trend / funnel / waterfall / matrix / heatmap / radar), dual themes: `dark_dashboard` + `consulting_report` |
-| **Reporting** | One command outputs HTML / Markdown / Excel / PPT outline / Word / Feishu-ready draft |
-| **Model Lab** | Offline strategy evaluation, ROI calculator, and D7 any-payment response baseline diagnostics |
-| **Boundary Controls** | Synthetic data only, no real customer data, no collection automation, no production risk decisioning |
+| **Data Foundation** | 18 months of synthetic post-loan data, 5-layer warehouse (DIM / ODS / DWD / DWS / ADS), primary-key relationships, P0–P4 privacy grading |
+| **Metric Assets** | 26 post-loan metrics across result / process / compliance / ROI domains; `metadata/metric_dictionary.yaml` as single source of truth; calculator registry keyed by `metric_code` |
+| **Anomaly Detection** | Rule-based detection over M1 D7 recovery, AI-call coverage, capacity pressure, discount usage, PTP fulfillment, and complaint risk |
+| **Attribution** | Top-N driver decomposition for M1 D7 recovery decline across channel / region / customer segment / collection resource / process evidence |
+| **Dashboard & Report** | Local static dashboard (`outputs/dashboard/dashboard.html`) and Markdown / HTML business report (`outputs/reports/m4_business_report.{md,html}`) |
+| **Model Lab** | Offline strategy evaluation (5 scenarios), ROI calculator (demo cost assumptions), and a D7 any-payment response baseline with leakage-safe features and `score_date` guard |
+| **State Recovery (M7-A)** | Feasibility / leakage guard only — diagnostic, **not** a production cure baseline |
+| **Boundary Controls** | Synthetic data only, no real customer data, no collection automation, no SMS / voice / WhatsApp, no LLM decisioning, not production risk decisioning |
 
 ---
 
-## Target Users
+## Who This Demo Is Aimed At
 
-| Role | Pain Point | What RiskOps Copilot Offers |
+| Role | Pain Point | What This Demo Shows |
 |---|---|---|
-| Risk strategy analyst | Slow attribution, endless report writing | One-click attribution + report draft |
-| Data / business analyst | Repetitive SQL & pivot tables | Auto-computed metrics + Excel attachments |
-| Post-loan manager | Hard to see the big picture & vendor issues | Operations dashboard + vendor traffic-light |
-| Front-line collector | Doesn't know how to talk to customer, fears compliance violations | Case summary + compliant script suggestion |
-| Compliance / QA | Low QA coverage, missed red-line phrases | Text QA + red-line scanning |
-| Product manager | Repeated PRD / deck writing | Document copilot |
-| Business supervisor | No closed-loop on anomalies | Supervision checklist + remediation tracking |
+| Risk strategy analyst | Slow attribution, scattered metric definitions | One CLI from metrics → anomalies → drivers → business report |
+| Data / business analyst | Repetitive SQL & pivot work for post-loan KPIs | Local warehouse + metric registry + rendered reports |
+| Post-loan manager | Hard to see the big picture of M1 D7 recovery | Static dashboard + structured anomaly / driver narrative |
+| Hiring reviewer | Wants to see how the author thinks about a vertical domain | A coherent, end-to-end synthetic story with clear boundaries |
+
+Roles around front-line collectors, compliance QA, and document copilots appear in PRD v6 but are **not in scope** for the current public demo.
 
 ---
 
 ## Documentation
 
-| Document | Purpose | Status |
-|---|---|---|
-| [PRD v6](docs/prd/PRD_v6.md) | **Master requirements** (must-read) | Skeleton complete, content backfilling |
-| [PRD v6 English](docs/prd/en/PRD_v6.en.md) | English version | In progress |
-| [PRD History](docs/prd/history/) | v1–v5 evolution archive | Archived |
-| [CHANGELOG](CHANGELOG.md) | Change log | Continuously updated |
-| Data Dictionary | Rendered from `metadata/*.yaml` | M1 deliverable |
-| Metric Dictionary | Rendered from `metadata/metric_dictionary.yaml` | M2 deliverable |
-| Demo Script | 5-min live demo guide | Available |
-| Interview Pitch | Portfolio packaging | Available |
+| Document | Purpose |
+|---|---|
+| [README.md](README.md) | Chinese entry point (primary narrative) |
+| [docs/architecture.md](docs/architecture.md) | High-level architecture and layer breakdown |
+| [PRD v6](docs/prd/PRD_v6.md) | Internal master requirements (includes planned-but-not-delivered scope) |
+| [PRD v6 English](docs/prd/en/PRD_v6.en.md) | English mirror of PRD v6 (partial) |
+| [PRD History](docs/prd/history/) | v1–v5 archive — historical context only |
+| [CHANGELOG](CHANGELOG.md) | Release log, M1–M7 milestones |
+| [docs/internal/](docs/internal/) | Engineering notes — not the public demo entry point |
 
 ---
 
-## Tech Stack
+## Tech Stack (mapped to modules)
 
-- **Language**: Python 3.11+
-- **Package manager**: uv or poetry
-- **Data foundation**: DuckDB (columnar analytics) + Parquet / CSV
-- **TUI**: Textual (Rich family)
-- **Visualization**: Plotly (HTML reports) + ECharts (alternate)
-- **Report engines**: Jinja2 + Plotly + openpyxl + python-pptx + python-docx
-- **LLM**: Claude (Anthropic API) primary, OpenAI as fallback
-- **Config**: YAML
-- **Testing**: pytest
+Only components that the current public demo actually uses. Items listed in PRD v6 §4.2 but not yet wired in (TUI / Textual, ECharts, openpyxl, python-pptx, python-docx, LLM orchestration) are out of scope here.
 
-See [PRD v6 §4.2 Tech Stack Decisions](docs/prd/PRD_v6.md#42-技术栈选型v6-新增固定下来不再漂移).
+- **pandas / DuckDB / Parquet** — synthetic data generation, 5-layer warehouse, ADS wide tables.
+- **PyYAML** — single source of truth under `metadata/` (tables, columns, metrics, privacy grading).
+- **scikit-learn** — D7 any-payment baseline and leakage-safe feature pipeline in Model Lab.
+- **Jinja2 + static HTML + Plotly** — dashboard and business report rendering.
+- **CLI (`scripts/riskops_cli.py`)** — the only demo entry point; wires summary / anomalies / drivers / model-lab / render-* commands.
+- **pytest** — data quality, cross-layer consistency, privacy boundary, and CLI regression checks.
 
 ---
 
@@ -97,25 +94,24 @@ See [PRD v6 §4.2 Tech Stack Decisions](docs/prd/PRD_v6.md#42-技术栈选型v6-
 
 ```
 riskops-copilot/
-├── riskops/              # Main code (CLI / data / metrics / engines / agents / TUI)
-├── synthetic_data/       # Synthetic data (DIM/ODS/DWD/DWS/ADS 5 layers)
+├── riskops/              # Library code (data / metrics / engines / model lab)
+├── scripts/              # CLI entry point + one-off generation / rendering scripts
+├── synthetic_data/       # Synthetic data (DIM / ODS / DWD / DWS / ADS, 5 layers)
 ├── metadata/             # Single source of truth (tables / columns / metrics / lineage / privacy)
 ├── schemas/              # CREATE TABLE SQL
-├── templates/            # Report templates (HTML/PPT/Word/Excel)
-├── configs/              # Business configs (compliance rules / thresholds / attribution rules)
-├── docs/                 # Documentation (PRD / data dict / decisions / demo)
-│   ├── prd/
-│   │   ├── PRD_v6.md
-│   │   ├── history/      # v1-v5 archive
-│   │   └── en/           # English versions
+├── templates/            # Report templates (HTML / Markdown)
+├── configs/              # Business configs (thresholds / attribution rules)
+├── outputs/              # Rendered dashboard, reports, and model-lab artifacts
+├── docs/
+│   ├── prd/              # PRD v6 + en/ + history/ (v1–v5 archive)
 │   ├── decisions/        # ADRs
+│   ├── internal/         # Engineering notes (not public demo entry)
 │   └── screenshots/      # README screenshots
-├── reports/ exports/     # Generated artifacts (gitignored)
-├── tests/                # Data quality & unit tests
-└── scripts/              # One-off scripts (data gen / warehouse build / doc render)
+├── tests/                # Data quality & regression tests
+└── reports/ exports/     # Generated artifacts (gitignored)
 ```
 
-Full design in [PRD v6 §4.3](docs/prd/PRD_v6.md#43-工程目录结构v6-新增一次定型).
+Full design in [PRD v6 §4.3](docs/prd/PRD_v6.md#43-工程目录结构v6-新增一次定型). Note that the PRD reflects the full Phase 1 plan; the directory above reflects what the public demo currently ships.
 
 ---
 

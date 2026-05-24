@@ -4,57 +4,96 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
-> 项目当前处于**预发布**阶段（Phase 1 开发中），版本号尚未进入 `0.x` 正式发布序列。在此之前，重要变更以**文档版本（PRD vX）**和**里程碑（M0-M7）**为锚点。
+> 项目当前是一个本地可运行的合成数据 demo / portfolio repo，不是生产风控服务。版本号在 `0.x` 序列内推进，里程碑（M1–M7）作为内部锚点。
 
 ---
 
 ## [Unreleased]
 
 ### Added
-- 项目初始化：仓库结构、目录骨架、文档体系搭建中。
-- PRD v6 全部章节补强完成，业务深度与技术细节均已落地。
+- M7-A State Recovery 目标可行性 guard：在 leakage / 时间窗 / 状态可观测性三个维度做诊断性检查，**不是 production cure baseline**。
+- 公开 demo 导航与 architecture 文档梳理：README、`docs/architecture.md`、CLI summary、Model Lab 文案在 demo boundary 上的措辞统一。
+
+### Notes
+- 当前 trainable baseline 仍是 **D7 any-payment response**；state recovery 仅作为 feasibility / leakage guard 存在。
+- 仓库不含真实客户数据；不做真实风控决策；不发送 SMS / voice / WhatsApp；不调用 LLM 做策略决策。
 
 ---
 
-## 里程碑历史
+## [0.6.0] — M6 Model Lab Strategy Evaluation MVP
 
-### 2026-05-15 — PRD v6 全章节补强（M0 中段）
+### Added
+- M6-A 策略情景 schema 与 5 个 demo scenario。
+- M6-B 离线策略评估器（baseline / scenario / delta / caveats）。
+- M6-C ROI Calculator：基于 demo cost assumptions 估算 cost / benefit / ROI / payback。
+- Model Lab CLI 入口：`scenarios` / `strategy-eval` / `roi` / `model-lab` / `render-model-lab`。
+- D7 any-payment response baseline（leakage-safe feature engineering）。
+- C-score `score_date` availability guard：训练时强制 `score_date <= snapshot_date`，避免 future-leak。
+- 合成数据过程行为校准（process calibration），用于支持 ML baseline 的可读性而非真实建模。
 
-**文档（PRD v6 中文版从 824 行 → 1642 行）**
-- **§5 数据底座**：补全五层（DIM 10 / ODS 14 / DWD 5 / DWS 8 / ADS 6）共 43 张表的用途、粒度、主键、关键字段摘要；隐私分级 P0–P4 加密/哈希/脱敏约定；LLM 上下文准入规则；合成数据时间线/规模/异常埋点清单；数据质量 8 条硬规则 + 3 条软规则。
-- **§6 指标资产**：Phase 1 共 26 个指标（贷后结果 8 + 催收过程 10 + 合规质检 5 + 减免 ROI 3）全部列出 metric_code、中文名、公式、粒度、优先级；占位 Phase 2+ 共 13 个；指标维护机制与 CI 校验规则。
-- **§7 引擎能力**：六个引擎（异常检测 / 归因 / 可视化 / 报告 / 催收质检 / 话术推荐）全部包含目标 / 输入 / 输出 / 算法 / 伪代码 / 配置 / 验收 / 示例。
-- **§11 路线图**：Phase 1-6 全展开，每个 Phase 含目标 / 范围 / 关键功能 / 典型问题 / 退出标准；新增 §11.7 跨 Phase 持续工作。
-- **§14.4 待办**：标记已完成的 T-XX，按 M0/M1/M2/M3-7 阶段重新组织。
-- 英文版 PRD v6 同步补强（关键表格全部翻译）。
-
-### 2026-05-15 — 项目启动 / M0 初始化
-
-**文档**
-- 完成 PRD v6 骨架：在 v5 基础上重组结构，新增 TL;DR、范围矩阵、技术栈选型、AI Agent 设计规范、里程碑、风险登记、决策日志（ADR）等关键章节。
-- 归档 PRD v1–v5 历史版本到 `docs/prd/history/`。
-- 中英文双语 README 落地，中文为主、英文为辅。
-- 确立 MIT 开源协议。
-
-**工程**
-- 创建项目目录骨架（按 PRD v6 §4.3 设计）：`riskops/`（代码）、`synthetic_data/`、`metadata/`、`schemas/`、`templates/`、`configs/`、`docs/`、`tests/`、`scripts/`。
-- 初始化 Git 仓库并推送至 GitHub。
-- 配置 `.gitignore`（数据/产物/敏感字段三层防护）。
-
-**决策**
-- ADR-001 ~ ADR-010：技术栈、Agent 编排方式、隐私边界、Phase 范围等关键决策固化。
+### Boundary
+- baseline 目标限定为 **D7 any-payment response**，未承诺 cure-to-current、全额回收或生产催收结果建模。
+- ROI 与收益数字来自 demo cost assumptions，不代表真实财务结果。
 
 ---
 
-## 版本规划占位
+## [0.5.0] — M5 CLI / Demo Entry
 
-| 版本号 | 对应里程碑 | 预计内容 |
-|---|---|---|
-| 0.1.0 | M1 数据底座 | 合成数据生成器 + 五层数仓 + metadata yaml |
-| 0.2.0 | M2 指标资产 | 指标字典 v1.0 + 计算引擎 |
-| 0.3.0 | M3 引擎核心 | 异常检测 + 归因 + 可视化 |
-| 0.4.0 | M4 报告与 TUI | 报告引擎 + TUI 主流程 |
-| 0.5.0 | M5 催收 Copilot | 质检 + 话术 + 审批 |
-| 0.6.0 | M6 Agent 整合 | Orchestrator + 专家 Agent |
-| 0.7.0 | M7 演示包装 | README 完善 + 演示资产 |
-| 1.0.0 | Phase 1 收官 | 首个可发布版本 |
+### Added
+- 统一 CLI 入口 `scripts/riskops_cli.py`：`summary` / `anomalies` / `drivers` / `outputs` / `render-dashboard` / `render-report`。
+- CLI 文案与 README、Dashboard、Business Report 边界声明保持一致。
+
+### Notes
+- 本阶段为 CLI 串联式 demo entry，**未引入 TUI / 交互式终端 UI**。Textual / Rich 等 TUI 框架仍仅在历史 PRD 中作为远期方向出现，不在公开 demo 范围内。
+
+---
+
+## [0.4.0] — M4 Dashboard 与 Business Report
+
+### Added
+- 本地静态 Dashboard：`outputs/dashboard/dashboard.html`。
+- M4 Business Report renderer：Markdown + HTML 双格式（`outputs/reports/m4_business_report.{md,html}`）。
+- 报告内容由 M3 异常 / 归因 / 过程证据驱动，结论先行。
+
+---
+
+## [0.3.0] — M3 异常检测与归因
+
+### Added
+- 异常检测：M1 D7 回收率、AI 外呼覆盖、产能压力、减免使用、PTP 履约、投诉风险等信号的规则化检测。
+- 归因引擎：围绕渠道、区域、客群分层、作业资源与过程证据，对 M1 D7 回收率下降做 Top-N 解释。
+- 结构化 M3 summary 输出，供 M4 报告渲染消费。
+
+---
+
+## [0.2.0] — M2 指标资产
+
+### Added
+- 26 个贷后指标字典（结果 / 过程 / 合规 / ROI 四域）。
+- Calculator registry：`metric_code → Callable`，按业务域聚合，函数名严格等于 `metric_code`。
+- ADS 字段对齐与 metric lineage 落档。
+
+---
+
+## [0.1.0] — M1 数据底座
+
+### Added
+- 18 个月合成贷后数据生成器。
+- 五层数仓骨架（DIM / ODS / DWD / DWS / ADS）。
+- 主键关系、隐私分级 P0–P4、数据质量硬规则与软规则。
+
+---
+
+## 2026-05-15 — M0 项目启动
+
+### Added
+- PRD v6 骨架：在 v5 基础上重组结构，新增 TL;DR、范围矩阵、技术栈选型、隐私分级、里程碑、风险登记、决策日志（ADR）等关键章节。
+- PRD v1–v5 归档至 `docs/prd/history/`。
+- 中英文双语 README、MIT 协议、项目目录骨架、`.gitignore`。
+- ADR-001 ~ ADR-010：技术栈、隐私边界、Phase 范围等关键决策固化。
+
+---
+
+## 关于未交付能力
+
+PRD v6 描述了 Phase 1 完整范围（含催收质检、话术推荐、TUI 控制台、飞书草稿、PPT / Word 报告等）。当前公开 demo **仅交付** README 顶部 Milestone Status 与本 CHANGELOG 中列出的项；PRD 中其余条目视为 **planned but not delivered**，不构成当前公开仓库的能力承诺。

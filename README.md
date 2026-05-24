@@ -162,6 +162,19 @@ pytest
 - state recovery data foundation improvement：继续夯实状态数据底座。
 - config-driven pipeline：把 pipeline 的关键参数从代码挪到配置。
 
+## Tech Stack（按模块对应）
+
+只列当前公开 demo 实际使用的组件，不写远期方向。
+
+- **pandas / DuckDB / Parquet**：合成数据生成、五层数仓与 ADS 宽表。
+- **PyYAML**：`metadata/` 单一权威源（表、列、指标、隐私分级）。
+- **scikit-learn**：Model Lab D7 any-payment baseline 与 leakage-safe 特征流程。
+- **Jinja2 + static HTML / Plotly**：Dashboard 与 Business Report 渲染。
+- **CLI（`scripts/riskops_cli.py`）**：demo 唯一入口，串联 summary / anomalies / drivers / model-lab / render-* 命令。
+- **pytest**：数据质量校验、跨层一致性、隐私边界与 CLI 回归。
+
+PRD v6 中提到的 TUI（Textual）、催收质检、话术推荐、飞书草稿、PPT / Word 报告等属于 **planned but not delivered**，不在当前公开 demo 范围。
+
 ## Project Entry Points
 
 - **Architecture**：[docs/architecture.md](docs/architecture.md)
