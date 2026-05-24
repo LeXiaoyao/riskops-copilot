@@ -203,6 +203,12 @@ Common entry points:
 
 ---
 
+## Preview / Screenshots
+
+For screenshots and visual walkthrough, see [docs/screenshots/README.md](docs/screenshots/README.md) — it lists the recommended CLI summary, Model Lab, and Dashboard captures. The Mermaid diagram in `docs/architecture.md` renders natively on GitHub.
+
+---
+
 ## Design Principles
 
 1. **Business-first**: Lock metric definitions, attribution framework, and compliance rules **before** writing code.

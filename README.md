@@ -89,6 +89,10 @@ pytest
 - **ROI Summary**：`outputs/model_lab/roi_summary.md`
   - 基于 demo cost assumptions 的成本、收益、ROI 和 payback 估算。
 
+## Preview / 截图
+
+截图与视觉导览见 [docs/screenshots/README.md](docs/screenshots/README.md)（CLI summary、Model Lab、Dashboard 推荐截图清单）。`docs/architecture.md` 内的 Mermaid 图会在 GitHub 上原生渲染。
+
 ## Milestone Status
 
 为避免终端截断，本节不用 Markdown 表格，改用分组列表呈现。
