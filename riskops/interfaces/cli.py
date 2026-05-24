@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any, TextIO
 
 from riskops.engines.dashboard import DashboardInputError, write_dashboard
+from riskops.engines.model_lab.ml_readiness import assess_ml_readiness, write_ml_readiness_outputs
 from riskops.engines.model_lab.roi_calculator import calculate_roi_results, load_strategy_eval_results, write_roi_outputs
 from riskops.engines.model_lab.scenario_schema import (
     load_strategy_scenarios,
@@ -28,6 +30,11 @@ DEFAULT_STRATEGY_EVAL_JSON = ROOT / "outputs" / "model_lab" / "strategy_eval_res
 DEFAULT_STRATEGY_EVAL_MD = ROOT / "outputs" / "model_lab" / "strategy_eval_summary.md"
 DEFAULT_ROI_JSON = ROOT / "outputs" / "model_lab" / "roi_results.json"
 DEFAULT_ROI_MD = ROOT / "outputs" / "model_lab" / "roi_summary.md"
+DEFAULT_SYNTHETIC_DATA = ROOT / "synthetic_data"
+DEFAULT_ML_READINESS_JSON = ROOT / "outputs" / "model_lab" / "ml_baseline" / "readiness.json"
+DEFAULT_ML_READINESS_MD = ROOT / "docs" / "m6_ml_readiness.md"
+DEFAULT_ML_BASELINE_DIR = ROOT / "outputs" / "model_lab" / "ml_baseline"
+RUN_ML_BASELINE = ROOT / "scripts" / "run_ml_baseline.py"
 
 OUTPUT_PATHS = [
     DEFAULT_DASHBOARD,
@@ -39,6 +46,9 @@ OUTPUT_PATHS = [
     DEFAULT_STRATEGY_EVAL_MD,
     DEFAULT_ROI_JSON,
     DEFAULT_ROI_MD,
+    DEFAULT_ML_READINESS_JSON,
+    DEFAULT_ML_BASELINE_DIR / "metrics.json",
+    DEFAULT_ML_BASELINE_DIR / "feature_importance.csv",
 ]
 
 COMMON_COMMANDS = [
@@ -50,6 +60,8 @@ COMMON_COMMANDS = [
     "python scripts/riskops_cli.py strategy-eval",
     "python scripts/riskops_cli.py roi",
     "python scripts/riskops_cli.py model-lab",
+    "python scripts/riskops_cli.py ml-readiness",
+    "python scripts/riskops_cli.py ml-baseline",
     "python scripts/riskops_cli.py render-model-lab",
     "python scripts/riskops_cli.py render-dashboard",
     "python scripts/riskops_cli.py render-report",
@@ -98,6 +110,22 @@ def build_parser() -> argparse.ArgumentParser:
     model_lab.add_argument("--strategy-eval", type=Path, default=DEFAULT_STRATEGY_EVAL_JSON)
     model_lab.add_argument("--roi", type=Path, default=DEFAULT_ROI_JSON)
     model_lab.set_defaults(handler=_handle_model_lab)
+
+    ml_readiness = subparsers.add_parser("ml-readiness", help="Assess M6-D ML target readiness.")
+    ml_readiness.add_argument("--data-dir", type=Path, default=DEFAULT_SYNTHETIC_DATA)
+    ml_readiness.add_argument("--output-json", type=Path, default=DEFAULT_ML_READINESS_JSON)
+    ml_readiness.add_argument("--output-md", type=Path, default=DEFAULT_ML_READINESS_MD)
+    ml_readiness.set_defaults(handler=_handle_ml_readiness)
+
+    ml_baseline = subparsers.add_parser("ml-baseline", help="Run M6-D leakage-safe ML baseline.")
+    ml_baseline.add_argument("--data-dir", type=Path, default=DEFAULT_SYNTHETIC_DATA)
+    ml_baseline.add_argument("--output-dir", type=Path, default=DEFAULT_ML_BASELINE_DIR)
+    ml_baseline.add_argument("--target", choices=["any_payment", "state_recovery"], default="any_payment")
+    ml_baseline.add_argument("--model", choices=["logistic", "random_forest", "both"], default="both")
+    ml_baseline.add_argument("--test-size", type=float, default=0.25)
+    ml_baseline.add_argument("--random-seed", type=int, default=20260521)
+    ml_baseline.add_argument("--exclude-vintage-month", action="store_true")
+    ml_baseline.set_defaults(handler=_handle_ml_baseline)
 
     render_model_lab = subparsers.add_parser("render-model-lab", help="Render M6 strategy eval and ROI outputs.")
     render_model_lab.add_argument("--scenarios", type=Path, default=DEFAULT_STRATEGY_SCENARIOS)
@@ -350,6 +378,52 @@ def _handle_model_lab(args: argparse.Namespace, out: TextIO) -> None:
     print("- no real collection action", file=out)
     print("- no SMS / voice / WhatsApp", file=out)
     print("- no LLM decisioning", file=out)
+
+
+def _handle_ml_readiness(args: argparse.Namespace, out: TextIO) -> None:
+    try:
+        readiness = assess_ml_readiness(args.data_dir)
+        paths = write_ml_readiness_outputs(readiness, args.output_json, args.output_md)
+    except (FileNotFoundError, ValueError) as exc:
+        raise CliInputError(exc) from exc
+
+    _print_title(out, "M6-D ML Readiness")
+    print(f"- recommended target：{readiness['recommended_target']}", file=out)
+    print(f"- reason：{readiness['recommendation_reason']}", file=out)
+    print(f"- readiness json：{_display_path(Path(paths['readiness_json']))}", file=out)
+    print(f"- readiness report：{_display_path(Path(paths['readiness_report']))}", file=out)
+    print("- synthetic data only", file=out)
+    print("- no real customer data", file=out)
+    print("- no PII in model features", file=out)
+    print("- no automated decisioning", file=out)
+    print("PASS ML readiness", file=out)
+
+
+def _handle_ml_baseline(args: argparse.Namespace, out: TextIO) -> None:
+    command = [
+        sys.executable,
+        str(RUN_ML_BASELINE),
+        "--data-dir",
+        str(args.data_dir),
+        "--output-dir",
+        str(args.output_dir),
+        "--target",
+        args.target,
+        "--model",
+        args.model,
+        "--test-size",
+        str(args.test_size),
+        "--random-seed",
+        str(args.random_seed),
+    ]
+    if args.exclude_vintage_month:
+        command.append("--exclude-vintage-month")
+    result = subprocess.run(command, capture_output=True, text=True, check=False)
+    if result.stdout:
+        print(result.stdout.rstrip(), file=out)
+    if result.returncode != 0:
+        detail = result.stderr.strip() or result.stdout.strip() or "unknown ML baseline failure"
+        raise CliInputError(detail)
 
 
 def _handle_render_model_lab(args: argparse.Namespace, out: TextIO) -> None:

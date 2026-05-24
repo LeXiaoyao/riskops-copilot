@@ -133,19 +133,25 @@ def write_ml_outputs(
     path = Path(output_dir)
     path.mkdir(parents=True, exist_ok=True)
     metrics_path = path / "model_metrics.json"
+    metrics_alias_path = path / "metrics.json"
     importance_path = path / "feature_importance.csv"
     lift_path = path / "lift_table.csv"
     report_path = path / "ml_baseline_report.md"
+    readme_path = path / "README.md"
 
     metrics_path.write_text(json.dumps(metrics, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    metrics_alias_path.write_text(json.dumps(metrics, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     feature_importance.to_csv(importance_path, index=False)
     lift_table.to_csv(lift_path, index=False)
     report_path.write_text(report_markdown, encoding="utf-8")
+    readme_path.write_text(_render_output_readme(metrics), encoding="utf-8")
     return {
         "model_metrics": str(metrics_path),
+        "metrics": str(metrics_alias_path),
         "feature_importance": str(importance_path),
         "lift_table": str(lift_path),
         "report": str(report_path),
+        "readme": str(readme_path),
     }
 
 
@@ -161,6 +167,49 @@ def write_robustness_outputs(output_dir: str | Path, robustness_payload: dict[st
         "robustness_check": str(json_path),
         "robustness_report": str(report_path),
     }
+
+
+def _render_output_readme(metrics: dict[str, Any]) -> str:
+    dataset_summary = metrics.get("dataset_summary", {})
+    train_test_split = metrics.get("train_test_split", {})
+    leakage_guard = metrics.get("leakage_guard_summary", {})
+    lines = [
+        "# M6-D ML Baseline Outputs",
+        "",
+        "## Demo Boundary",
+        "",
+        "- synthetic data only",
+        "- no real customer data",
+        "- no PII in model features",
+        "- no production model claim",
+        "- no automated financial or collection decisioning",
+        "",
+        "## Files",
+        "",
+        "- **metrics.json**：compact machine-readable metrics for CLI and briefing.",
+        "- **model_metrics.json**：backward-compatible full metrics payload.",
+        "- **feature_importance.csv**：model feature ranking.",
+        "- **lift_table.csv**：decile lift diagnostics.",
+        "- **ml_baseline_report.md**：human-readable diagnostic report.",
+        "- **robustness_check.json / .md**：vintage-month artifact robustness check.",
+        "",
+        "## Key Metrics",
+        "",
+        f"- **row_count**：{metrics.get('row_count', dataset_summary.get('sample_count', 0))}",
+        f"- **positive_rate**：{metrics.get('positive_rate', dataset_summary.get('positive_rate', 0.0)):.6f}",
+        f"- **train_test_split**：test_size={train_test_split.get('test_size', metrics.get('test_size', 0.0))}, random_seed={train_test_split.get('random_seed', metrics.get('random_seed', ''))}",
+        f"- **AUC**：{metrics.get('auc', metrics.get('metrics', {}).get('auc', 0.0)):.6f}",
+        f"- **KS**：{metrics.get('ks', metrics.get('metrics', {}).get('ks', 0.0)):.6f}",
+        f"- **top_decile_capture_rate**：{metrics.get('top_decile_capture_rate', 0.0):.6f}",
+        "",
+        "## Leakage Guard Summary",
+        "",
+        f"- **pii_features_blocked**：{leakage_guard.get('pii_features_blocked', True)}",
+        f"- **outcome_features_blocked**：{leakage_guard.get('outcome_features_blocked', True)}",
+        f"- **score_date_guard**：{leakage_guard.get('score_date_guard', dataset_summary.get('score_date_guard', 'not_recorded'))}",
+        "",
+    ]
+    return "\n".join(lines)
 
 
 def build_vintage_robustness_payload(with_vintage: dict[str, Any], without_vintage: dict[str, Any]) -> dict[str, Any]:

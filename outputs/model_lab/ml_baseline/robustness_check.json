@@ -23,10 +23,16 @@
       "feature_count": 39,
       "exclude_vintage_month": false,
       "excluded_time_features": [],
+      "target": "any_payment",
       "target_column": "is_recovered_d7",
       "target_semantic_name": "d7_any_payment_response",
       "target_definition": "1 if repaid_amount_d7 > 0 else 0",
       "target_boundary": "Legacy demo target name; positive means any D7 payment response, not full cure, DPD cleared, or complete recovery.",
+      "evaluation_only_fields": [
+        "repaid_amount_d7",
+        "recovery_rate_d7"
+      ],
+      "any_payment_positive_rate": 0.2749333333333333,
       "score_date_guard": "latest_score_on_or_before_observation_date_with_missing_impute_fallback",
       "score_date_fallback_count": 27493,
       "score_date_missing_count": 27493,
@@ -173,10 +179,16 @@
         "case_create_date",
         "case_create_time"
       ],
+      "target": "any_payment",
       "target_column": "is_recovered_d7",
       "target_semantic_name": "d7_any_payment_response",
       "target_definition": "1 if repaid_amount_d7 > 0 else 0",
       "target_boundary": "Legacy demo target name; positive means any D7 payment response, not full cure, DPD cleared, or complete recovery.",
+      "evaluation_only_fields": [
+        "repaid_amount_d7",
+        "recovery_rate_d7"
+      ],
+      "any_payment_positive_rate": 0.2749333333333333,
       "score_date_guard": "latest_score_on_or_before_observation_date_with_missing_impute_fallback",
       "score_date_fallback_count": 27493,
       "score_date_missing_count": 27493,

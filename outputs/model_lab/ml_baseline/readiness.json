@@ -1,0 +1,91 @@
+{
+  "generated_at": "2026-05-24T15:21:15+00:00",
+  "data_boundary": "synthetic_data_only",
+  "recommended_target": "d7_any_payment_response",
+  "recommendation_reason": "cleanest available label, complete loan-level grain, usable class balance, and existing leakage guards",
+  "candidates": [
+    {
+      "target_id": "d7_any_payment_response",
+      "decision": "selected_for_baseline",
+      "grain": "loan_id",
+      "row_count": 30000,
+      "positive_rate": 0.2749333333333333,
+      "label_source": "dws_loan_status_snapshot_di.repaid_amount_d7 > 0",
+      "leakage_risk": "low when repaid_amount_d7 and recovery_rate_d7 stay target/evaluation-only",
+      "notes": "Best first baseline because the label is complete, binary, and already guarded against direct outcome leakage."
+    },
+    {
+      "target_id": "d7_state_recovery_proxy",
+      "decision": "feasibility_only",
+      "grain": "loan_id",
+      "row_count": 3058,
+      "positive_rate": 0.033355134074558535,
+      "label_source": "loan daily snapshots at observation and D7",
+      "leakage_risk": "medium until snapshot timing and strict cure definition are strengthened",
+      "notes": "Useful for readiness diagnostics, but current synthetic strict cure positives are not strong enough for the first trainable baseline."
+    },
+    {
+      "target_id": "ptp_fulfillment",
+      "decision": "defer",
+      "grain": "collection_action",
+      "row_count": 14822,
+      "positive_rate": 0.492646066657671,
+      "label_source": "ods_collection_action rows where ptp_flag is true, target ptp_fulfilled_flag",
+      "leakage_risk": "medium because this is a second-stage model after promise-to-pay exists",
+      "notes": "Potentially useful later, but less suitable as the first product-chain ML baseline than D7 response."
+    }
+  ],
+  "leakage_guard_summary": {
+    "pii_features_blocked": true,
+    "outcome_features_blocked": true,
+    "sensitive_columns_checked": [
+      "case_id",
+      "customer_id",
+      "customer_id_hash",
+      "customer_name",
+      "id_card",
+      "loan_id",
+      "mobile_masked",
+      "phone_no"
+    ],
+    "outcome_columns_checked": [
+      "case_dpd_bucket_at_d7",
+      "case_outstanding_at_d7",
+      "case_status",
+      "case_status_at_d7",
+      "customer_active_case_count_at_d7",
+      "customer_max_dpd_at_d7",
+      "customer_total_outstanding_at_d7",
+      "d7_end_date",
+      "dpd_at_d7",
+      "dpd_reduction_d7",
+      "loan_state_d7_available",
+      "loan_status",
+      "loan_status_at_d7",
+      "outstanding_at_d7",
+      "outstanding_reduction_d7",
+      "outstanding_reduction_rate_d7",
+      "ptp_fulfilled_count",
+      "ptp_fulfilled_flag",
+      "ptp_fulfillment_rate",
+      "recovery_rate_d7",
+      "reduction_recovery_rate",
+      "repaid_amount_d7",
+      "repay_amount",
+      "repay_date",
+      "repay_time"
+    ],
+    "score_date_guard": "latest_score_on_or_before_observation_date_with_missing_impute_fallback",
+    "future_score_blocked_count": 12536,
+    "feature_count": 39
+  },
+  "demo_boundary": [
+    "synthetic data only",
+    "no real customer data",
+    "no PII in model features",
+    "no future D7 outcome fields in features",
+    "no production model claim",
+    "no automated financial or collection decisioning"
+  ],
+  "next_action": "run ml-baseline for the D7 any-payment response baseline and keep state_recovery as feasibility-only until stricter state labels improve"
+}

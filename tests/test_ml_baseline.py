@@ -529,6 +529,8 @@ def test_cli_can_run(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr
     assert "PASS ML baseline" in result.stdout
     assert (tmp_path / "model_metrics.json").exists()
+    assert (tmp_path / "metrics.json").exists()
+    assert (tmp_path / "README.md").exists()
     assert (tmp_path / "robustness_check.json").exists()
     assert (tmp_path / "robustness_check.md").exists()
 
@@ -621,12 +623,16 @@ def test_cli_metrics_json_contains_dataset_summary(tmp_path: Path) -> None:
 
     assert result.returncode == 0, result.stderr
     payload = json.loads((tmp_path / "model_metrics.json").read_text(encoding="utf-8"))
+    compact_payload = json.loads((tmp_path / "metrics.json").read_text(encoding="utf-8"))
     assert payload["dataset_summary"]["sample_count"] == 30000
+    assert payload["row_count"] == 30000
+    assert compact_payload["row_count"] == 30000
     assert payload["dataset_summary"]["feature_count"] > 0
     assert "score_date_fallback_count" in payload["dataset_summary"]
     assert "future_score_blocked_count" in payload["dataset_summary"]
     assert {"logistic", "random_forest"} <= set(payload["model_comparison"])
     assert "feature_diagnostics" in payload
+    assert {"auc", "ks", "top_decile_capture_rate", "leakage_guard_summary", "caveats"} <= set(payload)
     assert {"logistic", "random_forest"} <= set(payload["feature_diagnostics_by_model"])
     robustness_payload = json.loads((tmp_path / "robustness_check.json").read_text(encoding="utf-8"))
     assert {"with_vintage", "without_vintage", "delta_auc", "delta_ks", "delta_pr_auc"} <= set(robustness_payload)

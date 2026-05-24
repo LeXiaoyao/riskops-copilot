@@ -121,11 +121,44 @@ def _write_selected_outputs(output_dir: Path, result: dict[str, object]) -> dict
         feature_diagnostics_by_model=result["feature_diagnostics_by_model"],
         feature_columns=result["feature_columns"],
     )
+    summary = result["dataset_summary"]
+    metrics = result["metrics"]
+    lift_table = result["lift_table"]
+    top_decile = lift_table.iloc[0].to_dict() if len(lift_table) else {}
     metrics_payload = {
         key: value
         for key, value in result.items()
         if key not in {"lift_table", "feature_importance", "feature_columns"}
     }
+    metrics_payload.update(
+        {
+            "row_count": summary["sample_count"],
+            "positive_rate": summary["positive_rate"],
+            "train_test_split": {
+                "method": "stratified_random_split",
+                "test_size": result["test_size"],
+                "random_seed": result["random_seed"],
+            },
+            "auc": metrics["auc"],
+            "ks": metrics["ks"],
+            "pr_auc": metrics["pr_auc"],
+            "lift": float(top_decile.get("lift", 0.0)),
+            "top_decile_capture_rate": float(top_decile.get("cumulative_capture_rate", 0.0)),
+            "leakage_guard_summary": {
+                "pii_features_blocked": True,
+                "outcome_features_blocked": True,
+                "score_date_guard": summary.get("score_date_guard", "not_recorded"),
+                "future_score_blocked_count": summary.get("future_score_blocked_count", 0),
+                "target_boundary": summary.get("target_boundary", ""),
+            },
+            "caveats": [
+                "synthetic data validates pipeline feasibility, not real-world predictive power",
+                "baseline is not calibrated for production decisioning",
+                "D7 any-payment response is not a cure-to-current label",
+                "vintage_month may reflect synthetic batch/time artifacts",
+            ],
+        }
+    )
     return write_ml_outputs(output_dir, metrics_payload, result["lift_table"], result["feature_importance"], report)
 
 

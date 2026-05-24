@@ -30,6 +30,8 @@ def test_help_can_run_and_lists_commands() -> None:
         "strategy-eval",
         "roi",
         "model-lab",
+        "ml-readiness",
+        "ml-baseline",
         "render-model-lab",
         "render-dashboard",
         "render-report",
@@ -147,6 +149,33 @@ def test_model_lab_command_can_run_and_shows_boundary() -> None:
     assert "top recommended scenario" in result.stdout
     assert "synthetic data only" in result.stdout
     assert "no real customer data" in result.stdout
+
+
+def test_ml_readiness_command_can_run(tmp_path: Path) -> None:
+    result = run_cli(
+        "ml-readiness",
+        "--output-json",
+        str(tmp_path / "readiness.json"),
+        "--output-md",
+        str(tmp_path / "readiness.md"),
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "M6-D ML Readiness" in result.stdout
+    assert "d7_any_payment_response" in result.stdout
+    assert "PASS ML readiness" in result.stdout
+    assert (tmp_path / "readiness.json").exists()
+    assert (tmp_path / "readiness.md").exists()
+
+
+def test_ml_baseline_command_can_run(tmp_path: Path) -> None:
+    result = run_cli("ml-baseline", "--output-dir", str(tmp_path), "--model", "logistic")
+
+    assert result.returncode == 0, result.stderr
+    assert "PASS ML baseline" in result.stdout
+    assert "AUC:" in result.stdout
+    assert (tmp_path / "metrics.json").exists()
+    assert (tmp_path / "feature_importance.csv").exists()
 
 
 def test_render_model_lab_command_can_run_and_generate_m6_outputs(tmp_path: Path) -> None:
