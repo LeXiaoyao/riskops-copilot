@@ -128,3 +128,6 @@ RiskOps_Private_Notes/
 .ruff_cache/
 .mypy_cache/
 tmp/
+# AI assistant instructions — local only, not tracked
+AGENTS.md
+CLAUDE.md
