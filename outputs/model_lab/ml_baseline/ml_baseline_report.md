@@ -160,4 +160,4 @@
 - Add segment-level diagnostics for score_level, dpd_bucket, vendor and line stability.
 - Consider removing or bucketing vintage_month in a later robustness check if artifact dominance remains high.
 
-_Generated at 2026-05-24T15:21:47+00:00_
+_Generated at 2026-05-25T06:38:52+00:00_

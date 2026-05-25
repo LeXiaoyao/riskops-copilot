@@ -24,8 +24,8 @@
 <blockquote>Demo Disclaimer: 本报告基于 synthetic_data / 合成数据生成，仅用于 M3 Demo 展示，不代表真实业务结论。</blockquote>
 <h2>1. 执行摘要</h2>
 <ul>
-<li><strong>本期异常发现</strong>：共发现 8 个异常，其中 high 6 个、medium 2 个、low 0 个。</li>
-<li><strong>核心问题</strong>：M1 D7 回收率下降。M1 回收率 从 19.43% 降至 15.30%，relative change 为 -21.27%。</li>
+<li><strong>本期异常发现</strong>：共发现 6 个异常，其中 high 4 个、medium 2 个、low 0 个。</li>
+<li><strong>核心问题</strong>：M1 D7 回收率下降。M1 回收率 从 24.57% 降至 10.27%，relative change 为 -58.20%。</li>
 <li><strong>初步归因方向</strong>：Top drivers 指向 channel_code=ECOM、province=山东 / 上海、score_band=D / A，说明问题更像渠道、区域、客群结构与作业资源共同变化，而不是单个字段异常。</li>
 <li><strong>建议优先动作</strong>：优先下钻 ECOM x vendor x line x score_band，并同步复核 AI 外呼覆盖、PTP 履约、减免使用率、投诉率和人均案量。</li>
 <li><strong>经营判断边界</strong>：当前结论来自 synthetic data / 合成数据和 M3 规则输出，用于展示分析框架，不代表真实业务结论。</li>
@@ -33,13 +33,31 @@
 <h2>2. 异常总览</h2>
 <h3>2.1 按 severity 汇总</h3>
 <ul>
-<li><strong>high</strong>：6 个</li>
+<li><strong>high</strong>：4 个</li>
 <li><strong>medium</strong>：2 个</li>
 <li><strong>low</strong>：0 个</li>
-<li><strong>基线窗口</strong>：2026-03-19~2026-04-17</li>
-<li><strong>最近窗口</strong>：2026-04-18~2026-05-17</li>
+<li><strong>基线窗口</strong>：2026-03-20~2026-04-18</li>
+<li><strong>最近窗口</strong>：2026-04-19~2026-05-18</li>
 </ul>
 <h3>2.2 高优先级异常列表</h3>
+<ul>
+<li><strong>M1 回收率（m1_recovery_rate）</strong></li>
+</ul>
+<p>  - severity：high</p>
+<p>  - dimension：overall=ALL</p>
+<p>  - baseline / recent：24.57% / 10.27%</p>
+<p>  - relative change：-58.20%</p>
+<p>  - 业务解释：该异常提示经营指标偏离历史基线，需要结合维度、过程证据和作业队列继续下钻。</p>
+<p>  - 建议动作：进入 M3-B 后按供应商、线路、客群结构、AI 覆盖和减免策略下钻归因。</p>
+<ul>
+<li><strong>接通率（connect_rate）</strong></li>
+</ul>
+<p>  - severity：high</p>
+<p>  - dimension：vendor_id=V_B</p>
+<p>  - baseline / recent：34.25% / 27.53%</p>
+<p>  - relative change：-19.62%</p>
+<p>  - 业务解释：该异常提示经营指标偏离历史基线，需要结合维度、过程证据和作业队列继续下钻。</p>
+<p>  - 建议动作：下钻供应商 B 的线路、催员和触达时段，验证执行资源或号码质量问题。</p>
 <ul>
 <li><strong>华东线路人均案量（avg_case_per_collector）</strong></li>
 </ul>
@@ -50,110 +68,74 @@
 <p>  - 业务解释：人均案量上升意味着催员负荷变重，是 capacity pressure signal，可能影响触达节奏和承诺还款跟进，但不是最终根因。</p>
 <p>  - 建议动作：下钻华东各 line_id 的 active_case_count 与 active_collector_count，评估临时增员或分案转移。</p>
 <ul>
-<li><strong>高余额高风险客群占比（high_balance_high_risk_share）</strong></li>
-</ul>
-<p>  - severity：high</p>
-<p>  - dimension：balance_segment+risk_level=HIGH+C/D</p>
-<p>  - baseline / recent：0.59% / 0.75%</p>
-<p>  - relative change：27.45%</p>
-<p>  - 业务解释：高余额高风险客群占比上升会抬高贷后管理难度，可能加剧回收率和产能压力。</p>
-<p>  - 建议动作：进入 M3-B 后拆分余额段、risk_level 和入案批次，识别结构变化贡献。</p>
-<ul>
 <li><strong>AI 外呼覆盖率（ai_call_coverage）</strong></li>
 </ul>
 <p>  - severity：high</p>
 <p>  - dimension：action_type=AI_OUTBOUND</p>
-<p>  - baseline / recent：30.09% / 17.78%</p>
-<p>  - relative change：-40.89%</p>
+<p>  - baseline / recent：30.25% / 17.75%</p>
+<p>  - relative change：-41.32%</p>
 <p>  - 业务解释：AI 外呼覆盖下降说明自动化触达资源或策略发生变化，可能削弱早期提醒和低成本触达能力。</p>
 <p>  - 建议动作：检查 AI 外呼线路容量、分案策略和人工替代触达占比。</p>
-<ul>
-<li><strong>减免使用率（reduction_usage_rate）</strong></li>
-</ul>
-<p>  - severity：high</p>
-<p>  - dimension：overall=ALL</p>
-<p>  - baseline / recent：0.06% / 0.05%</p>
-<p>  - relative change：-27.17%</p>
-<p>  - 业务解释：减免使用率下降提示策略工具可能使用不足，需要检查授权、审批、客群准入和供应商执行。</p>
-<p>  - 建议动作：下钻 vendor_id、line_id 与 dpd_bucket，确认减免授权、审批或策略门槛是否变化。</p>
-<ul>
-<li><strong>PTP 履约率（ptp_keep_rate）</strong></li>
-</ul>
-<p>  - severity：high</p>
-<p>  - dimension：overall=ALL</p>
-<p>  - baseline / recent：49.68% / 43.58%</p>
-<p>  - relative change：-12.28%</p>
-<p>  - 业务解释：PTP 履约下降说明承诺还款后的跟进、客户还款意愿或策略工具支持出现压力。</p>
-<p>  - 建议动作：下钻承诺还款客户的风险等级、余额段、催员和减免使用情况。</p>
-<ul>
-<li><strong>万案投诉率（complaint_per_10k_cases）</strong></li>
-</ul>
-<p>  - severity：high</p>
-<p>  - dimension：template_id=TPL_RISK_NOTICE</p>
-<p>  - baseline / recent：54.20 / 122.48</p>
-<p>  - relative change：125.96%</p>
-<p>  - 业务解释：投诉率升高是合规侧过程风险信号，需要复核模板话术、发送时段和供应商执行。</p>
-<p>  - 建议动作：下钻该模板的发送供应商、发送时段、投诉等级和具体话术，进入合规复核。</p>
 <h2>3. M1 D7 回收率下降专题</h2>
 <ul>
 <li><strong>指标定位</strong>：D7 回收率（recovery_rate_d7）用于观察 M1 阶段早期回收表现，是贷后经营里判断触达、承诺、资源投入是否有效的核心结果指标。</li>
-<li><strong>baseline</strong>：19.43%</li>
-<li><strong>recent</strong>：15.30%</li>
-<li><strong>relative change</strong>：-21.27%</li>
+<li><strong>baseline</strong>：24.57%</li>
+<li><strong>recent</strong>：10.27%</li>
+<li><strong>relative change</strong>：-58.20%</li>
 <li><strong>为什么这是核心问题</strong>：M1 D7 回收率下降会提前反映新入案或早期逾期客群的回款压力，一旦持续恶化，后续 M1、M2+ 桶位的催收难度和资源成本都会上升。</li>
 <li><strong>可能影响环节</strong>：渠道客群质量、区域供应商执行、line_id 作业队列承载、AI 外呼覆盖、人工跟进节奏、PTP 履约管理、减免策略使用和合规投诉风险。</li>
 <li><strong>当前边界</strong>：本专题不重新定义指标口径，只解释 M3 已输出的 D7 回收率异常与 attribution 结果。</li>
 </ul>
 <h2>4. Top drivers 解释</h2>
-<h3>1. channel_code=ECOM</h3>
+<h3>1. risk_level=B</h3>
 <ul>
-<li><strong>baseline / recent</strong>：23.90% / 6.29%</li>
-<li><strong>contribution_score</strong>：15.26%</li>
+<li><strong>baseline / recent</strong>：25.17% / 9.94%</li>
+<li><strong>contribution_score</strong>：6.02%</li>
+<li><strong>confidence</strong>：medium</li>
+<li><strong>业务含义</strong>：risk_level=B 分组回收表现低于基线，是需要下钻验证的业务切片。</li>
+<li><strong>可解释边界</strong>：该 driver 是统计切片信号，不单独构成最终根因。</li>
+<li><strong>下一步下钻建议</strong>：继续按 vendor、line_id、score_band 和时间窗口下钻验证。</li>
+<li><strong>M3 原始解释</strong>：B 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。</li>
+</ul>
+<h3>2. product_code=P_CONS</h3>
+<ul>
+<li><strong>baseline / recent</strong>：33.40% / 11.30%</li>
+<li><strong>contribution_score</strong>：5.57%</li>
+<li><strong>confidence</strong>：medium</li>
+<li><strong>业务含义</strong>：product_code=P_CONS 分组回收表现低于基线，是需要下钻验证的业务切片。</li>
+<li><strong>可解释边界</strong>：该 driver 是统计切片信号，不单独构成最终根因。</li>
+<li><strong>下一步下钻建议</strong>：继续按 vendor、line_id、score_band 和时间窗口下钻验证。</li>
+<li><strong>M3 原始解释</strong>：P_CONS 分组的回收率下降对整体异常有可量化贡献。</li>
+</ul>
+<h3>3. balance_segment=NORMAL</h3>
+<ul>
+<li><strong>baseline / recent</strong>：23.45% / 10.90%</li>
+<li><strong>contribution_score</strong>：5.27%</li>
+<li><strong>confidence</strong>：medium</li>
+<li><strong>业务含义</strong>：balance_segment=NORMAL 分组回收表现低于基线，是需要下钻验证的业务切片。</li>
+<li><strong>可解释边界</strong>：该 driver 是统计切片信号，不单独构成最终根因。</li>
+<li><strong>下一步下钻建议</strong>：继续按 vendor、line_id、score_band 和时间窗口下钻验证。</li>
+<li><strong>M3 原始解释</strong>：NORMAL 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。</li>
+</ul>
+<h3>4. channel_code=ECOM</h3>
+<ul>
+<li><strong>baseline / recent</strong>：28.66% / 6.90%</li>
+<li><strong>contribution_score</strong>：4.88%</li>
 <li><strong>confidence</strong>：medium</li>
 <li><strong>业务含义</strong>：ECOM 代表电商渠道来源客群。该分组最近窗口 D7 回收率明显低于基线，说明问题可能集中在渠道客群质量、分案策略或触达资源匹配上。</li>
 <li><strong>可解释边界</strong>：这是切片贡献信号，不等于 ECOM 是唯一根因；channel、province、score_band 之间可能存在样本重叠。</li>
 <li><strong>下一步下钻建议</strong>：优先下钻 ECOM x vendor x line x score_band，确认是否由某个供应商、作业线或客群组合拉低。</li>
 <li><strong>M3 原始解释</strong>：ECOM 分组的回收率下降对整体异常有可量化贡献。</li>
 </ul>
-<h3>2. province=山东</h3>
+<h3>5. score_band=B</h3>
 <ul>
-<li><strong>baseline / recent</strong>：29.45% / 12.73%</li>
-<li><strong>contribution_score</strong>：6.52%</li>
+<li><strong>baseline / recent</strong>：24.96% / 9.56%</li>
+<li><strong>contribution_score</strong>：4.17%</li>
 <li><strong>confidence</strong>：medium</li>
-<li><strong>业务含义</strong>：山东分组回收率下降，提示区域客群、供应商执行或本地作业线排布可能出现同步变化。</li>
-<li><strong>可解释边界</strong>：province 是业务维度切片，不代表单纯地理线路，也不能直接推出区域供应商责任。</li>
-<li><strong>下一步下钻建议</strong>：复核山东区域供应商、line_id、分案批次和 score_band 结构，区分客群结构变化与作业执行变化。</li>
-<li><strong>M3 原始解释</strong>：山东 分组的回收率下降对整体异常有可量化贡献。</li>
-</ul>
-<h3>3. score_band=D</h3>
-<ul>
-<li><strong>baseline / recent</strong>：17.83% / 5.93%</li>
-<li><strong>contribution_score</strong>：5.75%</li>
-<li><strong>confidence</strong>：medium</li>
-<li><strong>业务含义</strong>：D 分客群通常代表更高风险层。该层回收率下降会直接放大 M1 早期回收压力。</li>
-<li><strong>可解释边界</strong>：score_band 是风险分层信号，不改变 D7 回收率口径，也不代表所有 D 分客群均不可回收。</li>
-<li><strong>下一步下钻建议</strong>：检查 D 分客群触达优先级、催收资源投入、减免授权和 PTP 跟进策略。</li>
-<li><strong>M3 原始解释</strong>：D 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。</li>
-</ul>
-<h3>4. province=上海</h3>
-<ul>
-<li><strong>baseline / recent</strong>：22.35% / 7.16%</li>
-<li><strong>contribution_score</strong>：4.42%</li>
-<li><strong>confidence</strong>：medium</li>
-<li><strong>业务含义</strong>：上海分组回收率下降，可能与区域客群结构、触达资源切换或供应商执行节奏有关。</li>
-<li><strong>可解释边界</strong>：province 只能说明该切片表现恶化，不能单独证明地理因素导致回收下降。</li>
-<li><strong>下一步下钻建议</strong>：复核上海区域供应商和作业线，重点查看 AI 外呼覆盖、人工触达占比和 PTP 履约表现。</li>
-<li><strong>M3 原始解释</strong>：上海 分组的回收率下降对整体异常有可量化贡献。</li>
-</ul>
-<h3>5. score_band=A</h3>
-<ul>
-<li><strong>baseline / recent</strong>：36.42% / 19.88%</li>
-<li><strong>contribution_score</strong>：4.04%</li>
-<li><strong>confidence</strong>：medium</li>
-<li><strong>业务含义</strong>：A 分客群通常是较优风险层。该层也出现下降，说明问题可能不只发生在高风险客群，需关注流程或资源侧变化。</li>
-<li><strong>可解释边界</strong>：A 分下降不等于模型分层失效；需要结合渠道、区域和作业线进一步验证。</li>
-<li><strong>下一步下钻建议</strong>：检查 A 分客群是否发生渠道结构变化、触达覆盖下降或承诺还款跟进断点。</li>
-<li><strong>M3 原始解释</strong>：A 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。</li>
+<li><strong>业务含义</strong>：score_band=B 分组回收表现低于基线，是需要下钻验证的业务切片。</li>
+<li><strong>可解释边界</strong>：该 driver 是统计切片信号，不单独构成最终根因。</li>
+<li><strong>下一步下钻建议</strong>：继续按 vendor、line_id、score_band 和时间窗口下钻验证。</li>
+<li><strong>M3 原始解释</strong>：B 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。</li>
 </ul>
 <h2>5. 产能压力分析</h2>
 <ul>
@@ -168,30 +150,58 @@
 <li><strong>证据链口径</strong>：以下指标属于 process evidence，用于解释异常发生前后的过程变化，不单独构成根因。</li>
 <li><strong>AI 外呼覆盖（ai_call_coverage）</strong></li>
 </ul>
+<p>  - driver：risk_level=B</p>
+<p>  - baseline / recent：8.70% / 19.05%</p>
+<p>  - delta：+10.35%</p>
+<p>  - 解释：process evidence，用于解释过程链路变化，不能单独视为最终根因。</p>
+<ul>
+<li><strong>PTP 履约（ptp_keep_rate）</strong></li>
+</ul>
+<p>  - driver：risk_level=B</p>
+<p>  - baseline / recent：33.33% / 100.00%</p>
+<p>  - delta：+66.67%</p>
+<p>  - 解释：process evidence，用于解释过程链路变化，不能单独视为最终根因。</p>
+<ul>
+<li><strong>AI 外呼覆盖（ai_call_coverage）</strong></li>
+</ul>
+<p>  - driver：product_code=P_CONS</p>
+<p>  - baseline / recent：21.43% / 16.67%</p>
+<p>  - delta：-4.76%</p>
+<p>  - 解释：process evidence，用于解释过程链路变化，不能单独视为最终根因。</p>
+<ul>
+<li><strong>AI 外呼覆盖（ai_call_coverage）</strong></li>
+</ul>
+<p>  - driver：balance_segment=NORMAL</p>
+<p>  - baseline / recent：22.58% / 13.04%</p>
+<p>  - delta：-9.54%</p>
+<p>  - 解释：process evidence，用于解释过程链路变化，不能单独视为最终根因。</p>
+<ul>
+<li><strong>PTP 履约（ptp_keep_rate）</strong></li>
+</ul>
+<p>  - driver：balance_segment=NORMAL</p>
+<p>  - baseline / recent：25.00% / 66.67%</p>
+<p>  - delta：+41.67%</p>
+<p>  - 解释：process evidence，用于解释过程链路变化，不能单独视为最终根因。</p>
+<ul>
+<li><strong>AI 外呼覆盖（ai_call_coverage）</strong></li>
+</ul>
 <p>  - driver：channel_code=ECOM</p>
-<p>  - baseline / recent：46.15% / 7.14%</p>
-<p>  - delta：-39.01%</p>
+<p>  - baseline / recent：18.18% / 25.00%</p>
+<p>  - delta：+6.82%</p>
+<p>  - 解释：process evidence，用于解释过程链路变化，不能单独视为最终根因。</p>
+<ul>
+<li><strong>PTP 履约（ptp_keep_rate）</strong></li>
+</ul>
+<p>  - driver：channel_code=ECOM</p>
+<p>  - baseline / recent：50.00% / 0.00%</p>
+<p>  - delta：-50.00%</p>
 <p>  - 解释：process evidence，用于解释过程链路变化，不能单独视为最终根因。</p>
 <ul>
 <li><strong>AI 外呼覆盖（ai_call_coverage）</strong></li>
 </ul>
-<p>  - driver：province=山东</p>
-<p>  - baseline / recent：100.00% / 0.00%</p>
-<p>  - delta：-100.00%</p>
-<p>  - 解释：process evidence，用于解释过程链路变化，不能单独视为最终根因。</p>
-<ul>
-<li><strong>AI 外呼覆盖（ai_call_coverage）</strong></li>
-</ul>
-<p>  - driver：province=上海</p>
-<p>  - baseline / recent：33.33% / 0.00%</p>
-<p>  - delta：-33.33%</p>
-<p>  - 解释：process evidence，用于解释过程链路变化，不能单独视为最终根因。</p>
-<ul>
-<li><strong>AI 外呼覆盖（ai_call_coverage）</strong></li>
-</ul>
-<p>  - driver：score_band=A</p>
-<p>  - baseline / recent：25.00% / 0.00%</p>
-<p>  - delta：-25.00%</p>
+<p>  - driver：score_band=B</p>
+<p>  - baseline / recent：12.50% / 8.33%</p>
+<p>  - delta：-4.17%</p>
 <p>  - 解释：process evidence，用于解释过程链路变化，不能单独视为最终根因。</p>
 <ul>
 <li><strong>人均案量 / 产能压力（avg_case_per_collector）</strong></li>
@@ -204,30 +214,9 @@
 <li><strong>AI 外呼覆盖（ai_call_coverage）</strong></li>
 </ul>
 <p>  - driver：action_type=AI_OUTBOUND</p>
-<p>  - baseline / recent：30.09% / 17.78%</p>
-<p>  - delta：-12.30%</p>
+<p>  - baseline / recent：30.25% / 17.75%</p>
+<p>  - delta：-12.50%</p>
 <p>  - 解释：AI 外呼覆盖下降说明自动化触达资源或策略发生变化，可能削弱早期提醒和低成本触达能力。</p>
-<ul>
-<li><strong>减免使用率（reduction_usage_rate）</strong></li>
-</ul>
-<p>  - driver：overall=ALL</p>
-<p>  - baseline / recent：0.06% / 0.05%</p>
-<p>  - delta：-0.02%</p>
-<p>  - 解释：减免使用率下降提示策略工具可能使用不足，需要检查授权、审批、客群准入和供应商执行。</p>
-<ul>
-<li><strong>PTP 履约（ptp_keep_rate）</strong></li>
-</ul>
-<p>  - driver：overall=ALL</p>
-<p>  - baseline / recent：49.68% / 43.58%</p>
-<p>  - delta：-6.10%</p>
-<p>  - 解释：PTP 履约下降说明承诺还款后的跟进、客户还款意愿或策略工具支持出现压力。</p>
-<ul>
-<li><strong>投诉率（complaint_per_10k_cases）</strong></li>
-</ul>
-<p>  - driver：template_id=TPL_RISK_NOTICE</p>
-<p>  - baseline / recent：54.20 / 122.48</p>
-<p>  - delta：+68.27</p>
-<p>  - 解释：投诉率升高是合规侧过程风险信号，需要复核模板话术、发送时段和供应商执行。</p>
 <h2>7. 管理动作建议</h2>
 <ul>
 <li>优先下钻 ECOM x vendor x line x score_band，定位是否存在集中异常组合。</li>

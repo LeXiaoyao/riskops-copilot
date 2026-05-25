@@ -24,7 +24,7 @@
 - **strategy_type**：contact_strategy
 - **目标指标**：recovery_rate_d7 / M1 D7 recovery_rate_d7
 - **target_anomaly_id**：M3A-ai_call_coverage-action_type-AI_OUTBOUND
-- **baseline / scenario / estimated delta**：15.2965% / 15.8965% / 0.6000%
+- **baseline / scenario / estimated delta**：10.2698% / 10.8698% / 0.6000%
 - **estimated_direction**：improve
 - **confidence**：medium
 - **影响客群**：action_type=AI_OUTBOUND, channel_code=ECOM
@@ -37,7 +37,7 @@
 - **strategy_type**：capacity_strategy
 - **目标指标**：recovery_rate_d7 / M1 D7 recovery_rate_d7
 - **target_anomaly_id**：M3A-avg_case_per_collector-region-华东
-- **baseline / scenario / estimated delta**：15.2965% / 15.6965% / 0.4000%
+- **baseline / scenario / estimated delta**：10.2698% / 10.6698% / 0.4000%
 - **estimated_direction**：reduce_risk
 - **confidence**：medium
 - **影响客群**：region=华东, line_id=ALL
@@ -50,7 +50,7 @@
 - **strategy_type**：settlement_strategy
 - **目标指标**：recovery_rate_d7 / M1 D7 recovery_rate_d7
 - **target_anomaly_id**：M3A-reduction_usage_rate-overall-ALL
-- **baseline / scenario / estimated delta**：15.2965% / 15.5965% / 0.3000%
+- **baseline / scenario / estimated delta**：10.2698% / 10.5698% / 0.3000%
 - **estimated_direction**：improve
 - **confidence**：low
 - **影响客群**：overall=ALL, dpd_bucket=M1
@@ -63,7 +63,7 @@
 - **strategy_type**：allocation_strategy
 - **目标指标**：recovery_rate_d7 / M1 D7 recovery_rate_d7
 - **target_anomaly_id**：M3A-m1_recovery_rate-overall-ALL
-- **baseline / scenario / estimated delta**：15.2965% / 15.7965% / 0.5000%
+- **baseline / scenario / estimated delta**：10.2698% / 10.7698% / 0.5000%
 - **estimated_direction**：reduce_risk
 - **confidence**：medium
 - **影响客群**：region=华东, vendor_id=ALL, line_id=ALL
@@ -76,7 +76,7 @@
 - **strategy_type**：segmentation_strategy
 - **目标指标**：recovery_rate_d7 / M1 D7 recovery_rate_d7
 - **target_anomaly_id**：M3B-recovery_rate_d7-03
-- **baseline / scenario / estimated delta**：5.9307% / 6.1307% / 0.2000%
+- **baseline / scenario / estimated delta**：10.9047% / 11.1047% / 0.2000%
 - **estimated_direction**：monitor
 - **confidence**：medium
 - **影响客群**：score_band=D, dpd_bucket=M1

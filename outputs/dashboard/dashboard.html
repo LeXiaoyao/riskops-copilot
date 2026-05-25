@@ -687,9 +687,9 @@
       <span class="lang-cn">把贷后风控运营里散落在 SQL / Excel / PPT 的工作流，沉淀成可复现的 AI / Data workflow：识别异常 → 解释驱动 → 生成经营报告 → 估算策略 ROI。</span>
     </div>
     <div class="meta">
-      <span><strong>报告生成时间</strong>：2026-05-25 12:59:55</span>
-      <span><strong>基线窗口</strong>：2026-03-19~2026-04-17</span>
-      <span><strong>最近窗口</strong>：2026-04-18~2026-05-17</span>
+      <span><strong>报告生成时间</strong>：2026-05-25 14:38:56</span>
+      <span><strong>基线窗口</strong>：2026-03-20~2026-04-18</span>
+      <span><strong>最近窗口</strong>：2026-04-19~2026-05-18</span>
       <span><strong>M3 报告版本</strong>：m3-c-v1</span>
     </div>
     <div class="disclaimer">
@@ -707,7 +707,7 @@
       <div class="portfolio-card" data-portfolio-card="business_problem">
         <div class="eyebrow">01 · Business Problem</div>
         <div class="title">M1 D7 回收率下降，到底由谁驱动？</div>
-        <div class="stat">D7 回收率 -21.27% 相对基线</div>
+        <div class="stat">D7 回收率 -58.20% 相对基线</div>
         <div class="desc-en">M1 day-7 recovery rate dropped. Is it driven by channel, region, customer segment, vendor / line, contact, complaint, or settlement use? Untangle it without a manual SQL hunt.</div>
         <div class="desc-cn">M1 D7 回收率下降，需要快速判断到底是渠道、区域、客群、供应商 / 线路、触达、投诉还是减免使用导致，避免靠人工 SQL 反复下钻。</div>
       </div>
@@ -721,14 +721,14 @@
       <div class="portfolio-card" data-portfolio-card="anomaly_signals">
         <div class="eyebrow">03 · Anomaly Signals</div>
         <div class="title">结构化异常事件，而非散点告警</div>
-        <div class="stat">8 anomalies · 6 high · 2 medium</div>
+        <div class="stat">6 anomalies · 4 high · 2 medium</div>
         <div class="desc-en">Rule + ML signals across recovery, AI outbound, manual capacity, PTP, settlement use and complaint risk are folded into typed events with severity.</div>
         <div class="desc-cn">回收率、AI 外呼覆盖、产能压力、PTP、减免使用、投诉风险等信号统一结构化为带 severity 的事件。</div>
       </div>
       <div class="portfolio-card" data-portfolio-card="attribution">
         <div class="eyebrow">04 · Attribution</div>
         <div class="title">排序好的 Top drivers，可解释</div>
-        <div class="stat">Top driver: channel_code=ECOM (15.26%)</div>
+        <div class="stat">Top driver: risk_level=B (6.02%)</div>
         <div class="desc-en">Decompose the headline drop into ranked drivers across channel, region, customer segment and vendor / line, with process evidence (contact / fulfill / settlement / compliance / capacity) attached.</div>
         <div class="desc-cn">把整体下降拆成可排序的驱动因素，并附触达 / 履约 / 减免 / 合规 / 产能五条证据链。</div>
       </div>
@@ -823,11 +823,11 @@
     <div class="card-grid">
       <div class="stat-card tone-neutral">
         <div class="label">异常总数</div>
-        <div class="value">8</div>
+        <div class="value">6</div>
       </div>
       <div class="stat-card tone-high">
         <div class="label">high 级</div>
-        <div class="value">6</div>
+        <div class="value">4</div>
       </div>
       <div class="stat-card tone-medium">
         <div class="label">medium 级</div>
@@ -848,11 +848,11 @@
     <div class="eyebrow">Executive Summary</div>
     <h2>本期一句话结论</h2>
     <ol>
-      <li>本期共识别 8 个异常，其中 6 个 high、2 个 medium、0 个 low。</li>
-      <li>核心问题是 D7 回收率（recovery_rate_d7）下降，历史基准 19.43% → 最近窗口 15.30%，相对变化 -21.27%。</li>
-      <li>伴随 产能压力上升。</li>
-      <li>初步归因指向 channel_code=ECOM、province=山东、score_band=D。</li>
-      <li>建议优先下钻 channel_code=ECOM × vendor / line / score_band，并结合触达和合规证据复核。</li>
+      <li>本期共识别 6 个异常，其中 4 个 high、2 个 medium、0 个 low。</li>
+      <li>核心问题是 D7 回收率（recovery_rate_d7）下降，历史基准 24.57% → 最近窗口 10.27%，相对变化 -58.20%。</li>
+      <li>伴随 PTP 履约上升、产能压力上升。</li>
+      <li>初步归因指向 risk_level=B、product_code=P_CONS、balance_segment=NORMAL。</li>
+      <li>建议优先下钻 risk_level=B × vendor / line / score_band，并结合触达和合规证据复核。</li>
     </ol>
   </section>
 
@@ -874,6 +874,38 @@
       <tbody>
         <tr>
           <td>
+            <strong>M1 回收率</strong><br/>
+            <span style="color: var(--muted); font-size: 12px;">m1_recovery_rate</span>
+          </td>
+          <td>
+            <span class="severity-pill high">high</span>
+          </td>
+          <td>overall = ALL</td>
+          <td>24.57%</td>
+          <td>10.27%</td>
+          <td>
+              <span class="delta-negative">-58.20%</span>
+          </td>
+          <td>进入 M3-B 后按供应商、线路、客群结构、AI 覆盖和减免策略下钻归因。</td>
+        </tr>
+        <tr>
+          <td>
+            <strong>接通率</strong><br/>
+            <span style="color: var(--muted); font-size: 12px;">connect_rate</span>
+          </td>
+          <td>
+            <span class="severity-pill high">high</span>
+          </td>
+          <td>vendor_id = V_B</td>
+          <td>34.25%</td>
+          <td>27.53%</td>
+          <td>
+              <span class="delta-negative">-19.62%</span>
+          </td>
+          <td>下钻供应商 B 的线路、催员和触达时段，验证执行资源或号码质量问题。</td>
+        </tr>
+        <tr>
+          <td>
             <strong>华东线路人均案量</strong><br/>
             <span style="color: var(--muted); font-size: 12px;">avg_case_per_collector</span>
           </td>
@@ -890,22 +922,6 @@
         </tr>
         <tr>
           <td>
-            <strong>高余额高风险客群占比</strong><br/>
-            <span style="color: var(--muted); font-size: 12px;">high_balance_high_risk_share</span>
-          </td>
-          <td>
-            <span class="severity-pill high">high</span>
-          </td>
-          <td>balance_segment+risk_level = HIGH+C/D</td>
-          <td>0.59%</td>
-          <td>0.75%</td>
-          <td>
-              <span class="delta-positive">+27.45%</span>
-          </td>
-          <td>进入 M3-B 后拆分余额段、risk_level 和入案批次，识别结构变化贡献。</td>
-        </tr>
-        <tr>
-          <td>
             <strong>AI 外呼覆盖率</strong><br/>
             <span style="color: var(--muted); font-size: 12px;">ai_call_coverage</span>
           </td>
@@ -913,60 +929,12 @@
             <span class="severity-pill high">high</span>
           </td>
           <td>action_type = AI_OUTBOUND</td>
-          <td>30.09%</td>
-          <td>17.78%</td>
+          <td>30.25%</td>
+          <td>17.75%</td>
           <td>
-              <span class="delta-negative">-40.89%</span>
+              <span class="delta-negative">-41.32%</span>
           </td>
           <td>检查 AI 外呼线路容量、分案策略和人工替代触达占比。</td>
-        </tr>
-        <tr>
-          <td>
-            <strong>减免使用率</strong><br/>
-            <span style="color: var(--muted); font-size: 12px;">reduction_usage_rate</span>
-          </td>
-          <td>
-            <span class="severity-pill high">high</span>
-          </td>
-          <td>overall = ALL</td>
-          <td>0.06%</td>
-          <td>0.05%</td>
-          <td>
-              <span class="delta-negative">-27.17%</span>
-          </td>
-          <td>下钻 vendor_id、line_id 与 dpd_bucket，确认减免授权、审批或策略门槛是否变化。</td>
-        </tr>
-        <tr>
-          <td>
-            <strong>PTP 履约率</strong><br/>
-            <span style="color: var(--muted); font-size: 12px;">ptp_keep_rate</span>
-          </td>
-          <td>
-            <span class="severity-pill high">high</span>
-          </td>
-          <td>overall = ALL</td>
-          <td>49.68%</td>
-          <td>43.58%</td>
-          <td>
-              <span class="delta-negative">-12.28%</span>
-          </td>
-          <td>下钻承诺还款客户的风险等级、余额段、催员和减免使用情况。</td>
-        </tr>
-        <tr>
-          <td>
-            <strong>万案投诉率</strong><br/>
-            <span style="color: var(--muted); font-size: 12px;">complaint_per_10k_cases</span>
-          </td>
-          <td>
-            <span class="severity-pill high">high</span>
-          </td>
-          <td>template_id = TPL_RISK_NOTICE</td>
-          <td>54.20</td>
-          <td>122.48</td>
-          <td>
-              <span class="delta-positive">+125.96%</span>
-          </td>
-          <td>下钻该模板的发送供应商、发送时段、投诉等级和具体话术，进入合规复核。</td>
         </tr>
       </tbody>
     </table>
@@ -990,15 +958,15 @@
     <div class="target-block">
       <h3>归因目标异常：M1 回收率</h3>
       <div class="target-meta">
-        <span><strong>severity</strong>：<span class="severity-pill medium">medium</span></span>
+        <span><strong>severity</strong>：<span class="severity-pill high">high</span></span>
         <span><strong>维度</strong>：overall = ALL</span>
-        <span><strong>baseline</strong>：19.43%</span>
-        <span><strong>recent</strong>：15.30%</span>
+        <span><strong>baseline</strong>：24.57%</span>
+        <span><strong>recent</strong>：10.27%</span>
         <span><strong>relative change</strong>：
-            <span class="delta-negative">-21.27%</span>
+            <span class="delta-negative">-58.20%</span>
         </span>
       </div>
-      <p style="margin: 10px 0 0;">最近窗口均值 15.30% 低于基线 19.43%，变化 -4.13%。</p>
+      <p style="margin: 10px 0 0;">最近窗口均值 10.27% 低于基线 24.57%，变化 -14.30%。</p>
     </div>
 
     <h3 style="margin: 12px 0 8px; font-size: 15px;">Top 5 drivers</h3>
@@ -1007,20 +975,92 @@
         <div class="driver-head">
           <div>
             <span class="driver-rank">#1</span>
-            <span class="driver-title">channel_code = ECOM</span>
-            <span class="driver-role">渠道结构</span>
+            <span class="driver-title">risk_level = B</span>
+            <span class="driver-role">客群风险结构</span>
           </div>
           <div class="contribution-wrap">
             <div class="label">贡献度 contribution</div>
-            <div class="driver-contribution">15.26%</div>
+            <div class="driver-contribution">6.02%</div>
             <div class="contribution-bar" aria-label="贡献度进度条">
               <span class="fill" style="width: 100.0%;"></span>
             </div>
           </div>
         </div>
         <div class="driver-meta">
-          <span><strong>历史基准</strong>：23.90%</span>
-          <span><strong>最近窗口</strong>：6.29%</span>
+          <span><strong>历史基准</strong>：25.17%</span>
+          <span><strong>最近窗口</strong>：9.94%</span>
+          <span><strong>confidence</strong>：medium</span>
+        </div>
+        <p class="role-explanation"><strong>维度解读</strong>：风险层信号，结合余额段与入案策略综合判断。</p>
+        <p><strong>业务解释</strong>：B 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。</p>
+        <p><strong>推荐动作</strong>：对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。</p>
+      </div>
+      <div class="driver-card">
+        <div class="driver-head">
+          <div>
+            <span class="driver-rank">#2</span>
+            <span class="driver-title">product_code = P_CONS</span>
+            <span class="driver-role">维度切片</span>
+          </div>
+          <div class="contribution-wrap">
+            <div class="label">贡献度 contribution</div>
+            <div class="driver-contribution">5.57%</div>
+            <div class="contribution-bar" aria-label="贡献度进度条">
+              <span class="fill" style="width: 92.6%;"></span>
+            </div>
+          </div>
+        </div>
+        <div class="driver-meta">
+          <span><strong>历史基准</strong>：33.40%</span>
+          <span><strong>最近窗口</strong>：11.30%</span>
+          <span><strong>confidence</strong>：medium</span>
+        </div>
+        <p class="role-explanation"><strong>维度解读</strong>：维度切片信号，需进一步下钻 vendor / line / 产品组合确认。</p>
+        <p><strong>业务解释</strong>：P_CONS 分组的回收率下降对整体异常有可量化贡献。</p>
+        <p><strong>推荐动作</strong>：继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。</p>
+      </div>
+      <div class="driver-card">
+        <div class="driver-head">
+          <div>
+            <span class="driver-rank">#3</span>
+            <span class="driver-title">balance_segment = NORMAL</span>
+            <span class="driver-role">余额结构</span>
+          </div>
+          <div class="contribution-wrap">
+            <div class="label">贡献度 contribution</div>
+            <div class="driver-contribution">5.27%</div>
+            <div class="contribution-bar" aria-label="贡献度进度条">
+              <span class="fill" style="width: 87.5%;"></span>
+            </div>
+          </div>
+        </div>
+        <div class="driver-meta">
+          <span><strong>历史基准</strong>：23.45%</span>
+          <span><strong>最近窗口</strong>：10.90%</span>
+          <span><strong>confidence</strong>：medium</span>
+        </div>
+        <p class="role-explanation"><strong>维度解读</strong>：余额结构信号，建议联动 risk_level 复核放贷与回收能力。</p>
+        <p><strong>业务解释</strong>：NORMAL 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。</p>
+        <p><strong>推荐动作</strong>：对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。</p>
+      </div>
+      <div class="driver-card">
+        <div class="driver-head">
+          <div>
+            <span class="driver-rank">#4</span>
+            <span class="driver-title">channel_code = ECOM</span>
+            <span class="driver-role">渠道结构</span>
+          </div>
+          <div class="contribution-wrap">
+            <div class="label">贡献度 contribution</div>
+            <div class="driver-contribution">4.88%</div>
+            <div class="contribution-bar" aria-label="贡献度进度条">
+              <span class="fill" style="width: 81.1%;"></span>
+            </div>
+          </div>
+        </div>
+        <div class="driver-meta">
+          <span><strong>历史基准</strong>：28.66%</span>
+          <span><strong>最近窗口</strong>：6.90%</span>
           <span><strong>confidence</strong>：medium</span>
         </div>
         <p class="role-explanation"><strong>维度解读</strong>：电商 / 渠道定位信号，建议下钻产品、供应商、线路。</p>
@@ -1030,97 +1070,25 @@
       <div class="driver-card">
         <div class="driver-head">
           <div>
-            <span class="driver-rank">#2</span>
-            <span class="driver-title">province = 山东</span>
-            <span class="driver-role">区域结构</span>
-          </div>
-          <div class="contribution-wrap">
-            <div class="label">贡献度 contribution</div>
-            <div class="driver-contribution">6.52%</div>
-            <div class="contribution-bar" aria-label="贡献度进度条">
-              <span class="fill" style="width: 42.8%;"></span>
-            </div>
-          </div>
-        </div>
-        <div class="driver-meta">
-          <span><strong>历史基准</strong>：29.45%</span>
-          <span><strong>最近窗口</strong>：12.73%</span>
-          <span><strong>confidence</strong>：medium</span>
-        </div>
-        <p class="role-explanation"><strong>维度解读</strong>：地域分群信号，不应直接作为最终策略动作，需结合产能与产品结构。</p>
-        <p><strong>业务解释</strong>：山东 分组的回收率下降对整体异常有可量化贡献。</p>
-        <p><strong>推荐动作</strong>：继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。</p>
-      </div>
-      <div class="driver-card">
-        <div class="driver-head">
-          <div>
-            <span class="driver-rank">#3</span>
-            <span class="driver-title">score_band = D</span>
-            <span class="driver-role">客群风险结构</span>
-          </div>
-          <div class="contribution-wrap">
-            <div class="label">贡献度 contribution</div>
-            <div class="driver-contribution">5.75%</div>
-            <div class="contribution-bar" aria-label="贡献度进度条">
-              <span class="fill" style="width: 37.7%;"></span>
-            </div>
-          </div>
-        </div>
-        <div class="driver-meta">
-          <span><strong>历史基准</strong>：17.83%</span>
-          <span><strong>最近窗口</strong>：5.93%</span>
-          <span><strong>confidence</strong>：medium</span>
-        </div>
-        <p class="role-explanation"><strong>维度解读</strong>：风险分层信号，关注该客群的触达、减免和资源投入。</p>
-        <p><strong>业务解释</strong>：D 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。</p>
-        <p><strong>推荐动作</strong>：对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。</p>
-      </div>
-      <div class="driver-card">
-        <div class="driver-head">
-          <div>
-            <span class="driver-rank">#4</span>
-            <span class="driver-title">province = 上海</span>
-            <span class="driver-role">区域结构</span>
-          </div>
-          <div class="contribution-wrap">
-            <div class="label">贡献度 contribution</div>
-            <div class="driver-contribution">4.42%</div>
-            <div class="contribution-bar" aria-label="贡献度进度条">
-              <span class="fill" style="width: 29.0%;"></span>
-            </div>
-          </div>
-        </div>
-        <div class="driver-meta">
-          <span><strong>历史基准</strong>：22.35%</span>
-          <span><strong>最近窗口</strong>：7.16%</span>
-          <span><strong>confidence</strong>：medium</span>
-        </div>
-        <p class="role-explanation"><strong>维度解读</strong>：地域分群信号，不应直接作为最终策略动作，需结合产能与产品结构。</p>
-        <p><strong>业务解释</strong>：上海 分组的回收率下降对整体异常有可量化贡献。</p>
-        <p><strong>推荐动作</strong>：继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。</p>
-      </div>
-      <div class="driver-card">
-        <div class="driver-head">
-          <div>
             <span class="driver-rank">#5</span>
-            <span class="driver-title">score_band = A</span>
+            <span class="driver-title">score_band = B</span>
             <span class="driver-role">客群风险结构</span>
           </div>
           <div class="contribution-wrap">
             <div class="label">贡献度 contribution</div>
-            <div class="driver-contribution">4.04%</div>
+            <div class="driver-contribution">4.17%</div>
             <div class="contribution-bar" aria-label="贡献度进度条">
-              <span class="fill" style="width: 26.5%;"></span>
+              <span class="fill" style="width: 69.2%;"></span>
             </div>
           </div>
         </div>
         <div class="driver-meta">
-          <span><strong>历史基准</strong>：36.42%</span>
-          <span><strong>最近窗口</strong>：19.88%</span>
+          <span><strong>历史基准</strong>：24.96%</span>
+          <span><strong>最近窗口</strong>：9.56%</span>
           <span><strong>confidence</strong>：medium</span>
         </div>
         <p class="role-explanation"><strong>维度解读</strong>：结构变化信号，检查高质量客群占比或样本结构是否漂移。</p>
-        <p><strong>业务解释</strong>：A 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。</p>
+        <p><strong>业务解释</strong>：B 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。</p>
         <p><strong>推荐动作</strong>：对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。</p>
       </div>
   </section>
@@ -1135,15 +1103,16 @@
           <span>触达证据</span>
           <span class="tone-tag">正向改善</span>
         </div>
-        <div class="headline">province=山东 的 AI 外呼覆盖率 下降：历史基准 100.00% → 最近窗口 0.00%（变化 -100.00%）。</div>
+        <div class="headline">risk_level=B 的 AI 外呼覆盖率 上升：历史基准 8.70% → 最近窗口 19.05%（变化 +10.35%）。</div>
         <div style="font-size: 12px; color: var(--muted);">主指标：AI 外呼覆盖率</div>
       </div>
-      <div class="evidence-card tone-neutral">
+      <div class="evidence-card tone-positive">
         <div class="chain-label">
           <span>履约证据</span>
-          <span class="tone-tag">无显著变化</span>
+          <span class="tone-tag">正向改善</span>
         </div>
-        <div class="headline">本期 PTP 履约 在 Top drivers 切片中未观察到显著变化。</div>
+        <div class="headline">risk_level=B 的 PTP 履约率 上升：历史基准 33.33% → 最近窗口 100.00%（变化 +66.67%）。</div>
+        <div style="font-size: 12px; color: var(--muted);">主指标：PTP 履约率</div>
       </div>
       <div class="evidence-card tone-neutral">
         <div class="chain-label">
@@ -1186,43 +1155,43 @@
           </thead>
           <tbody>
             <tr>
+              <td>risk_level=B</td>
+              <td>PTP 履约率</td>
+              <td>33.33%</td>
+              <td>100.00%</td>
+              <td>
+                  <span class="delta-positive">+66.67%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>product_code=P_CONS</td>
+              <td>PTP 履约率</td>
+              <td>0.00%</td>
+              <td>0.00%</td>
+              <td>
+                  <span class="delta-neutral">+0.00%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>balance_segment=NORMAL</td>
+              <td>PTP 履约率</td>
+              <td>25.00%</td>
+              <td>66.67%</td>
+              <td>
+                  <span class="delta-positive">+41.67%</span>
+              </td>
+            </tr>
+            <tr>
               <td>channel_code=ECOM</td>
               <td>PTP 履约率</td>
-              <td>0.00%</td>
+              <td>50.00%</td>
               <td>0.00%</td>
               <td>
-                  <span class="delta-neutral">+0.00%</span>
+                  <span class="delta-negative">-50.00%</span>
               </td>
             </tr>
             <tr>
-              <td>province=山东</td>
-              <td>PTP 履约率</td>
-              <td>0.00%</td>
-              <td>0.00%</td>
-              <td>
-                  <span class="delta-neutral">+0.00%</span>
-              </td>
-            </tr>
-            <tr>
-              <td>score_band=D</td>
-              <td>PTP 履约率</td>
-              <td>0.00%</td>
-              <td>0.00%</td>
-              <td>
-                  <span class="delta-neutral">+0.00%</span>
-              </td>
-            </tr>
-            <tr>
-              <td>province=上海</td>
-              <td>PTP 履约率</td>
-              <td>0.00%</td>
-              <td>0.00%</td>
-              <td>
-                  <span class="delta-neutral">+0.00%</span>
-              </td>
-            </tr>
-            <tr>
-              <td>score_band=A</td>
+              <td>score_band=B</td>
               <td>PTP 履约率</td>
               <td>0.00%</td>
               <td>0.00%</td>
@@ -1247,93 +1216,93 @@
           </thead>
           <tbody>
             <tr>
+              <td>risk_level=B</td>
+              <td>AI 外呼覆盖率</td>
+              <td>8.70%</td>
+              <td>19.05%</td>
+              <td>
+                  <span class="delta-positive">+10.35%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>risk_level=B</td>
+              <td>人工触达占比</td>
+              <td>91.30%</td>
+              <td>80.95%</td>
+              <td>
+                  <span class="delta-negative">-10.35%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>product_code=P_CONS</td>
+              <td>AI 外呼覆盖率</td>
+              <td>21.43%</td>
+              <td>16.67%</td>
+              <td>
+                  <span class="delta-negative">-4.76%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>product_code=P_CONS</td>
+              <td>人工触达占比</td>
+              <td>78.57%</td>
+              <td>83.33%</td>
+              <td>
+                  <span class="delta-positive">+4.76%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>balance_segment=NORMAL</td>
+              <td>AI 外呼覆盖率</td>
+              <td>22.58%</td>
+              <td>13.04%</td>
+              <td>
+                  <span class="delta-negative">-9.54%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>balance_segment=NORMAL</td>
+              <td>人工触达占比</td>
+              <td>77.42%</td>
+              <td>86.96%</td>
+              <td>
+                  <span class="delta-positive">+9.54%</span>
+              </td>
+            </tr>
+            <tr>
               <td>channel_code=ECOM</td>
               <td>AI 外呼覆盖率</td>
-              <td>46.15%</td>
-              <td>7.14%</td>
-              <td>
-                  <span class="delta-negative">-39.01%</span>
-              </td>
-            </tr>
-            <tr>
-              <td>channel_code=ECOM</td>
-              <td>人工触达占比</td>
-              <td>53.85%</td>
-              <td>92.86%</td>
-              <td>
-                  <span class="delta-positive">+39.01%</span>
-              </td>
-            </tr>
-            <tr>
-              <td>province=山东</td>
-              <td>AI 外呼覆盖率</td>
-              <td>100.00%</td>
-              <td>0.00%</td>
-              <td>
-                  <span class="delta-negative">-100.00%</span>
-              </td>
-            </tr>
-            <tr>
-              <td>province=山东</td>
-              <td>人工触达占比</td>
-              <td>0.00%</td>
-              <td>100.00%</td>
-              <td>
-                  <span class="delta-positive">+100.00%</span>
-              </td>
-            </tr>
-            <tr>
-              <td>score_band=D</td>
-              <td>AI 外呼覆盖率</td>
-              <td>0.00%</td>
-              <td>0.00%</td>
-              <td>
-                  <span class="delta-neutral">+0.00%</span>
-              </td>
-            </tr>
-            <tr>
-              <td>score_band=D</td>
-              <td>人工触达占比</td>
-              <td>100.00%</td>
-              <td>100.00%</td>
-              <td>
-                  <span class="delta-neutral">+0.00%</span>
-              </td>
-            </tr>
-            <tr>
-              <td>province=上海</td>
-              <td>AI 外呼覆盖率</td>
-              <td>33.33%</td>
-              <td>0.00%</td>
-              <td>
-                  <span class="delta-negative">-33.33%</span>
-              </td>
-            </tr>
-            <tr>
-              <td>province=上海</td>
-              <td>人工触达占比</td>
-              <td>66.67%</td>
-              <td>100.00%</td>
-              <td>
-                  <span class="delta-positive">+33.33%</span>
-              </td>
-            </tr>
-            <tr>
-              <td>score_band=A</td>
-              <td>AI 外呼覆盖率</td>
+              <td>18.18%</td>
               <td>25.00%</td>
-              <td>0.00%</td>
               <td>
-                  <span class="delta-negative">-25.00%</span>
+                  <span class="delta-positive">+6.82%</span>
               </td>
             </tr>
             <tr>
-              <td>score_band=A</td>
+              <td>channel_code=ECOM</td>
               <td>人工触达占比</td>
+              <td>81.82%</td>
               <td>75.00%</td>
-              <td>100.00%</td>
               <td>
-                  <span class="delta-positive">+25.00%</span>
+                  <span class="delta-negative">-6.82%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>score_band=B</td>
+              <td>AI 外呼覆盖率</td>
+              <td>12.50%</td>
+              <td>8.33%</td>
+              <td>
+                  <span class="delta-negative">-4.17%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>score_band=B</td>
+              <td>人工触达占比</td>
+              <td>87.50%</td>
+              <td>91.67%</td>
+              <td>
+                  <span class="delta-positive">+4.17%</span>
               </td>
             </tr>
           </tbody>
@@ -1353,6 +1322,33 @@
           </thead>
           <tbody>
             <tr>
+              <td>risk_level=B</td>
+              <td>减免使用率</td>
+              <td>0.00%</td>
+              <td>0.00%</td>
+              <td>
+                  <span class="delta-neutral">+0.00%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>product_code=P_CONS</td>
+              <td>减免使用率</td>
+              <td>0.00%</td>
+              <td>0.00%</td>
+              <td>
+                  <span class="delta-neutral">+0.00%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>balance_segment=NORMAL</td>
+              <td>减免使用率</td>
+              <td>0.00%</td>
+              <td>0.00%</td>
+              <td>
+                  <span class="delta-neutral">+0.00%</span>
+              </td>
+            </tr>
+            <tr>
               <td>channel_code=ECOM</td>
               <td>减免使用率</td>
               <td>0.00%</td>
@@ -1362,34 +1358,7 @@
               </td>
             </tr>
             <tr>
-              <td>province=山东</td>
-              <td>减免使用率</td>
-              <td>0.00%</td>
-              <td>0.00%</td>
-              <td>
-                  <span class="delta-neutral">+0.00%</span>
-              </td>
-            </tr>
-            <tr>
-              <td>score_band=D</td>
-              <td>减免使用率</td>
-              <td>0.00%</td>
-              <td>0.00%</td>
-              <td>
-                  <span class="delta-neutral">+0.00%</span>
-              </td>
-            </tr>
-            <tr>
-              <td>province=上海</td>
-              <td>减免使用率</td>
-              <td>0.00%</td>
-              <td>0.00%</td>
-              <td>
-                  <span class="delta-neutral">+0.00%</span>
-              </td>
-            </tr>
-            <tr>
-              <td>score_band=A</td>
+              <td>score_band=B</td>
               <td>减免使用率</td>
               <td>0.00%</td>
               <td>0.00%</td>
@@ -1414,6 +1383,33 @@
           </thead>
           <tbody>
             <tr>
+              <td>risk_level=B</td>
+              <td>投诉率</td>
+              <td>0.00%</td>
+              <td>0.00%</td>
+              <td>
+                  <span class="delta-neutral">+0.00%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>product_code=P_CONS</td>
+              <td>投诉率</td>
+              <td>0.00%</td>
+              <td>0.00%</td>
+              <td>
+                  <span class="delta-neutral">+0.00%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>balance_segment=NORMAL</td>
+              <td>投诉率</td>
+              <td>0.00%</td>
+              <td>0.00%</td>
+              <td>
+                  <span class="delta-neutral">+0.00%</span>
+              </td>
+            </tr>
+            <tr>
               <td>channel_code=ECOM</td>
               <td>投诉率</td>
               <td>0.00%</td>
@@ -1423,34 +1419,7 @@
               </td>
             </tr>
             <tr>
-              <td>province=山东</td>
-              <td>投诉率</td>
-              <td>0.00%</td>
-              <td>0.00%</td>
-              <td>
-                  <span class="delta-neutral">+0.00%</span>
-              </td>
-            </tr>
-            <tr>
-              <td>score_band=D</td>
-              <td>投诉率</td>
-              <td>0.00%</td>
-              <td>0.00%</td>
-              <td>
-                  <span class="delta-neutral">+0.00%</span>
-              </td>
-            </tr>
-            <tr>
-              <td>province=上海</td>
-              <td>投诉率</td>
-              <td>0.00%</td>
-              <td>0.00%</td>
-              <td>
-                  <span class="delta-neutral">+0.00%</span>
-              </td>
-            </tr>
-            <tr>
-              <td>score_band=A</td>
+              <td>score_band=B</td>
               <td>投诉率</td>
               <td>0.00%</td>
               <td>0.00%</td>
@@ -1632,28 +1601,22 @@
     <div class="section-hint">本轮异常与归因驱动的可执行建议（来自 M3-C 报告）。</div>
     <ul class="next-steps-list">
       <li>
+        <span class="source-tag">attribution</span>对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。
+      </li>
+      <li>
         <span class="source-tag">attribution</span>继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。
       </li>
       <li>
-        <span class="source-tag">attribution</span>对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。
+        <span class="source-tag">anomaly</span>进入 M3-B 后按供应商、线路、客群结构、AI 覆盖和减免策略下钻归因。
+      </li>
+      <li>
+        <span class="source-tag">anomaly</span>下钻供应商 B 的线路、催员和触达时段，验证执行资源或号码质量问题。
       </li>
       <li>
         <span class="source-tag">anomaly</span>下钻华东各 line_id 的 active_case_count 与 active_collector_count，评估临时增员或分案转移。
       </li>
       <li>
-        <span class="source-tag">anomaly</span>进入 M3-B 后拆分余额段、risk_level 和入案批次，识别结构变化贡献。
-      </li>
-      <li>
         <span class="source-tag">anomaly</span>检查 AI 外呼线路容量、分案策略和人工替代触达占比。
-      </li>
-      <li>
-        <span class="source-tag">anomaly</span>下钻 vendor_id、line_id 与 dpd_bucket，确认减免授权、审批或策略门槛是否变化。
-      </li>
-      <li>
-        <span class="source-tag">anomaly</span>下钻承诺还款客户的风险等级、余额段、催员和减免使用情况。
-      </li>
-      <li>
-        <span class="source-tag">anomaly</span>下钻该模板的发送供应商、发送时段、投诉等级和具体话术，进入合规复核。
       </li>
     </ul>
 
