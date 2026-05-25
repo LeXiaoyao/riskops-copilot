@@ -93,7 +93,14 @@ pytest
 
 ## Preview / 截图
 
-截图与视觉导览见 [docs/screenshots/README.md](docs/screenshots/README.md)（CLI summary、Model Lab、Dashboard 推荐截图清单）。`docs/architecture.md` 内的 Mermaid 图会在 GitHub 上原生渲染。
+![Dashboard Hero + Portfolio at a Glance](docs/screenshots/Hero%20+%20Portfolio%20at%20a%20Glance.png)
+
+| | |
+|---|---|
+| ![Anomaly Signals](docs/screenshots/Anomaly%20Signals%20%E9%9D%A2%E6%9D%BF.png) | ![Attribution Drivers](docs/screenshots/Attribution%20drivers%20%E9%9D%A2%E6%9D%BF.png) |
+| ![Strategy ROI Lab](docs/screenshots/Strategy%20ROI%20Lab%20%E9%9D%A2%E6%9D%BF.png) | ![AI+ML Fusion](docs/screenshots/AI%2BML%20Fusion%20%E5%88%86%E5%B1%82%E8%A1%A8.png) |
+
+完整截图索引见 [docs/screenshots/README.md](docs/screenshots/README.md)。`docs/architecture.md` 内的 Mermaid 图会在 GitHub 上原生渲染。
 
 ## Milestone Status
 
@@ -133,6 +140,19 @@ pytest
 
 - **阶段**：M6 Strategy Evaluation / ROI
 - **交付**：Strategy Scenario Schema、Offline Strategy Evaluator、ROI Calculator、Model Lab CLI integration。
+- **状态**：已发布。
+
+### v0.7.0 Demo Packaging（M7）
+
+- **阶段**：M7 Demo Packaging
+- **交付**：
+  - M7-A State Recovery 可行性 guard
+  - M7-B Dashboard Portfolio framing（Hero、5模块导览、AI+ML Fusion层、glossary）
+  - M7-C 确定性 Briefing 生成器（规则模板，不调 LLM）
+  - M7-D DeepSeek LLM 接入（`briefing --use-llm` 生成中文管理层摘要）
+  - M7-E 全链路一键脚本（`scripts/run_all.sh`）
+  - M7-F Excel 报告（`m4_business_report.xlsx`，4 个 Sheet）
+  - M7-G 面试讲稿（`docs/interview_pitch.md`，5 分钟结构化 + 12 节追问）
 - **状态**：已发布。
 
 ## Boundaries

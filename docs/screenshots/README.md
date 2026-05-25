@@ -6,6 +6,18 @@
 
 ---
 
+## 当前截图清单
+
+| 文件名 | 内容 |
+|---|---|
+| `Hero + Portfolio at a Glance.png` | Dashboard 首屏：Hero positioning + 5 模块导览卡 |
+| `Anomaly Signals 面板.png` | 异常信号面板：6 类贷后信号强度 |
+| `Attribution drivers 面板.png` | 归因面板：M1 D7 回收率下降 Top5 driver |
+| `Strategy ROI Lab 面板.png` | 策略 ROI Lab：5 个情景成本收益对比 |
+| `AI+ML Fusion 分层表.png` | AI + ML Fusion 职责分层表与术语 glossary |
+
+---
+
 ## Recommended Screenshots
 
 下面是建议补充的 4 张截图。每一张都给出：用途、来源命令或文件、推荐文件名、人工截图要点。
