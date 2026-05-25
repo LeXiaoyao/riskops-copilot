@@ -234,7 +234,7 @@ def _collect_evidence(scenario: dict[str, Any], m3_summary: dict[str, Any], keyw
     for anomaly in m3_summary.get("high_priority_anomalies", []):
         if _matches_evidence(anomaly, keyword, target_anomaly_id):
             evidence.append(_evidence_item("anomaly", anomaly))
-    target = m3_summary.get("attribution_target_anomaly", {})
+    target = _target_anomaly(m3_summary)
     if _matches_evidence(target, keyword, target_anomaly_id):
         evidence.append(_evidence_item("anomaly", target))
     for driver in m3_summary.get("m1_d7_attribution_summary", {}).get("top_drivers", []):
@@ -247,6 +247,8 @@ def _collect_evidence(scenario: dict[str, Any], m3_summary: dict[str, Any], keyw
 
 
 def _matches_evidence(item: dict[str, Any], keyword: str, target_anomaly_id: Any) -> bool:
+    if not isinstance(item, dict):
+        return False
     values = {str(value) for value in item.values() if isinstance(value, (str, int, float))}
     text = " ".join(values)
     return bool((target_anomaly_id and str(target_anomaly_id) in text) or (keyword and keyword in text))
@@ -271,10 +273,18 @@ def _baseline_value(scenario: dict[str, Any], m3_summary: dict[str, Any], eviden
         for item in evidence:
             if item.get("source_id") == target_anomaly_id and isinstance(item.get("recent_value"), (int, float)):
                 return float(item["recent_value"])
-    target = m3_summary.get("attribution_target_anomaly", {})
+    target = _target_anomaly(m3_summary)
     if isinstance(target.get("recent_value"), (int, float)):
         return float(target["recent_value"])
     return 0.0
+
+
+def _target_anomaly(m3_summary: dict[str, Any]) -> dict[str, Any]:
+    target = m3_summary.get("attribution_target_anomaly")
+    if isinstance(target, dict):
+        return target
+    nested = m3_summary.get("m1_d7_attribution_summary", {}).get("target_anomaly")
+    return nested if isinstance(nested, dict) else {}
 
 
 def _business_interpretation(scenario_id: str) -> str:
