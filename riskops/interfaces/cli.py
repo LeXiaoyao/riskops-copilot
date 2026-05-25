@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -173,6 +174,9 @@ def build_parser() -> argparse.ArgumentParser:
     briefing.add_argument("--api-key", type=str, default=None, help="DeepSeek API key (default: $DEEPSEEK_API_KEY).")
     briefing.add_argument("--model", type=str, default="deepseek-chat", help="DeepSeek model name.")
     briefing.set_defaults(handler=_handle_briefing)
+
+    tui = subparsers.add_parser("tui", help="Start the DeepSeek-style RiskOps Copilot TUI.")
+    tui.set_defaults(handler=_handle_tui)
 
     qc_scan = subparsers.add_parser("qc-scan", help="Run demo compliance keyword scan for collection scripts.")
     qc_input = qc_scan.add_mutually_exclusive_group(required=True)
@@ -569,6 +573,16 @@ def _handle_briefing(args: argparse.Namespace, out: TextIO) -> None:
     print("- no LLM automatic decisioning", file=out)
     print("- synthetic data only", file=out)
     print("PASS briefing", file=out)
+
+
+def _handle_tui(_args: argparse.Namespace, out: TextIO) -> None:
+    api_key = os.getenv("DEEPSEEK_API_KEY")
+    if not api_key:
+        print("请先设置 export DEEPSEEK_API_KEY=your_key", file=out)
+        return
+    from riskops.tui.app import RiskOpsTUIApp  # noqa: PLC0415
+
+    RiskOpsTUIApp(api_key=api_key).run()
 
 
 def _handle_qc_scan(args: argparse.Namespace, out: TextIO) -> None:
