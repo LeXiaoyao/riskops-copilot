@@ -24,6 +24,11 @@ from riskops.engines.model_lab.scenario_schema import (
 )
 from riskops.engines.model_lab.strategy_evaluator import run_strategy_evaluation
 from riskops.engines.report import BusinessReportInputError, write_business_report, write_business_report_excel
+from riskops.engines.visualization import (
+    build_anomaly_severity_chart,
+    build_driver_contribution_chart,
+    build_roi_comparison_chart,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_M3_SUMMARY = ROOT / "outputs" / "m3" / "m3_summary.json"
@@ -42,6 +47,10 @@ DEFAULT_ML_READINESS_MD = ROOT / "docs" / "m6_ml_readiness.md"
 DEFAULT_ML_BASELINE_DIR = ROOT / "outputs" / "model_lab" / "ml_baseline"
 DEFAULT_ML_METRICS_JSON = DEFAULT_ML_BASELINE_DIR / "metrics.json"
 DEFAULT_COPILOT_BRIEFING = ROOT / "outputs" / "copilot" / "briefing.md"
+DEFAULT_VISUALIZATION_DIR = ROOT / "outputs" / "visualization"
+DEFAULT_ANOMALY_SEVERITY_CHART = DEFAULT_VISUALIZATION_DIR / "anomaly_severity.html"
+DEFAULT_DRIVER_CONTRIBUTION_CHART = DEFAULT_VISUALIZATION_DIR / "driver_contribution.html"
+DEFAULT_ROI_COMPARISON_CHART = DEFAULT_VISUALIZATION_DIR / "roi_comparison.html"
 RUN_ML_BASELINE = ROOT / "scripts" / "run_ml_baseline.py"
 
 OUTPUT_PATHS = [
@@ -59,6 +68,9 @@ OUTPUT_PATHS = [
     DEFAULT_ML_METRICS_JSON,
     DEFAULT_ML_BASELINE_DIR / "feature_importance.csv",
     DEFAULT_COPILOT_BRIEFING,
+    DEFAULT_ANOMALY_SEVERITY_CHART,
+    DEFAULT_DRIVER_CONTRIBUTION_CHART,
+    DEFAULT_ROI_COMPARISON_CHART,
 ]
 
 COMMON_COMMANDS = [
@@ -77,6 +89,7 @@ COMMON_COMMANDS = [
     "python scripts/riskops_cli.py render-dashboard",
     "python scripts/riskops_cli.py render-report",
     "python scripts/riskops_cli.py render-excel",
+    "python scripts/riskops_cli.py render-charts",
 ]
 
 
@@ -207,6 +220,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Business report Excel output path.",
     )
     render_excel.set_defaults(handler=_handle_render_excel)
+
+    render_charts = subparsers.add_parser("render-charts", help="Render offline Plotly charts to outputs/visualization/*.html.")
+    render_charts.add_argument("--m3-summary", type=Path, default=DEFAULT_M3_SUMMARY)
+    render_charts.add_argument("--roi", type=Path, default=DEFAULT_ROI_JSON)
+    render_charts.add_argument("--output-dir", type=Path, default=DEFAULT_VISUALIZATION_DIR)
+    render_charts.set_defaults(handler=_handle_render_charts)
 
     return parser
 
@@ -579,6 +598,23 @@ def _handle_render_excel(args: argparse.Namespace, out: TextIO) -> None:
     print("input：{}".format(_display_path(args.input)), file=out)
     print("roi input：{}".format(_display_path(args.roi_input)), file=out)
     print("anomalies：{}".format(_safe_int(result.get("anomaly_count"))), file=out)
+
+
+def _handle_render_charts(args: argparse.Namespace, out: TextIO) -> None:
+    m3_summary = _load_summary(args.m3_summary)
+    roi_results = _load_json_object(args.roi, "ROI results")
+    output_dir = args.output_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    outputs = [
+        (output_dir / "anomaly_severity.html", build_anomaly_severity_chart(m3_summary)),
+        (output_dir / "driver_contribution.html", build_driver_contribution_chart(m3_summary)),
+        (output_dir / "roi_comparison.html", build_roi_comparison_chart(roi_results)),
+    ]
+    for path, html in outputs:
+        path.write_text(html, encoding="utf-8")
+        print(_display_path(path), file=out)
+    print("PASS render-charts", file=out)
 
 
 def _load_summary(input_path: Path) -> dict[str, Any]:
