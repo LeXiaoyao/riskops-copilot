@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 from typing import Any, TextIO
 
+from riskops.engines.copilot.briefing_builder import build_copilot_briefing, write_copilot_briefing
 from riskops.engines.dashboard import DashboardInputError, write_dashboard
 from riskops.engines.model_lab.ml_readiness import assess_ml_readiness, write_ml_readiness_outputs
 from riskops.engines.model_lab.roi_calculator import calculate_roi_results, load_strategy_eval_results, write_roi_outputs
@@ -34,6 +35,8 @@ DEFAULT_SYNTHETIC_DATA = ROOT / "synthetic_data"
 DEFAULT_ML_READINESS_JSON = ROOT / "outputs" / "model_lab" / "ml_baseline" / "readiness.json"
 DEFAULT_ML_READINESS_MD = ROOT / "docs" / "m6_ml_readiness.md"
 DEFAULT_ML_BASELINE_DIR = ROOT / "outputs" / "model_lab" / "ml_baseline"
+DEFAULT_ML_METRICS_JSON = DEFAULT_ML_BASELINE_DIR / "metrics.json"
+DEFAULT_COPILOT_BRIEFING = ROOT / "outputs" / "copilot" / "briefing.md"
 RUN_ML_BASELINE = ROOT / "scripts" / "run_ml_baseline.py"
 
 OUTPUT_PATHS = [
@@ -47,8 +50,9 @@ OUTPUT_PATHS = [
     DEFAULT_ROI_JSON,
     DEFAULT_ROI_MD,
     DEFAULT_ML_READINESS_JSON,
-    DEFAULT_ML_BASELINE_DIR / "metrics.json",
+    DEFAULT_ML_METRICS_JSON,
     DEFAULT_ML_BASELINE_DIR / "feature_importance.csv",
+    DEFAULT_COPILOT_BRIEFING,
 ]
 
 COMMON_COMMANDS = [
@@ -62,6 +66,7 @@ COMMON_COMMANDS = [
     "python scripts/riskops_cli.py model-lab",
     "python scripts/riskops_cli.py ml-readiness",
     "python scripts/riskops_cli.py ml-baseline",
+    "python scripts/riskops_cli.py briefing",
     "python scripts/riskops_cli.py render-model-lab",
     "python scripts/riskops_cli.py render-dashboard",
     "python scripts/riskops_cli.py render-report",
@@ -126,6 +131,15 @@ def build_parser() -> argparse.ArgumentParser:
     ml_baseline.add_argument("--random-seed", type=int, default=20260521)
     ml_baseline.add_argument("--exclude-vintage-month", action="store_true")
     ml_baseline.set_defaults(handler=_handle_ml_baseline)
+
+    briefing = subparsers.add_parser("briefing", help="Render deterministic Copilot briefing.")
+    briefing.add_argument("--m3-summary", type=Path, default=DEFAULT_M3_SUMMARY)
+    briefing.add_argument("--strategy-eval", type=Path, default=DEFAULT_STRATEGY_EVAL_JSON)
+    briefing.add_argument("--roi", type=Path, default=DEFAULT_ROI_JSON)
+    briefing.add_argument("--ml-metrics", type=Path, default=DEFAULT_ML_METRICS_JSON)
+    briefing.add_argument("--ml-readiness", type=Path, default=DEFAULT_ML_READINESS_JSON)
+    briefing.add_argument("--output", type=Path, default=DEFAULT_COPILOT_BRIEFING)
+    briefing.set_defaults(handler=_handle_briefing)
 
     render_model_lab = subparsers.add_parser("render-model-lab", help="Render M6 strategy eval and ROI outputs.")
     render_model_lab.add_argument("--scenarios", type=Path, default=DEFAULT_STRATEGY_SCENARIOS)
@@ -424,6 +438,31 @@ def _handle_ml_baseline(args: argparse.Namespace, out: TextIO) -> None:
     if result.returncode != 0:
         detail = result.stderr.strip() or result.stdout.strip() or "unknown ML baseline failure"
         raise CliInputError(detail)
+
+
+def _handle_briefing(args: argparse.Namespace, out: TextIO) -> None:
+    try:
+        briefing = build_copilot_briefing(
+            args.m3_summary,
+            args.strategy_eval,
+            args.roi,
+            args.ml_metrics,
+            args.ml_readiness,
+        )
+        output = write_copilot_briefing(briefing, args.output)
+    except (FileNotFoundError, ValueError, json.JSONDecodeError) as exc:
+        raise CliInputError(exc) from exc
+
+    what_happened = briefing["what_happened"]
+    ml = briefing["ml_baseline"]
+    print("Copilot briefing：{}".format(_display_path(Path(output))), file=out)
+    print(f"- anomaly_count：{what_happened['anomaly_count']}", file=out)
+    print(f"- target_metric：{what_happened['target_metric']}", file=out)
+    print(f"- ml_target：{ml['recommended_target']}", file=out)
+    print("- deterministic rule-based briefing", file=out)
+    print("- no LLM automatic decisioning", file=out)
+    print("- synthetic data only", file=out)
+    print("PASS briefing", file=out)
 
 
 def _handle_render_model_lab(args: argparse.Namespace, out: TextIO) -> None:

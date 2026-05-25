@@ -1,0 +1,1 @@
+"""Deterministic Copilot briefing engine."""

@@ -13,10 +13,13 @@
 ### Added
 - M7-A State Recovery 目标可行性 guard：在 leakage / 时间窗 / 状态可观测性三个维度做诊断性检查，**不是 production cure baseline**。
 - 公开 demo 导航与 architecture 文档梳理：README、`docs/architecture.md`、CLI summary、Model Lab 文案在 demo boundary 上的措辞统一。
+- M7-B Dashboard Portfolio 加层：Hero 双语 positioning 块、Portfolio at a Glance 5 模块导览卡（Business Problem / Data & Metric Layer / Anomaly Signals / Attribution / Strategy ROI Lab）、AI + ML Fusion 职责分层表、术语 glossary（M1 D7 / PTP / Vendor-line / Recovery rate 等），面向无消金背景访客 30 秒读懂 demo 设计。
+- M7-C Deterministic Briefing：`riskops/engines/copilot/briefing_builder.py` 把 M3 / strategy_eval / ROI / ML 输出聚合为管理层单页简报（`outputs/copilot/briefing.md`）；CLI 入口 `briefing`；规则模板，**不调 LLM**。
 
 ### Notes
 - 当前 trainable baseline 仍是 **D7 any-payment response**；state recovery 仅作为 feasibility / leakage guard 存在。
 - 仓库不含真实客户数据；不做真实风控决策；不发送 SMS / voice / WhatsApp；不调用 LLM 做策略决策。
+- M7-C briefing 不是 PRD M5 催收 Copilot，也不是 M8 LLM Agent 层；`riskops/agents/` 目录为上述两者保留。
 
 ---
 
