@@ -24,7 +24,12 @@ from riskops.engines.model_lab.scenario_schema import (
 )
 from riskops.engines.model_lab.strategy_evaluator import run_strategy_evaluation
 from riskops.engines.qc import scan_batch
-from riskops.engines.report import BusinessReportInputError, write_business_report, write_business_report_excel
+from riskops.engines.report import (
+    BusinessReportInputError,
+    write_business_report,
+    write_business_report_excel,
+    write_business_report_ppt,
+)
 from riskops.engines.visualization import (
     build_anomaly_severity_chart,
     build_driver_contribution_chart,
@@ -37,6 +42,7 @@ DEFAULT_DASHBOARD = ROOT / "outputs" / "dashboard" / "dashboard.html"
 DEFAULT_REPORT_MD = ROOT / "outputs" / "reports" / "m4_business_report.md"
 DEFAULT_REPORT_HTML = ROOT / "outputs" / "reports" / "m4_business_report.html"
 DEFAULT_REPORT_XLSX = ROOT / "outputs" / "reports" / "m4_business_report.xlsx"
+DEFAULT_REPORT_PPTX = ROOT / "outputs" / "reports" / "m4_business_report.pptx"
 DEFAULT_STRATEGY_SCENARIOS = ROOT / "configs" / "strategy_scenarios.yaml"
 DEFAULT_STRATEGY_EVAL_JSON = ROOT / "outputs" / "model_lab" / "strategy_eval_results.json"
 DEFAULT_STRATEGY_EVAL_MD = ROOT / "outputs" / "model_lab" / "strategy_eval_summary.md"
@@ -59,6 +65,7 @@ OUTPUT_PATHS = [
     DEFAULT_REPORT_MD,
     DEFAULT_REPORT_HTML,
     DEFAULT_REPORT_XLSX,
+    DEFAULT_REPORT_PPTX,
     ROOT / "outputs" / "m3" / "m3_summary.md",
     DEFAULT_M3_SUMMARY,
     DEFAULT_STRATEGY_EVAL_JSON,
@@ -91,6 +98,7 @@ COMMON_COMMANDS = [
     "python scripts/riskops_cli.py render-dashboard",
     "python scripts/riskops_cli.py render-report",
     "python scripts/riskops_cli.py render-excel",
+    "python scripts/riskops_cli.py render-ppt",
     "python scripts/riskops_cli.py render-charts",
 ]
 
@@ -228,6 +236,25 @@ def build_parser() -> argparse.ArgumentParser:
         help="Business report Excel output path.",
     )
     render_excel.set_defaults(handler=_handle_render_excel)
+
+    render_ppt = subparsers.add_parser(
+        "render-ppt",
+        help="Render outputs/reports/m4_business_report.pptx.",
+    )
+    _add_input_arg(render_ppt)
+    render_ppt.add_argument(
+        "--roi-input",
+        type=Path,
+        default=DEFAULT_ROI_JSON,
+        help="Path to ROI results JSON.",
+    )
+    render_ppt.add_argument(
+        "--output",
+        type=Path,
+        default=DEFAULT_REPORT_PPTX,
+        help="Business report PowerPoint output path.",
+    )
+    render_ppt.set_defaults(handler=_handle_render_ppt)
 
     render_charts = subparsers.add_parser("render-charts", help="Render offline Plotly charts to outputs/visualization/*.html.")
     render_charts.add_argument("--m3-summary", type=Path, default=DEFAULT_M3_SUMMARY)
@@ -632,6 +659,17 @@ def _handle_render_excel(args: argparse.Namespace, out: TextIO) -> None:
     print("input：{}".format(_display_path(args.input)), file=out)
     print("roi input：{}".format(_display_path(args.roi_input)), file=out)
     print("anomalies：{}".format(_safe_int(result.get("anomaly_count"))), file=out)
+
+
+def _handle_render_ppt(args: argparse.Namespace, out: TextIO) -> None:
+    try:
+        result = write_business_report_ppt(args.input, args.output, args.roi_input)
+    except BusinessReportInputError as exc:
+        raise CliInputError(exc) from exc
+    print("business report ppt：{}".format(_display_path(args.output)), file=out)
+    print("input：{}".format(_display_path(args.input)), file=out)
+    print("roi input：{}".format(_display_path(args.roi_input)), file=out)
+    print("slides：{}".format(_safe_int(result.get("slide_count"))), file=out)
 
 
 def _handle_render_charts(args: argparse.Namespace, out: TextIO) -> None:

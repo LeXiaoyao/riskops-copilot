@@ -37,6 +37,7 @@ def test_help_can_run_and_lists_commands() -> None:
         "render-dashboard",
         "render-report",
         "render-excel",
+        "render-ppt",
     ]:
         assert command in result.stdout
 
@@ -90,6 +91,7 @@ def test_outputs_can_run_and_marks_file_status() -> None:
         "outputs/reports/m4_business_report.md",
         "outputs/reports/m4_business_report.html",
         "outputs/reports/m4_business_report.xlsx",
+        "outputs/reports/m4_business_report.pptx",
         "outputs/m3/m3_summary.md",
         "outputs/m3/m3_summary.json",
         "outputs/model_lab/strategy_eval_results.json",

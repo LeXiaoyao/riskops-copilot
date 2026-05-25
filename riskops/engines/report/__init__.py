@@ -9,11 +9,13 @@ from riskops.engines.report.business_report import (
 )
 from riskops.engines.report.excel_renderer import ExcelReportInputError, write_business_report_excel
 from riskops.engines.report.m3_report import M3ReportInputError, build_m3_summary, render_markdown, write_m3_report
+from riskops.engines.report.ppt_renderer import PptReportInputError, write_business_report_ppt
 
 __all__ = [
     "BusinessReportInputError",
     "ExcelReportInputError",
     "M3ReportInputError",
+    "PptReportInputError",
     "build_business_report_context",
     "build_m3_summary",
     "render_business_report_html",
@@ -21,5 +23,6 @@ __all__ = [
     "render_markdown",
     "write_business_report",
     "write_business_report_excel",
+    "write_business_report_ppt",
     "write_m3_report",
 ]
