@@ -13,11 +13,88 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+import yaml
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoescape
 
 DASHBOARD_VERSION = "m4-ab-v1"
 TEMPLATE_DIR = Path(__file__).resolve().parent / "templates"
 TEMPLATE_NAME = "dashboard.html.j2"
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+_TABLES_YAML = _REPO_ROOT / "metadata" / "tables.yaml"
+_METRICS_YAML = _REPO_ROOT / "metadata" / "metric_dictionary.yaml"
+
+# Static portfolio framing — used to make the dashboard self-explanatory
+# for visitors without a consumer-finance / collections background.
+PROJECT_POSITIONING_EN = (
+    "RiskOps Copilot turns post-loan risk operations from scattered SQL / "
+    "Excel / PPT work into a reproducible AI / Data workflow: detect "
+    "anomaly → explain drivers → generate business report → evaluate "
+    "strategy ROI."
+)
+PROJECT_POSITIONING_CN = (
+    "把贷后风控运营里散落在 SQL / Excel / PPT 的工作流，沉淀成可复现的 "
+    "AI / Data workflow：识别异常 → 解释驱动 → 生成经营报告 → 估算策略 ROI。"
+)
+
+JARGON_GLOSSARY = [
+    {
+        "term": "M1 D7 recovery rate",
+        "plain": "share of newly-overdue (M1) loan amount that gets any payment within day 7",
+        "cn": "M1 客户在逾期第 7 天前完成任意还款的金额占比，是贷后早期催收效果的核心指标。",
+    },
+    {
+        "term": "PTP (promise to pay)",
+        "plain": "the borrower verbally / textually agrees to pay by a date; PTP keep rate = share that actually paid",
+        "cn": "客户口头或文字承诺还款日期；PTP 履约率衡量承诺后真实兑现比例。",
+    },
+    {
+        "term": "Vendor / line",
+        "plain": "outsourced collection agency (vendor) and its operation queue (line)",
+        "cn": "委外催收机构（vendor）及其作业线路 / 队列（line）。",
+    },
+    {
+        "term": "Recovery rate",
+        "plain": "share of overdue principal + interest recovered within a defined window",
+        "cn": "在指定窗口内已回收的逾期本息占应收逾期金额的比例。",
+    },
+    {
+        "term": "AI outbound coverage",
+        "plain": "share of overdue cases reached by AI-driven outbound calls (demo only — no real customer contact)",
+        "cn": "AI 外呼覆盖到的逾期案件占比；本 demo 不产生真实外呼。",
+    },
+    {
+        "term": "Driver / attribution",
+        "plain": "which slice (channel / region / customer segment / vendor) explains the change in the headline metric",
+        "cn": "解释整体指标变化的关键切片（渠道 / 区域 / 客群 / 供应商等）。",
+    },
+]
+
+AI_ML_FUSION_LAYERS = [
+    {
+        "layer": "ML / rules layer",
+        "role": "Detect & structure signals",
+        "detail_en": "Statistical rules and an offline ML baseline surface anomalies and structure them into typed events with severity.",
+        "detail_cn": "统计规则与离线 ML baseline 识别异常，将其结构化为带 severity 的事件。",
+    },
+    {
+        "layer": "Attribution / ROI layer",
+        "role": "Quantify business impact",
+        "detail_en": "Attribution decomposes the headline drop into ranked drivers; the ROI lab estimates net benefit under demo cost assumptions.",
+        "detail_cn": "归因将整体下降拆解为可排序的驱动因素；ROI lab 在 demo 成本假设下估算净收益。",
+    },
+    {
+        "layer": "LLM / Agent layer (planned)",
+        "role": "Summarize, explain, draft, route",
+        "detail_en": "Later layer will summarize the dashboard, explain drivers in plain language, draft business reports, and route human review.",
+        "detail_cn": "后续 layer 负责摘要、口语化解释、报告草稿与人工复核路由。",
+    },
+    {
+        "layer": "Human-in-the-loop boundary",
+        "role": "Compliance & approval",
+        "detail_en": "LLM is not used as an automatic financial decision maker. Every action requires explicit human approval; no SMS / voice / WhatsApp is sent.",
+        "detail_cn": "LLM 不作为自动金融决策者，所有动作必须人工审批；不发送短信 / 语音 / WhatsApp。",
+    },
+]
 
 PROCESS_METRIC_GROUPS = [
     {
@@ -149,6 +226,8 @@ def build_dashboard_context(
     *,
     source_path: Path | None = None,
     generated_at: datetime | None = None,
+    roi_summary: dict[str, Any] | None = None,
+    strategy_summary: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Enrich the raw M3 summary into a template-ready context.
 
@@ -210,10 +289,36 @@ def build_dashboard_context(
 
     generated_at = generated_at or datetime.now()
 
+    roi_block = _build_roi_block(roi_summary)
+    strategy_block = _build_strategy_block(strategy_summary)
+    data_layer_table_count = _count_yaml_list(_TABLES_YAML)
+    metric_dict_count = _count_yaml_list(_METRICS_YAML)
+    portfolio_cards = _build_portfolio_cards(
+        anomaly_count=_safe_int(overview.get("anomaly_count")),
+        severity_counts=severity_counts,
+        target_metric_name=target_metric_name,
+        target_metric_code=target_metric_code,
+        target_anomaly=target_anomaly,
+        top_drivers=driver_displays,
+        roi_block=roi_block,
+        strategy_block=strategy_block,
+        data_layer_table_count=data_layer_table_count,
+        metric_dict_count=metric_dict_count,
+    )
+
     return {
         "dashboard_version": DASHBOARD_VERSION,
         "project_title": "RiskOps Copilot",
         "subtitle": "M4 Dashboard & Report MVP",
+        "project_positioning_en": PROJECT_POSITIONING_EN,
+        "project_positioning_cn": PROJECT_POSITIONING_CN,
+        "portfolio_cards": portfolio_cards,
+        "ai_ml_fusion_layers": AI_ML_FUSION_LAYERS,
+        "jargon_glossary": JARGON_GLOSSARY,
+        "data_layer_table_count": data_layer_table_count,
+        "metric_dict_count": metric_dict_count,
+        "roi_block": roi_block,
+        "strategy_block": strategy_block,
         "demo_disclaimer": summary.get("demo_disclaimer")
         or "本报告基于 synthetic_data / 合成数据生成，仅用于 Demo 展示，不代表真实业务结论。",
         "report_version": summary.get("report_version"),
@@ -260,16 +365,49 @@ def render_dashboard_html(context: dict[str, Any]) -> str:
     env.filters["signed_pct"] = _format_signed_pct
     env.filters["metric_value"] = _format_metric_value
     env.filters["signed_value"] = _format_signed_value
+    env.filters["roi"] = _format_roi
     return env.get_template(TEMPLATE_NAME).render(**context).rstrip() + "\n"
 
 
 def write_dashboard(input_path: Path, output_path: Path) -> dict[str, Any]:
     summary = load_m3_summary(input_path)
-    context = build_dashboard_context(summary, source_path=input_path)
+    roi_summary = _load_optional_json(_sibling_outputs(input_path, "model_lab/roi_results.json"))
+    strategy_summary = _load_optional_json(
+        _sibling_outputs(input_path, "model_lab/strategy_eval_results.json")
+    )
+    context = build_dashboard_context(
+        summary,
+        source_path=input_path,
+        roi_summary=roi_summary,
+        strategy_summary=strategy_summary,
+    )
     html = render_dashboard_html(context)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(html, encoding="utf-8")
     return context
+
+
+def _sibling_outputs(input_path: Path, rel: str) -> Path:
+    # M3 summary lives under outputs/m3/m3_summary.json; siblings under outputs/.
+    outputs_root = input_path.resolve().parent.parent
+    return outputs_root / rel
+
+
+def _load_optional_json(path: Path) -> dict[str, Any] | None:
+    if not path.exists():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
+    return payload if isinstance(payload, dict) else None
+
+
+def _count_yaml_list(path: Path) -> int:
+    if not path.exists():
+        return 0
+    data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    return len(data) if isinstance(data, list) else 0
 
 
 def _as_dict(value: Any) -> dict[str, Any]:
@@ -616,3 +754,183 @@ def _capacity_chain(spec: dict[str, Any], signals: list[dict[str, Any]]) -> dict
         "highlight": first,
         "details": signals,
     }
+
+
+def _build_portfolio_cards(
+    *,
+    anomaly_count: int,
+    severity_counts: dict[str, Any],
+    target_metric_name: str,
+    target_metric_code: str,
+    target_anomaly: dict[str, Any] | None,
+    top_drivers: list[dict[str, Any]],
+    roi_block: dict[str, Any] | None,
+    strategy_block: dict[str, Any] | None,
+    data_layer_table_count: int,
+    metric_dict_count: int,
+) -> list[dict[str, Any]]:
+    high = _safe_int(severity_counts.get("high"))
+    medium = _safe_int(severity_counts.get("medium"))
+    rc = target_anomaly.get("relative_change") if isinstance(target_anomaly, dict) else None
+    if isinstance(rc, int | float) and rc != 0:
+        problem_stat = (
+            f"{target_metric_name} {_format_signed_pct(rc)} 相对基线"
+        )
+    else:
+        problem_stat = f"{target_metric_name}"
+    business_problem = {
+        "code": "business_problem",
+        "eyebrow": "01 · Business Problem",
+        "title": "M1 D7 回收率下降，到底由谁驱动？",
+        "stat": problem_stat,
+        "description_en": (
+            "M1 day-7 recovery rate dropped. Is it driven by channel, "
+            "region, customer segment, vendor / line, contact, complaint, "
+            "or settlement use? Untangle it without a manual SQL hunt."
+        ),
+        "description_cn": (
+            "M1 D7 回收率下降，需要快速判断到底是渠道、区域、客群、供应商 / "
+            "线路、触达、投诉还是减免使用导致，避免靠人工 SQL 反复下钻。"
+        ),
+    }
+
+    data_metric = {
+        "code": "data_metric_layer",
+        "eyebrow": "02 · Data & Metric Layer",
+        "title": "Synthetic data only · 单一权威源",
+        "stat": f"{data_layer_table_count} tables · {metric_dict_count} metrics",
+        "description_en": (
+            "All numbers come from synthetic data. A 5-layer warehouse, "
+            "a metric dictionary (single source of truth) and an enforced "
+            "privacy boundary (P0–P4) sit under every panel."
+        ),
+        "description_cn": (
+            "全部基于合成数据；五层数仓 + 指标字典作为单一权威源，"
+            "并按 P0–P4 隐私分级约束哪些字段可以进入报告与 LLM 上下文。"
+        ),
+    }
+
+    anomaly_signal = {
+        "code": "anomaly_signals",
+        "eyebrow": "03 · Anomaly Signals",
+        "title": "结构化异常事件，而非散点告警",
+        "stat": f"{anomaly_count} anomalies · {high} high · {medium} medium",
+        "description_en": (
+            "Rule + ML signals across recovery, AI outbound, manual "
+            "capacity, PTP, settlement use and complaint risk are folded "
+            "into typed events with severity."
+        ),
+        "description_cn": (
+            "回收率、AI 外呼覆盖、产能压力、PTP、减免使用、投诉风险等信号"
+            "统一结构化为带 severity 的事件。"
+        ),
+    }
+
+    if top_drivers:
+        primary = top_drivers[0]
+        attr_stat = (
+            f"Top driver: {primary.get('dimension_name')}={primary.get('dimension_value')} "
+            f"({_format_pct(primary.get('contribution_score'))})"
+        )
+    else:
+        attr_stat = "Top drivers ranked by marginal contribution"
+    attribution_card = {
+        "code": "attribution",
+        "eyebrow": "04 · Attribution",
+        "title": "排序好的 Top drivers，可解释",
+        "stat": attr_stat,
+        "description_en": (
+            "Decompose the headline drop into ranked drivers across "
+            "channel, region, customer segment and vendor / line, with "
+            "process evidence (contact / fulfill / settlement / "
+            "compliance / capacity) attached."
+        ),
+        "description_cn": (
+            "把整体下降拆成可排序的驱动因素，并附触达 / 履约 / 减免 / "
+            "合规 / 产能五条证据链。"
+        ),
+    }
+
+    if roi_block and roi_block.get("scenario_count"):
+        roi_stat = (
+            f"{roi_block['scenario_count']} scenarios · "
+            f"top ROI {roi_block.get('top_roi_display', 'N/A')} "
+            f"({roi_block.get('top_scenario_name', 'N/A')})"
+        )
+    else:
+        roi_stat = "Demo cost assumptions only"
+    strategy_card = {
+        "code": "strategy_roi",
+        "eyebrow": "05 · Strategy / ROI Lab",
+        "title": "离线情景 · 量化净收益与回收周期",
+        "stat": roi_stat,
+        "description_en": (
+            "Offline what-if scenarios estimate delta, cost, net benefit, "
+            "ROI and payback days under explicit demo cost assumptions. "
+            "Not a production financial decision."
+        ),
+        "description_cn": (
+            "基于显式 demo 成本假设的离线情景估算 delta / cost / net benefit / "
+            "ROI / payback，不代表真实财务结论或上线决策。"
+        ),
+    }
+
+    return [business_problem, data_metric, anomaly_signal, attribution_card, strategy_card]
+
+
+def _build_roi_block(roi_summary: dict[str, Any] | None) -> dict[str, Any] | None:
+    if not isinstance(roi_summary, dict):
+        return None
+    results = _as_list(roi_summary.get("results"))
+    cost_assumptions = _as_dict(roi_summary.get("cost_assumptions"))
+    top = _as_dict(roi_summary.get("highest_roi_scenario"))
+    scenarios: list[dict[str, Any]] = []
+    for row in results:
+        if not isinstance(row, dict):
+            continue
+        scenarios.append(
+            {
+                "scenario_id": row.get("scenario_id"),
+                "scenario_name": row.get("scenario_name"),
+                "strategy_type": row.get("strategy_type"),
+                "target_metric": row.get("target_metric"),
+                "estimated_delta": row.get("estimated_delta"),
+                "estimated_delta_display": _format_signed_value(row.get("estimated_delta")),
+                "gross_benefit": row.get("gross_benefit"),
+                "action_cost": row.get("action_cost"),
+                "net_benefit": row.get("net_benefit"),
+                "roi_ratio": row.get("roi_ratio"),
+                "roi_ratio_display": _format_roi(row.get("roi_ratio")),
+                "payback_period_days": row.get("payback_period_days"),
+                "cost_assumption": row.get("cost_assumption"),
+            }
+        )
+    return {
+        "scenario_count": _safe_int(roi_summary.get("scenario_count")) or len(scenarios),
+        "positive_roi_count": _safe_int(roi_summary.get("positive_roi_count")),
+        "top_scenario_id": top.get("scenario_id"),
+        "top_scenario_name": top.get("scenario_name"),
+        "top_roi_ratio": top.get("roi_ratio"),
+        "top_roi_display": _format_roi(top.get("roi_ratio")),
+        "cost_assumptions": cost_assumptions,
+        "scenarios": scenarios,
+        "demo_disclaimer": roi_summary.get("demo_disclaimer"),
+    }
+
+
+def _build_strategy_block(strategy_summary: dict[str, Any] | None) -> dict[str, Any] | None:
+    if not isinstance(strategy_summary, dict):
+        return None
+    return {
+        "scenario_count": _safe_int(strategy_summary.get("scenario_count")),
+        "priority_scenarios": _as_list(strategy_summary.get("priority_scenarios")),
+        "strategy_type_counts": _as_dict(strategy_summary.get("strategy_type_counts")),
+        "target_metric_counts": _as_dict(strategy_summary.get("target_metric_counts")),
+        "demo_disclaimer": strategy_summary.get("demo_disclaimer"),
+    }
+
+
+def _format_roi(value: Any) -> str:
+    if not isinstance(value, int | float):
+        return "N/A"
+    return f"{value:.1f}×"

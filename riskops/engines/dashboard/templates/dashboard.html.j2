@@ -61,7 +61,26 @@
   header.hero .subtitle {
     font-size: 16px;
     opacity: 0.92;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
+  }
+  header.hero .positioning {
+    background: rgba(255, 255, 255, 0.10);
+    border-left: 3px solid rgba(255, 255, 255, 0.45);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin: 0 0 16px;
+    font-size: 13.5px;
+    line-height: 1.55;
+  }
+  header.hero .positioning .lang-en {
+    display: block;
+    font-weight: 500;
+  }
+  header.hero .positioning .lang-cn {
+    display: block;
+    margin-top: 6px;
+    opacity: 0.88;
+    font-size: 13px;
   }
   header.hero .meta {
     display: flex;
@@ -492,6 +511,168 @@
   .evidence-detail summary::-webkit-details-marker { display: none; }
   .evidence-detail[open] summary { background: var(--accent-soft); color: var(--accent); }
   .evidence-detail table { margin-top: 10px; }
+  .portfolio-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+  }
+  .portfolio-card {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 16px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .portfolio-card .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 10.5px;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .portfolio-card .title {
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.4;
+  }
+  .portfolio-card .stat {
+    font-size: 12.5px;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 4px 8px;
+    border-radius: 6px;
+    display: inline-block;
+    width: fit-content;
+    font-weight: 600;
+  }
+  .portfolio-card .desc-en {
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .portfolio-card .desc-cn {
+    font-size: 12.5px;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .fusion-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 10px;
+  }
+  .fusion-card {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 14px;
+    background: #fafbfc;
+  }
+  .fusion-card .layer {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .fusion-card .role {
+    font-size: 11.5px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 2px;
+  }
+  .fusion-card .detail-en {
+    font-size: 12.5px;
+    color: var(--ink);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+  .fusion-card .detail-cn {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+  .fusion-boundary {
+    margin-top: 12px;
+    background: #fff8e0;
+    border-left: 3px solid #e0b94a;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 12.5px;
+    color: #5b3b00;
+  }
+  .jargon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .jargon-card {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: #fafbfc;
+  }
+  .jargon-card .term {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .jargon-card .plain {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+  .jargon-card .plain-cn {
+    font-size: 12px;
+    color: var(--ink);
+    margin-top: 2px;
+    line-height: 1.55;
+  }
+  .roi-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .roi-stat {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 14px;
+    background: #fafbfc;
+  }
+  .roi-stat .label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .roi-stat .value {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--accent);
+    margin-top: 4px;
+  }
+  .roi-stat .hint {
+    font-size: 11.5px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .demo-only-tag {
+    display: inline-block;
+    background: #fff;
+    color: #7a4a00;
+    border: 1px solid #e0b94a;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    margin-left: 6px;
+  }
 </style>
 </head>
 <body>
@@ -501,6 +682,10 @@
     <div class="eyebrow">{{ dashboard_version }}</div>
     <h1>{{ project_title }}</h1>
     <div class="subtitle">{{ subtitle }}</div>
+    <div class="positioning" role="note" aria-label="project positioning">
+      <span class="lang-en">{{ project_positioning_en }}</span>
+      <span class="lang-cn">{{ project_positioning_cn }}</span>
+    </div>
     <div class="meta">
       <span><strong>报告生成时间</strong>：{{ generated_at_display }}</span>
       {% if overview.baseline_window %}
@@ -518,6 +703,60 @@
       {{ demo_disclaimer }}
     </div>
   </header>
+
+  <section class="panel" id="portfolio">
+    <h2>Portfolio at a glance · 30 秒看懂这份 Dashboard</h2>
+    <div class="section-hint">
+      为没有消费金融背景的访客准备的一屏式导览：业务问题 → 数据底座 → 异常 → 归因 → 策略 ROI。所有数字均来自 synthetic data。
+    </div>
+    <div class="portfolio-grid">
+      {% for card in portfolio_cards %}
+      <div class="portfolio-card" data-portfolio-card="{{ card.code }}">
+        <div class="eyebrow">{{ card.eyebrow }}</div>
+        <div class="title">{{ card.title }}</div>
+        <div class="stat">{{ card.stat }}</div>
+        <div class="desc-en">{{ card.description_en }}</div>
+        <div class="desc-cn">{{ card.description_cn }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="panel" id="ai-ml-fusion">
+    <h2>AI + ML Fusion · 各层职责</h2>
+    <div class="section-hint">
+      本 demo 不把 LLM 当作自动金融决策者；ML / 规则、归因 / ROI、LLM / Agent 各自负责不同环节，关键动作必须由人复核。
+    </div>
+    <div class="fusion-grid">
+      {% for layer in ai_ml_fusion_layers %}
+      <div class="fusion-card">
+        <div class="layer">{{ layer.layer }}</div>
+        <div class="role">{{ layer.role }}</div>
+        <div class="detail-en">{{ layer.detail_en }}</div>
+        <div class="detail-cn">{{ layer.detail_cn }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="fusion-boundary">
+      <strong>Human-in-the-loop boundary</strong>：LLM is not used as an automatic financial decision maker. Every action requires explicit human approval; no SMS / voice / WhatsApp is sent; no real customer is contacted.
+    </div>
+  </section>
+
+  <section class="panel" id="jargon">
+    <h2>Jargon glossary · 一眼读懂术语</h2>
+    <div class="section-hint">
+      下列术语会反复出现在异常 / 归因 / 过程证据 / ROI 模块中，先看一眼避免迷失。
+    </div>
+    <div class="jargon-grid">
+      {% for entry in jargon_glossary %}
+      <div class="jargon-card">
+        <div class="term">{{ entry.term }}</div>
+        <div class="plain">{{ entry.plain }}</div>
+        <div class="plain-cn">{{ entry.cn }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
 
   <section class="panel" id="overview">
     <h2>1. 异常总览</h2>
@@ -786,8 +1025,87 @@
     </details>
   </section>
 
+  <section class="panel" id="strategy-roi-lab">
+    <h2>5. Strategy / ROI Lab <span class="demo-only-tag">demo assumptions only</span></h2>
+    <div class="section-hint">
+      离线策略情景估算：基于显式 demo 成本假设给出 delta / cost / net benefit / ROI / payback，仅用于演示，不代表真实财务结果，也不会触发任何真实催收动作。
+    </div>
+    {% if roi_block and roi_block.scenarios %}
+    <div class="roi-summary-grid">
+      <div class="roi-stat">
+        <div class="label">Scenarios evaluated</div>
+        <div class="value">{{ roi_block.scenario_count }}</div>
+        <div class="hint">positive ROI: {{ roi_block.positive_roi_count }}</div>
+      </div>
+      <div class="roi-stat">
+        <div class="label">Top scenario</div>
+        <div class="value">{{ roi_block.top_scenario_name or 'N/A' }}</div>
+        <div class="hint">ROI {{ roi_block.top_roi_display }}</div>
+      </div>
+      {% if roi_block.cost_assumptions %}
+      <div class="roi-stat">
+        <div class="label">Assumed case base</div>
+        <div class="value">{{ roi_block.cost_assumptions.assumed_case_base or 'N/A' }}</div>
+        <div class="hint">unit recovery value: {{ roi_block.cost_assumptions.unit_recovery_value or 'N/A' }}</div>
+      </div>
+      <div class="roi-stat">
+        <div class="label">Payback window</div>
+        <div class="value">{{ roi_block.cost_assumptions.payback_window_days or 'N/A' }} days</div>
+        <div class="hint">demo assumption</div>
+      </div>
+      {% endif %}
+    </div>
+    <table class="soft-table">
+      <thead>
+        <tr>
+          <th>Scenario</th>
+          <th>Strategy type</th>
+          <th>Δ on D7 recovery<br/><span style="font-weight: 400;">estimated delta</span></th>
+          <th>Net benefit</th>
+          <th>ROI</th>
+          <th>Payback (days)</th>
+          <th>Cost assumption</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for sc in roi_block.scenarios %}
+        <tr>
+          <td><strong>{{ sc.scenario_name or sc.scenario_id }}</strong></td>
+          <td>{{ sc.strategy_type or '—' }}</td>
+          <td>
+            {% if sc.estimated_delta is number %}
+            <span class="{% if sc.estimated_delta > 0 %}delta-positive{% elif sc.estimated_delta < 0 %}delta-negative{% else %}delta-neutral{% endif %}">{{ sc.estimated_delta_display }}</span>
+            {% else %}—{% endif %}
+          </td>
+          <td>
+            {% if sc.net_benefit is number %}
+            {{ '%s' | format(sc.net_benefit) }}
+            {% else %}—{% endif %}
+          </td>
+          <td>{{ sc.roi_ratio_display }}</td>
+          <td>
+            {% if sc.payback_period_days is number %}{{ '%.1f' | format(sc.payback_period_days) }}{% else %}—{% endif %}
+          </td>
+          <td style="color: var(--muted); font-size: 12px;">{{ sc.cost_assumption or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if roi_block.demo_disclaimer %}
+    <p style="margin-top: 12px; font-size: 12px; color: var(--muted); font-style: italic;">
+      {{ roi_block.demo_disclaimer }}
+    </p>
+    {% endif %}
+    {% else %}
+    <p class="empty">
+      未检测到 ROI 输出（outputs/model_lab/roi_results.json）。可运行 <code>python scripts/riskops_cli.py render-model-lab</code> 重新生成。
+      本 Demo 中所有 ROI 结果仅来自 demo cost assumptions，<strong>不代表真实财务结论</strong>。
+    </p>
+    {% endif %}
+  </section>
+
   <section class="panel" id="limitations">
-    <h2>5. 数据局限与合规说明</h2>
+    <h2>6. 数据局限与合规说明</h2>
     <div class="section-hint">Demo 环境使用的合成数据与隐私边界约束。</div>
     <ul class="limitations-list">
       {% for item in data_limitations %}
@@ -801,7 +1119,7 @@
   </section>
 
   <section class="panel" id="next-steps">
-    <h2>6. 下一步建议</h2>
+    <h2>7. 下一步建议</h2>
     <div class="section-hint">本轮异常与归因驱动的可执行建议（来自 M3-C 报告）。</div>
     {% if next_steps %}
     <ul class="next-steps-list">

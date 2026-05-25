@@ -81,7 +81,7 @@ pytest
 ## Key Outputs
 
 - **Dashboard**：`outputs/dashboard/dashboard.html`
-  - 本地静态看板，用于快速查看贷后经营状态。
+  - 本地静态看板，用于快速查看贷后经营状态；首屏含 Portfolio at a glance（5 模块导览：Business Problem / Data & Metric Layer / Anomaly Signals / Attribution / Strategy ROI Lab）、AI + ML Fusion 职责说明与术语 glossary（M1 D7、PTP、Vendor / line、Recovery rate 等），便于无消费金融背景的访客 30 秒读懂。
 - **Business Report**：`outputs/reports/m4_business_report.md`
   - 面向经营复盘的异常、归因、过程证据和管理动作建议。
 - **Strategy Evaluation**：`outputs/model_lab/strategy_eval_summary.md`

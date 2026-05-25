@@ -49,6 +49,7 @@
   ```
 - **截图要点**：
   - 截取首屏即可，目标是让访客一眼看到 dashboard 风格，而不是替代完整 HTML。
+  - 推荐覆盖 Hero（含 project positioning）+ Portfolio at a glance（5 个模块卡片）+ AI + ML Fusion 块上半部分，避免漏掉 demo boundary tag。
   - 浏览器宽度建议 1280–1440px；过宽会让图过大。
   - 单张控制在 1 MB 以内（PNG 8-bit 或 WebP 优先）。
 

@@ -61,7 +61,26 @@
   header.hero .subtitle {
     font-size: 16px;
     opacity: 0.92;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
+  }
+  header.hero .positioning {
+    background: rgba(255, 255, 255, 0.10);
+    border-left: 3px solid rgba(255, 255, 255, 0.45);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin: 0 0 16px;
+    font-size: 13.5px;
+    line-height: 1.55;
+  }
+  header.hero .positioning .lang-en {
+    display: block;
+    font-weight: 500;
+  }
+  header.hero .positioning .lang-cn {
+    display: block;
+    margin-top: 6px;
+    opacity: 0.88;
+    font-size: 13px;
   }
   header.hero .meta {
     display: flex;
@@ -492,6 +511,168 @@
   .evidence-detail summary::-webkit-details-marker { display: none; }
   .evidence-detail[open] summary { background: var(--accent-soft); color: var(--accent); }
   .evidence-detail table { margin-top: 10px; }
+  .portfolio-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+  }
+  .portfolio-card {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 16px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .portfolio-card .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 10.5px;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .portfolio-card .title {
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.4;
+  }
+  .portfolio-card .stat {
+    font-size: 12.5px;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 4px 8px;
+    border-radius: 6px;
+    display: inline-block;
+    width: fit-content;
+    font-weight: 600;
+  }
+  .portfolio-card .desc-en {
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .portfolio-card .desc-cn {
+    font-size: 12.5px;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .fusion-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 10px;
+  }
+  .fusion-card {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 14px;
+    background: #fafbfc;
+  }
+  .fusion-card .layer {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .fusion-card .role {
+    font-size: 11.5px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 2px;
+  }
+  .fusion-card .detail-en {
+    font-size: 12.5px;
+    color: var(--ink);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+  .fusion-card .detail-cn {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+  .fusion-boundary {
+    margin-top: 12px;
+    background: #fff8e0;
+    border-left: 3px solid #e0b94a;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 12.5px;
+    color: #5b3b00;
+  }
+  .jargon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .jargon-card {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: #fafbfc;
+  }
+  .jargon-card .term {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .jargon-card .plain {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+  .jargon-card .plain-cn {
+    font-size: 12px;
+    color: var(--ink);
+    margin-top: 2px;
+    line-height: 1.55;
+  }
+  .roi-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .roi-stat {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 14px;
+    background: #fafbfc;
+  }
+  .roi-stat .label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .roi-stat .value {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--accent);
+    margin-top: 4px;
+  }
+  .roi-stat .hint {
+    font-size: 11.5px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .demo-only-tag {
+    display: inline-block;
+    background: #fff;
+    color: #7a4a00;
+    border: 1px solid #e0b94a;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    margin-left: 6px;
+  }
 </style>
 </head>
 <body>
@@ -501,8 +682,12 @@
     <div class="eyebrow">m4-ab-v1</div>
     <h1>RiskOps Copilot</h1>
     <div class="subtitle">M4 Dashboard &amp; Report MVP</div>
+    <div class="positioning" role="note" aria-label="project positioning">
+      <span class="lang-en">RiskOps Copilot turns post-loan risk operations from scattered SQL / Excel / PPT work into a reproducible AI / Data workflow: detect anomaly → explain drivers → generate business report → evaluate strategy ROI.</span>
+      <span class="lang-cn">把贷后风控运营里散落在 SQL / Excel / PPT 的工作流，沉淀成可复现的 AI / Data workflow：识别异常 → 解释驱动 → 生成经营报告 → 估算策略 ROI。</span>
+    </div>
     <div class="meta">
-      <span><strong>报告生成时间</strong>：2026-05-18 09:55:59</span>
+      <span><strong>报告生成时间</strong>：2026-05-25 12:59:55</span>
       <span><strong>基线窗口</strong>：2026-03-19~2026-04-17</span>
       <span><strong>最近窗口</strong>：2026-04-18~2026-05-17</span>
       <span><strong>M3 报告版本</strong>：m3-c-v1</span>
@@ -512,6 +697,125 @@
       本报告基于 synthetic_data / 合成数据生成，仅用于 M3 Demo 展示，不代表真实业务结论。
     </div>
   </header>
+
+  <section class="panel" id="portfolio">
+    <h2>Portfolio at a glance · 30 秒看懂这份 Dashboard</h2>
+    <div class="section-hint">
+      为没有消费金融背景的访客准备的一屏式导览：业务问题 → 数据底座 → 异常 → 归因 → 策略 ROI。所有数字均来自 synthetic data。
+    </div>
+    <div class="portfolio-grid">
+      <div class="portfolio-card" data-portfolio-card="business_problem">
+        <div class="eyebrow">01 · Business Problem</div>
+        <div class="title">M1 D7 回收率下降，到底由谁驱动？</div>
+        <div class="stat">D7 回收率 -21.27% 相对基线</div>
+        <div class="desc-en">M1 day-7 recovery rate dropped. Is it driven by channel, region, customer segment, vendor / line, contact, complaint, or settlement use? Untangle it without a manual SQL hunt.</div>
+        <div class="desc-cn">M1 D7 回收率下降，需要快速判断到底是渠道、区域、客群、供应商 / 线路、触达、投诉还是减免使用导致，避免靠人工 SQL 反复下钻。</div>
+      </div>
+      <div class="portfolio-card" data-portfolio-card="data_metric_layer">
+        <div class="eyebrow">02 · Data &amp; Metric Layer</div>
+        <div class="title">Synthetic data only · 单一权威源</div>
+        <div class="stat">43 tables · 26 metrics</div>
+        <div class="desc-en">All numbers come from synthetic data. A 5-layer warehouse, a metric dictionary (single source of truth) and an enforced privacy boundary (P0–P4) sit under every panel.</div>
+        <div class="desc-cn">全部基于合成数据；五层数仓 + 指标字典作为单一权威源，并按 P0–P4 隐私分级约束哪些字段可以进入报告与 LLM 上下文。</div>
+      </div>
+      <div class="portfolio-card" data-portfolio-card="anomaly_signals">
+        <div class="eyebrow">03 · Anomaly Signals</div>
+        <div class="title">结构化异常事件，而非散点告警</div>
+        <div class="stat">8 anomalies · 6 high · 2 medium</div>
+        <div class="desc-en">Rule + ML signals across recovery, AI outbound, manual capacity, PTP, settlement use and complaint risk are folded into typed events with severity.</div>
+        <div class="desc-cn">回收率、AI 外呼覆盖、产能压力、PTP、减免使用、投诉风险等信号统一结构化为带 severity 的事件。</div>
+      </div>
+      <div class="portfolio-card" data-portfolio-card="attribution">
+        <div class="eyebrow">04 · Attribution</div>
+        <div class="title">排序好的 Top drivers，可解释</div>
+        <div class="stat">Top driver: channel_code=ECOM (15.26%)</div>
+        <div class="desc-en">Decompose the headline drop into ranked drivers across channel, region, customer segment and vendor / line, with process evidence (contact / fulfill / settlement / compliance / capacity) attached.</div>
+        <div class="desc-cn">把整体下降拆成可排序的驱动因素，并附触达 / 履约 / 减免 / 合规 / 产能五条证据链。</div>
+      </div>
+      <div class="portfolio-card" data-portfolio-card="strategy_roi">
+        <div class="eyebrow">05 · Strategy / ROI Lab</div>
+        <div class="title">离线情景 · 量化净收益与回收周期</div>
+        <div class="stat">5 scenarios · top ROI 36.5× (提升 AI 外呼覆盖)</div>
+        <div class="desc-en">Offline what-if scenarios estimate delta, cost, net benefit, ROI and payback days under explicit demo cost assumptions. Not a production financial decision.</div>
+        <div class="desc-cn">基于显式 demo 成本假设的离线情景估算 delta / cost / net benefit / ROI / payback，不代表真实财务结论或上线决策。</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="ai-ml-fusion">
+    <h2>AI + ML Fusion · 各层职责</h2>
+    <div class="section-hint">
+      本 demo 不把 LLM 当作自动金融决策者；ML / 规则、归因 / ROI、LLM / Agent 各自负责不同环节，关键动作必须由人复核。
+    </div>
+    <div class="fusion-grid">
+      <div class="fusion-card">
+        <div class="layer">ML / rules layer</div>
+        <div class="role">Detect &amp; structure signals</div>
+        <div class="detail-en">Statistical rules and an offline ML baseline surface anomalies and structure them into typed events with severity.</div>
+        <div class="detail-cn">统计规则与离线 ML baseline 识别异常，将其结构化为带 severity 的事件。</div>
+      </div>
+      <div class="fusion-card">
+        <div class="layer">Attribution / ROI layer</div>
+        <div class="role">Quantify business impact</div>
+        <div class="detail-en">Attribution decomposes the headline drop into ranked drivers; the ROI lab estimates net benefit under demo cost assumptions.</div>
+        <div class="detail-cn">归因将整体下降拆解为可排序的驱动因素；ROI lab 在 demo 成本假设下估算净收益。</div>
+      </div>
+      <div class="fusion-card">
+        <div class="layer">LLM / Agent layer (planned)</div>
+        <div class="role">Summarize, explain, draft, route</div>
+        <div class="detail-en">Later layer will summarize the dashboard, explain drivers in plain language, draft business reports, and route human review.</div>
+        <div class="detail-cn">后续 layer 负责摘要、口语化解释、报告草稿与人工复核路由。</div>
+      </div>
+      <div class="fusion-card">
+        <div class="layer">Human-in-the-loop boundary</div>
+        <div class="role">Compliance &amp; approval</div>
+        <div class="detail-en">LLM is not used as an automatic financial decision maker. Every action requires explicit human approval; no SMS / voice / WhatsApp is sent.</div>
+        <div class="detail-cn">LLM 不作为自动金融决策者，所有动作必须人工审批；不发送短信 / 语音 / WhatsApp。</div>
+      </div>
+    </div>
+    <div class="fusion-boundary">
+      <strong>Human-in-the-loop boundary</strong>：LLM is not used as an automatic financial decision maker. Every action requires explicit human approval; no SMS / voice / WhatsApp is sent; no real customer is contacted.
+    </div>
+  </section>
+
+  <section class="panel" id="jargon">
+    <h2>Jargon glossary · 一眼读懂术语</h2>
+    <div class="section-hint">
+      下列术语会反复出现在异常 / 归因 / 过程证据 / ROI 模块中，先看一眼避免迷失。
+    </div>
+    <div class="jargon-grid">
+      <div class="jargon-card">
+        <div class="term">M1 D7 recovery rate</div>
+        <div class="plain">share of newly-overdue (M1) loan amount that gets any payment within day 7</div>
+        <div class="plain-cn">M1 客户在逾期第 7 天前完成任意还款的金额占比，是贷后早期催收效果的核心指标。</div>
+      </div>
+      <div class="jargon-card">
+        <div class="term">PTP (promise to pay)</div>
+        <div class="plain">the borrower verbally / textually agrees to pay by a date; PTP keep rate = share that actually paid</div>
+        <div class="plain-cn">客户口头或文字承诺还款日期；PTP 履约率衡量承诺后真实兑现比例。</div>
+      </div>
+      <div class="jargon-card">
+        <div class="term">Vendor / line</div>
+        <div class="plain">outsourced collection agency (vendor) and its operation queue (line)</div>
+        <div class="plain-cn">委外催收机构（vendor）及其作业线路 / 队列（line）。</div>
+      </div>
+      <div class="jargon-card">
+        <div class="term">Recovery rate</div>
+        <div class="plain">share of overdue principal + interest recovered within a defined window</div>
+        <div class="plain-cn">在指定窗口内已回收的逾期本息占应收逾期金额的比例。</div>
+      </div>
+      <div class="jargon-card">
+        <div class="term">AI outbound coverage</div>
+        <div class="plain">share of overdue cases reached by AI-driven outbound calls (demo only — no real customer contact)</div>
+        <div class="plain-cn">AI 外呼覆盖到的逾期案件占比；本 demo 不产生真实外呼。</div>
+      </div>
+      <div class="jargon-card">
+        <div class="term">Driver / attribution</div>
+        <div class="plain">which slice (channel / region / customer segment / vendor) explains the change in the headline metric</div>
+        <div class="plain-cn">解释整体指标变化的关键切片（渠道 / 区域 / 客群 / 供应商等）。</div>
+      </div>
+    </div>
+  </section>
 
   <section class="panel" id="overview">
     <h2>1. 异常总览</h2>
@@ -1188,8 +1492,125 @@
     </details>
   </section>
 
+  <section class="panel" id="strategy-roi-lab">
+    <h2>5. Strategy / ROI Lab <span class="demo-only-tag">demo assumptions only</span></h2>
+    <div class="section-hint">
+      离线策略情景估算：基于显式 demo 成本假设给出 delta / cost / net benefit / ROI / payback，仅用于演示，不代表真实财务结果，也不会触发任何真实催收动作。
+    </div>
+    <div class="roi-summary-grid">
+      <div class="roi-stat">
+        <div class="label">Scenarios evaluated</div>
+        <div class="value">5</div>
+        <div class="hint">positive ROI: 5</div>
+      </div>
+      <div class="roi-stat">
+        <div class="label">Top scenario</div>
+        <div class="value">提升 AI 外呼覆盖</div>
+        <div class="hint">ROI 36.5×</div>
+      </div>
+      <div class="roi-stat">
+        <div class="label">Assumed case base</div>
+        <div class="value">10000</div>
+        <div class="hint">unit recovery value: 500</div>
+      </div>
+      <div class="roi-stat">
+        <div class="label">Payback window</div>
+        <div class="value">30 days</div>
+        <div class="hint">demo assumption</div>
+      </div>
+    </div>
+    <table class="soft-table">
+      <thead>
+        <tr>
+          <th>Scenario</th>
+          <th>Strategy type</th>
+          <th>Δ on D7 recovery<br/><span style="font-weight: 400;">estimated delta</span></th>
+          <th>Net benefit</th>
+          <th>ROI</th>
+          <th>Payback (days)</th>
+          <th>Cost assumption</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>提升 AI 外呼覆盖</strong></td>
+          <td>contact_strategy</td>
+          <td>
+            <span class="delta-positive">+0.60%</span>
+          </td>
+          <td>
+            29200.0
+          </td>
+          <td>36.5×</td>
+          <td>
+0.8          </td>
+          <td style="color: var(--muted); font-size: 12px;">AI call unit cost applied to assumed case base.</td>
+        </tr>
+        <tr>
+          <td><strong>补充人工催收产能</strong></td>
+          <td>capacity_strategy</td>
+          <td>
+            <span class="delta-positive">+0.40%</span>
+          </td>
+          <td>
+            12000.0
+          </td>
+          <td>1.5×</td>
+          <td>
+12.0          </td>
+          <td style="color: var(--muted); font-size: 12px;">Manual capacity cost assumes 10% of cases need capacity handling.</td>
+        </tr>
+        <tr>
+          <td><strong>调整减免使用策略</strong></td>
+          <td>settlement_strategy</td>
+          <td>
+            <span class="delta-positive">+0.30%</span>
+          </td>
+          <td>
+            12750.0
+          </td>
+          <td>5.7×</td>
+          <td>
+4.5          </td>
+          <td style="color: var(--muted); font-size: 12px;">Settlement cost uses demo reduction cost rate.</td>
+        </tr>
+        <tr>
+          <td><strong>供应商与作业线资源再分配</strong></td>
+          <td>allocation_strategy</td>
+          <td>
+            <span class="delta-positive">+0.50%</span>
+          </td>
+          <td>
+            22000.0
+          </td>
+          <td>7.3×</td>
+          <td>
+3.6          </td>
+          <td style="color: var(--muted); font-size: 12px;">Vendor reallocation uses fixed demo admin cost.</td>
+        </tr>
+        <tr>
+          <td><strong>D 分客群优先跟进</strong></td>
+          <td>segmentation_strategy</td>
+          <td>
+            <span class="delta-positive">+0.20%</span>
+          </td>
+          <td>
+            8000.0
+          </td>
+          <td>4.0×</td>
+          <td>
+6.0          </td>
+          <td style="color: var(--muted); font-size: 12px;">Segmentation priority uses fixed demo admin cost.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="margin-top: 12px; font-size: 12px; color: var(--muted); font-style: italic;">
+      This ROI calculator uses synthetic data only and demo cost assumptions. It creates no real financial conclusion and no real collection action.
+    </p>
+  </section>
+
   <section class="panel" id="limitations">
-    <h2>5. 数据局限与合规说明</h2>
+    <h2>6. 数据局限与合规说明</h2>
     <div class="section-hint">Demo 环境使用的合成数据与隐私边界约束。</div>
     <ul class="limitations-list">
       <li>
@@ -1207,7 +1628,7 @@
   </section>
 
   <section class="panel" id="next-steps">
-    <h2>6. 下一步建议</h2>
+    <h2>7. 下一步建议</h2>
     <div class="section-hint">本轮异常与归因驱动的可执行建议（来自 M3-C 报告）。</div>
     <ul class="next-steps-list">
       <li>
