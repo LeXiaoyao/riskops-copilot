@@ -168,6 +168,44 @@ def write_copilot_briefing(briefing: dict[str, Any], output_path: str | Path) ->
     return str(path)
 
 
+def render_copilot_briefing_with_narrative(
+    briefing: dict[str, Any],
+    narrative: str,
+) -> str:
+    """Prepend LLM narrative section to the deterministic briefing."""
+    deterministic = render_copilot_briefing(briefing)
+    header = "\n".join([
+        "# RiskOps Copilot Briefing（AI 增强版）",
+        "",
+        "> **AI 摘要** 由 DeepSeek LLM 生成，仅供参考。",
+        "> 以下结构化数据段（What Happened 等）为确定性规则输出，是唯一可追溯的权威信源。",
+        "",
+        "## AI 管理层摘要",
+        "",
+        narrative.strip(),
+        "",
+        "---",
+        "",
+    ])
+    # 替换掉 deterministic 里的第一行标题，避免重复
+    deterministic_body = "\n".join(deterministic.split("\n")[1:]).lstrip("\n")
+    return header + deterministic_body
+
+
+def write_copilot_briefing_with_narrative(
+    briefing: dict[str, Any],
+    narrative: str,
+    output_path: str | Path,
+) -> str:
+    path = Path(output_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        render_copilot_briefing_with_narrative(briefing, narrative),
+        encoding="utf-8",
+    )
+    return str(path)
+
+
 def _top_strategy(strategy_results: list[dict[str, Any]], roi: dict[str, Any]) -> dict[str, Any]:
     highest = _as_dict(roi.get("highest_roi_scenario"))
     scenario_id = highest.get("scenario_id")

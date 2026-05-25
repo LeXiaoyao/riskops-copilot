@@ -9,7 +9,11 @@ import sys
 from pathlib import Path
 from typing import Any, TextIO
 
-from riskops.engines.copilot.briefing_builder import build_copilot_briefing, write_copilot_briefing
+from riskops.engines.copilot.briefing_builder import (
+    build_copilot_briefing,
+    write_copilot_briefing,
+    write_copilot_briefing_with_narrative,
+)
 from riskops.engines.dashboard import DashboardInputError, write_dashboard
 from riskops.engines.model_lab.ml_readiness import assess_ml_readiness, write_ml_readiness_outputs
 from riskops.engines.model_lab.roi_calculator import calculate_roi_results, load_strategy_eval_results, write_roi_outputs
@@ -19,13 +23,14 @@ from riskops.engines.model_lab.scenario_schema import (
     validate_strategy_scenarios,
 )
 from riskops.engines.model_lab.strategy_evaluator import run_strategy_evaluation
-from riskops.engines.report import BusinessReportInputError, write_business_report
+from riskops.engines.report import BusinessReportInputError, write_business_report, write_business_report_excel
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_M3_SUMMARY = ROOT / "outputs" / "m3" / "m3_summary.json"
 DEFAULT_DASHBOARD = ROOT / "outputs" / "dashboard" / "dashboard.html"
 DEFAULT_REPORT_MD = ROOT / "outputs" / "reports" / "m4_business_report.md"
 DEFAULT_REPORT_HTML = ROOT / "outputs" / "reports" / "m4_business_report.html"
+DEFAULT_REPORT_XLSX = ROOT / "outputs" / "reports" / "m4_business_report.xlsx"
 DEFAULT_STRATEGY_SCENARIOS = ROOT / "configs" / "strategy_scenarios.yaml"
 DEFAULT_STRATEGY_EVAL_JSON = ROOT / "outputs" / "model_lab" / "strategy_eval_results.json"
 DEFAULT_STRATEGY_EVAL_MD = ROOT / "outputs" / "model_lab" / "strategy_eval_summary.md"
@@ -43,6 +48,7 @@ OUTPUT_PATHS = [
     DEFAULT_DASHBOARD,
     DEFAULT_REPORT_MD,
     DEFAULT_REPORT_HTML,
+    DEFAULT_REPORT_XLSX,
     ROOT / "outputs" / "m3" / "m3_summary.md",
     DEFAULT_M3_SUMMARY,
     DEFAULT_STRATEGY_EVAL_JSON,
@@ -70,6 +76,7 @@ COMMON_COMMANDS = [
     "python scripts/riskops_cli.py render-model-lab",
     "python scripts/riskops_cli.py render-dashboard",
     "python scripts/riskops_cli.py render-report",
+    "python scripts/riskops_cli.py render-excel",
 ]
 
 
@@ -132,13 +139,16 @@ def build_parser() -> argparse.ArgumentParser:
     ml_baseline.add_argument("--exclude-vintage-month", action="store_true")
     ml_baseline.set_defaults(handler=_handle_ml_baseline)
 
-    briefing = subparsers.add_parser("briefing", help="Render deterministic Copilot briefing.")
+    briefing = subparsers.add_parser("briefing", help="Render Copilot briefing (deterministic; add --use-llm for AI narrative).")
     briefing.add_argument("--m3-summary", type=Path, default=DEFAULT_M3_SUMMARY)
     briefing.add_argument("--strategy-eval", type=Path, default=DEFAULT_STRATEGY_EVAL_JSON)
     briefing.add_argument("--roi", type=Path, default=DEFAULT_ROI_JSON)
     briefing.add_argument("--ml-metrics", type=Path, default=DEFAULT_ML_METRICS_JSON)
     briefing.add_argument("--ml-readiness", type=Path, default=DEFAULT_ML_READINESS_JSON)
     briefing.add_argument("--output", type=Path, default=DEFAULT_COPILOT_BRIEFING)
+    briefing.add_argument("--use-llm", action="store_true", help="Prepend AI narrative via DeepSeek API.")
+    briefing.add_argument("--api-key", type=str, default=None, help="DeepSeek API key (default: $DEEPSEEK_API_KEY).")
+    briefing.add_argument("--model", type=str, default="deepseek-chat", help="DeepSeek model name.")
     briefing.set_defaults(handler=_handle_briefing)
 
     render_model_lab = subparsers.add_parser("render-model-lab", help="Render M6 strategy eval and ROI outputs.")
@@ -178,6 +188,25 @@ def build_parser() -> argparse.ArgumentParser:
         help="Business report HTML output path.",
     )
     render_report.set_defaults(handler=_handle_render_report)
+
+    render_excel = subparsers.add_parser(
+        "render-excel",
+        help="Render outputs/reports/m4_business_report.xlsx.",
+    )
+    _add_input_arg(render_excel)
+    render_excel.add_argument(
+        "--roi-input",
+        type=Path,
+        default=DEFAULT_ROI_JSON,
+        help="Path to ROI results JSON.",
+    )
+    render_excel.add_argument(
+        "--output",
+        type=Path,
+        default=DEFAULT_REPORT_XLSX,
+        help="Business report Excel output path.",
+    )
+    render_excel.set_defaults(handler=_handle_render_excel)
 
     return parser
 
@@ -449,8 +478,31 @@ def _handle_briefing(args: argparse.Namespace, out: TextIO) -> None:
             args.ml_metrics,
             args.ml_readiness,
         )
-        output = write_copilot_briefing(briefing, args.output)
     except (FileNotFoundError, ValueError, json.JSONDecodeError) as exc:
+        raise CliInputError(exc) from exc
+
+    use_llm = getattr(args, "use_llm", False)
+    narrative: str | None = None
+
+    if use_llm:
+        from riskops.engines.copilot.llm_narrator import narrate_briefing  # noqa: PLC0415
+        print("calling DeepSeek API …", file=out)
+        try:
+            narrative = narrate_briefing(
+                briefing,
+                api_key=getattr(args, "api_key", None),
+                model=getattr(args, "model", "deepseek-chat"),
+            )
+        except Exception as exc:  # noqa: BLE001
+            print(f"LLM call failed ({exc})，falling back to deterministic briefing", file=out)
+            narrative = None
+
+    try:
+        if narrative:
+            output = write_copilot_briefing_with_narrative(briefing, narrative, args.output)
+        else:
+            output = write_copilot_briefing(briefing, args.output)
+    except OSError as exc:
         raise CliInputError(exc) from exc
 
     what_happened = briefing["what_happened"]
@@ -459,7 +511,7 @@ def _handle_briefing(args: argparse.Namespace, out: TextIO) -> None:
     print(f"- anomaly_count：{what_happened['anomaly_count']}", file=out)
     print(f"- target_metric：{what_happened['target_metric']}", file=out)
     print(f"- ml_target：{ml['recommended_target']}", file=out)
-    print("- deterministic rule-based briefing", file=out)
+    print(f"- mode：{'llm+deterministic' if narrative else 'deterministic only'}", file=out)
     print("- no LLM automatic decisioning", file=out)
     print("- synthetic data only", file=out)
     print("PASS briefing", file=out)
@@ -516,6 +568,17 @@ def _handle_render_report(args: argparse.Namespace, out: TextIO) -> None:
     print("input：{}".format(_display_path(args.input)), file=out)
     print("anomalies：{}".format(_safe_int(overview.get("anomaly_count"))), file=out)
     print("top drivers：{}".format(len(_as_list(context.get("top_drivers")))), file=out)
+
+
+def _handle_render_excel(args: argparse.Namespace, out: TextIO) -> None:
+    try:
+        result = write_business_report_excel(args.input, args.output, args.roi_input)
+    except BusinessReportInputError as exc:
+        raise CliInputError(exc) from exc
+    print("business report excel：{}".format(_display_path(args.output)), file=out)
+    print("input：{}".format(_display_path(args.input)), file=out)
+    print("roi input：{}".format(_display_path(args.roi_input)), file=out)
+    print("anomalies：{}".format(_safe_int(result.get("anomaly_count"))), file=out)
 
 
 def _load_summary(input_path: Path) -> dict[str, Any]:

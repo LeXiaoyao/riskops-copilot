@@ -25,6 +25,7 @@ dependencies = [
   "python-pptx",
   "python-docx",
   "textual",
+  "openai",
 ]
 
 [project.optional-dependencies]
