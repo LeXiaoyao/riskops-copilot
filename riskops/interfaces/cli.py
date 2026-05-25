@@ -23,6 +23,7 @@ from riskops.engines.model_lab.scenario_schema import (
     validate_strategy_scenarios,
 )
 from riskops.engines.model_lab.strategy_evaluator import run_strategy_evaluation
+from riskops.engines.qc import scan_batch
 from riskops.engines.report import BusinessReportInputError, write_business_report, write_business_report_excel
 from riskops.engines.visualization import (
     build_anomaly_severity_chart,
@@ -85,6 +86,7 @@ COMMON_COMMANDS = [
     "python scripts/riskops_cli.py ml-readiness",
     "python scripts/riskops_cli.py ml-baseline",
     "python scripts/riskops_cli.py briefing",
+    "python scripts/riskops_cli.py qc-scan --texts \"你赶快还钱\" \"我是法院，马上起诉你\"",
     "python scripts/riskops_cli.py render-model-lab",
     "python scripts/riskops_cli.py render-dashboard",
     "python scripts/riskops_cli.py render-report",
@@ -163,6 +165,12 @@ def build_parser() -> argparse.ArgumentParser:
     briefing.add_argument("--api-key", type=str, default=None, help="DeepSeek API key (default: $DEEPSEEK_API_KEY).")
     briefing.add_argument("--model", type=str, default="deepseek-chat", help="DeepSeek model name.")
     briefing.set_defaults(handler=_handle_briefing)
+
+    qc_scan = subparsers.add_parser("qc-scan", help="Run demo compliance keyword scan for collection scripts.")
+    qc_input = qc_scan.add_mutually_exclusive_group(required=True)
+    qc_input.add_argument("--texts", nargs="+", help="Collection script texts to scan.")
+    qc_input.add_argument("--file", type=Path, help="Text file path; one script per line.")
+    qc_scan.set_defaults(handler=_handle_qc_scan)
 
     render_model_lab = subparsers.add_parser("render-model-lab", help="Render M6 strategy eval and ROI outputs.")
     render_model_lab.add_argument("--scenarios", type=Path, default=DEFAULT_STRATEGY_SCENARIOS)
@@ -534,6 +542,32 @@ def _handle_briefing(args: argparse.Namespace, out: TextIO) -> None:
     print("- no LLM automatic decisioning", file=out)
     print("- synthetic data only", file=out)
     print("PASS briefing", file=out)
+
+
+def _handle_qc_scan(args: argparse.Namespace, out: TextIO) -> None:
+    if args.file:
+        if not args.file.exists():
+            raise CliInputError(f"qc-scan 输入文件不存在：{args.file}")
+        texts = args.file.read_text(encoding="utf-8").splitlines()
+    else:
+        texts = list(args.texts or [])
+
+    results = scan_batch(texts)
+    level_counts = {
+        "clean": sum(1 for result in results if result["risk_level"] == "clean"),
+        "medium": sum(1 for result in results if result["risk_level"] == "medium"),
+        "high": sum(1 for result in results if result["risk_level"] == "high"),
+    }
+
+    _print_title(out, "QC 合规关键词扫描")
+    for index, result in enumerate(results, start=1):
+        print(f"{index}. risk_level：{result['risk_level']}，violation_count：{result['violation_count']}", file=out)
+    print("", file=out)
+    print(f"- 总条数：{len(results)}", file=out)
+    print(f"- clean：{level_counts['clean']}", file=out)
+    print(f"- medium：{level_counts['medium']}", file=out)
+    print(f"- high：{level_counts['high']}", file=out)
+    print("PASS qc-scan", file=out)
 
 
 def _handle_render_model_lab(args: argparse.Namespace, out: TextIO) -> None:

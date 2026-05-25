@@ -32,6 +32,7 @@ def test_help_can_run_and_lists_commands() -> None:
         "model-lab",
         "ml-readiness",
         "ml-baseline",
+        "qc-scan",
         "render-model-lab",
         "render-dashboard",
         "render-report",
@@ -178,6 +179,16 @@ def test_ml_baseline_command_can_run(tmp_path: Path) -> None:
     assert "AUC:" in result.stdout
     assert (tmp_path / "metrics.json").exists()
     assert (tmp_path / "feature_importance.csv").exists()
+
+
+def test_qc_scan_command_can_run() -> None:
+    result = run_cli("qc-scan", "--texts", "你赶快还钱", "我是法院，马上起诉你")
+
+    assert result.returncode == 0, result.stderr
+    assert "QC 合规关键词扫描" in result.stdout
+    assert "risk_level：clean" in result.stdout
+    assert "risk_level：medium" in result.stdout
+    assert "PASS qc-scan" in result.stdout
 
 
 def test_render_model_lab_command_can_run_and_generate_m6_outputs(tmp_path: Path) -> None:
