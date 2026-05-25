@@ -59,6 +59,7 @@ python scripts/riskops_cli.py model-lab
 python scripts/riskops_cli.py render-model-lab
 python scripts/riskops_cli.py render-dashboard
 python scripts/riskops_cli.py render-report
+bash scripts/run_all.sh
 pytest
 ```
 
@@ -76,6 +77,7 @@ pytest
 - **render-model-lab**：重新生成 strategy evaluation 与 ROI 输出。
 - **render-dashboard**：重新生成本地静态 Dashboard。
 - **render-report**：重新生成 Markdown / HTML 经营报告。
+- **run_all.sh**：从合成数据生成、仓库构建、M3 产物到 M4/M6/M7 输出，一键重跑完整 demo pipeline，并打印 `outputs/` 文件清单。
 - **pytest**：运行当前测试集，验证 Demo 主链路未被破坏。
 
 ## Key Outputs
