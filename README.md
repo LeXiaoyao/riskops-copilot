@@ -90,6 +90,12 @@ pytest
   - 5 个离线策略情景的 baseline / scenario / delta / caveats。
 - **ROI Summary**：`outputs/model_lab/roi_summary.md`
   - 基于 demo cost assumptions 的成本、收益、ROI 和 payback 估算。
+- **Excel Report**：`outputs/reports/m4_business_report.xlsx`
+  - 4 个 Sheet：概览 / 异常信号 / 归因 Top5 / 策略ROI；`python scripts/riskops_cli.py render-excel` 生成。
+- **AI Briefing**（可选，需 DeepSeek API Key）：`outputs/copilot/briefing.md`
+  - `python scripts/riskops_cli.py briefing --use-llm` 生成中文管理层 AI 摘要；默认不加 `--use-llm` 则为确定性规则模板。
+- **Visualization Charts**：`outputs/visualization/`
+  - 3 张 Plotly 交互图表（anomaly_severity / driver_contribution / roi_comparison）；`python scripts/riskops_cli.py render-charts` 生成。
 
 ## Preview / 截图
 
