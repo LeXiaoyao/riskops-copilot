@@ -19,6 +19,8 @@
 - M7-E 全链路一键脚本：`scripts/run_all.sh` 从合成数据生成到 briefing 全流程，任意步骤失败即 exit。
 - M7-F Excel 报告：`riskops/engines/report/excel_renderer.py`，生成 `m4_business_report.xlsx`（概览 / 异常信号 / 归因 Top5 / 策略ROI 四个 Sheet）；CLI `render-excel`。
 - M7-G 面试讲稿：`docs/interview_pitch.md`，5 分钟结构化讲稿 + 12 节常见追问，中文为主。
+- M7-H Plotly 可视化图表导出：`riskops/engines/visualization/chart_builder.py`，生成异常信号强度图 / 归因贡献图 / 策略ROI对比图（`outputs/visualization/`）；CLI `render-charts`。
+- M7-I QC 合规关键词扫描：`riskops/engines/qc/compliance_scanner.py`，5 类违规词典（威胁恐吓/冒充司法/骚扰第三方/诱导新贷/辱骂）扫描催收话术，输出 risk_level / violations / Markdown 报告；CLI `qc-scan`。
 
 ### Notes
 - 当前 trainable baseline 仍是 D7 any-payment response；state recovery 仅作为 feasibility / leakage guard 存在。
