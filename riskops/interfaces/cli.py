@@ -34,8 +34,15 @@ from riskops.engines.report import (
 from riskops.engines.script import approve_and_log, check_frequency, generate_script_draft, load_case_context
 from riskops.engines.visualization import (
     build_anomaly_severity_chart,
+    build_capacity_heatmap_chart,
+    build_collection_funnel_chart,
+    build_complaint_risk_chart,
+    build_dpd_structure_chart,
     build_driver_contribution_chart,
+    build_reduction_roi_chart,
     build_roi_comparison_chart,
+    build_vendor_matrix_chart,
+    build_waterfall_chart,
 )
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -60,6 +67,13 @@ DEFAULT_VISUALIZATION_DIR = ROOT / "outputs" / "visualization"
 DEFAULT_ANOMALY_SEVERITY_CHART = DEFAULT_VISUALIZATION_DIR / "anomaly_severity.html"
 DEFAULT_DRIVER_CONTRIBUTION_CHART = DEFAULT_VISUALIZATION_DIR / "driver_contribution.html"
 DEFAULT_ROI_COMPARISON_CHART = DEFAULT_VISUALIZATION_DIR / "roi_comparison.html"
+DEFAULT_COLLECTION_FUNNEL_CHART = DEFAULT_VISUALIZATION_DIR / "collection_funnel.html"
+DEFAULT_WATERFALL_CHART = DEFAULT_VISUALIZATION_DIR / "waterfall.html"
+DEFAULT_VENDOR_MATRIX_CHART = DEFAULT_VISUALIZATION_DIR / "vendor_matrix.html"
+DEFAULT_CAPACITY_HEATMAP_CHART = DEFAULT_VISUALIZATION_DIR / "capacity_heatmap.html"
+DEFAULT_DPD_STRUCTURE_CHART = DEFAULT_VISUALIZATION_DIR / "dpd_structure.html"
+DEFAULT_REDUCTION_ROI_CHART = DEFAULT_VISUALIZATION_DIR / "reduction_roi.html"
+DEFAULT_COMPLAINT_RISK_CHART = DEFAULT_VISUALIZATION_DIR / "complaint_risk.html"
 RUN_ML_BASELINE = ROOT / "scripts" / "run_ml_baseline.py"
 
 OUTPUT_PATHS = [
@@ -81,6 +95,13 @@ OUTPUT_PATHS = [
     DEFAULT_ANOMALY_SEVERITY_CHART,
     DEFAULT_DRIVER_CONTRIBUTION_CHART,
     DEFAULT_ROI_COMPARISON_CHART,
+    DEFAULT_COLLECTION_FUNNEL_CHART,
+    DEFAULT_WATERFALL_CHART,
+    DEFAULT_VENDOR_MATRIX_CHART,
+    DEFAULT_CAPACITY_HEATMAP_CHART,
+    DEFAULT_DPD_STRUCTURE_CHART,
+    DEFAULT_REDUCTION_ROI_CHART,
+    DEFAULT_COMPLAINT_RISK_CHART,
 ]
 
 COMMON_COMMANDS = [
@@ -799,6 +820,13 @@ def _handle_render_charts(args: argparse.Namespace, out: TextIO) -> None:
         (output_dir / "anomaly_severity.html", build_anomaly_severity_chart(m3_summary)),
         (output_dir / "driver_contribution.html", build_driver_contribution_chart(m3_summary)),
         (output_dir / "roi_comparison.html", build_roi_comparison_chart(roi_results)),
+        (output_dir / "collection_funnel.html", build_collection_funnel_chart()),
+        (output_dir / "waterfall.html", build_waterfall_chart()),
+        (output_dir / "vendor_matrix.html", build_vendor_matrix_chart()),
+        (output_dir / "capacity_heatmap.html", build_capacity_heatmap_chart()),
+        (output_dir / "dpd_structure.html", build_dpd_structure_chart()),
+        (output_dir / "reduction_roi.html", build_reduction_roi_chart()),
+        (output_dir / "complaint_risk.html", build_complaint_risk_chart()),
     ]
     for path, html in outputs:
         path.write_text(html, encoding="utf-8")

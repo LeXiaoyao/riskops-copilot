@@ -6,8 +6,15 @@ from pathlib import Path
 
 from riskops.engines.visualization import (
     build_anomaly_severity_chart,
+    build_capacity_heatmap_chart,
+    build_collection_funnel_chart,
+    build_complaint_risk_chart,
+    build_dpd_structure_chart,
     build_driver_contribution_chart,
+    build_reduction_roi_chart,
     build_roi_comparison_chart,
+    build_vendor_matrix_chart,
+    build_waterfall_chart,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -90,6 +97,62 @@ def test_build_roi_comparison_chart_returns_html() -> None:
     assert "plotly" in html.lower()
 
 
+def test_build_collection_funnel_chart_returns_html() -> None:
+    html = build_collection_funnel_chart()
+
+    assert isinstance(html, str)
+    assert html
+    assert "plotly" in html.lower()
+
+
+def test_build_waterfall_chart_returns_html() -> None:
+    html = build_waterfall_chart()
+
+    assert isinstance(html, str)
+    assert html
+    assert "plotly" in html.lower()
+
+
+def test_build_vendor_matrix_chart_returns_html() -> None:
+    html = build_vendor_matrix_chart()
+
+    assert isinstance(html, str)
+    assert html
+    assert "plotly" in html.lower()
+
+
+def test_build_capacity_heatmap_chart_returns_html() -> None:
+    html = build_capacity_heatmap_chart()
+
+    assert isinstance(html, str)
+    assert html
+    assert "plotly" in html.lower()
+
+
+def test_build_dpd_structure_chart_returns_html() -> None:
+    html = build_dpd_structure_chart()
+
+    assert isinstance(html, str)
+    assert html
+    assert "plotly" in html.lower()
+
+
+def test_build_reduction_roi_chart_returns_html() -> None:
+    html = build_reduction_roi_chart()
+
+    assert isinstance(html, str)
+    assert html
+    assert "plotly" in html.lower()
+
+
+def test_build_complaint_risk_chart_returns_html() -> None:
+    html = build_complaint_risk_chart()
+
+    assert isinstance(html, str)
+    assert html
+    assert "plotly" in html.lower()
+
+
 def test_cli_render_charts_can_run(tmp_path: Path) -> None:
     result = subprocess.run(
         [sys.executable, str(CLI), "render-charts", "--output-dir", str(tmp_path)],
@@ -102,4 +165,11 @@ def test_cli_render_charts_can_run(tmp_path: Path) -> None:
     assert (tmp_path / "anomaly_severity.html").exists()
     assert (tmp_path / "driver_contribution.html").exists()
     assert (tmp_path / "roi_comparison.html").exists()
+    assert (tmp_path / "collection_funnel.html").exists()
+    assert (tmp_path / "waterfall.html").exists()
+    assert (tmp_path / "vendor_matrix.html").exists()
+    assert (tmp_path / "capacity_heatmap.html").exists()
+    assert (tmp_path / "dpd_structure.html").exists()
+    assert (tmp_path / "reduction_roi.html").exists()
+    assert (tmp_path / "complaint_risk.html").exists()
     assert "PASS render-charts" in result.stdout
