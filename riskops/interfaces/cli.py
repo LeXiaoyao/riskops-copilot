@@ -24,7 +24,7 @@ from riskops.engines.model_lab.scenario_schema import (
     validate_strategy_scenarios,
 )
 from riskops.engines.model_lab.strategy_evaluator import run_strategy_evaluation
-from riskops.engines.qc import scan_batch
+from riskops.engines.qc import scan_batch, scan_text_with_llm
 from riskops.engines.report import (
     BusinessReportInputError,
     write_business_report,
@@ -179,10 +179,13 @@ def build_parser() -> argparse.ArgumentParser:
     tui = subparsers.add_parser("tui", help="Start the DeepSeek-style RiskOps Copilot TUI.")
     tui.set_defaults(handler=_handle_tui)
 
-    qc_scan = subparsers.add_parser("qc-scan", help="Run demo compliance keyword scan for collection scripts.")
+    qc_scan = subparsers.add_parser("qc-scan", help="Run compliance scan (keyword-only or keyword + LLM 11-dimension scoring).")
     qc_input = qc_scan.add_mutually_exclusive_group(required=True)
     qc_input.add_argument("--texts", nargs="+", help="Collection script texts to scan.")
     qc_input.add_argument("--file", type=Path, help="Text file path; one script per line.")
+    qc_scan.add_argument("--use-llm", action="store_true", help="Append LLM 11-dimension scoring via DeepSeek API.")
+    qc_scan.add_argument("--api-key", type=str, default=None, help="DeepSeek API key (default: $DEEPSEEK_API_KEY).")
+    qc_scan.add_argument("--model", type=str, default="deepseek-chat", help="DeepSeek model name.")
     qc_scan.set_defaults(handler=_handle_qc_scan)
 
     script = subparsers.add_parser("script", help="Generate a mock compliant collection script draft.")
@@ -601,22 +604,52 @@ def _handle_qc_scan(args: argparse.Namespace, out: TextIO) -> None:
     else:
         texts = list(args.texts or [])
 
-    results = scan_batch(texts)
-    level_counts = {
-        "clean": sum(1 for result in results if result["risk_level"] == "clean"),
-        "medium": sum(1 for result in results if result["risk_level"] == "medium"),
-        "high": sum(1 for result in results if result["risk_level"] == "high"),
-    }
+    use_llm = getattr(args, "use_llm", False)
+    api_key: str | None = getattr(args, "api_key", None) or os.getenv("DEEPSEEK_API_KEY")
+    model: str = getattr(args, "model", "deepseek-chat")
 
-    _print_title(out, "QC 合规关键词扫描")
-    for index, result in enumerate(results, start=1):
-        print(f"{index}. risk_level：{result['risk_level']}，violation_count：{result['violation_count']}", file=out)
-    print("", file=out)
-    print(f"- 总条数：{len(results)}", file=out)
-    print(f"- clean：{level_counts['clean']}", file=out)
-    print(f"- medium：{level_counts['medium']}", file=out)
-    print(f"- high：{level_counts['high']}", file=out)
-    print("PASS qc-scan", file=out)
+    if use_llm and not api_key:
+        print("LLM scoring skipped: DEEPSEEK_API_KEY not found，falling back to keyword-only scan", file=out)
+        use_llm = False
+
+    if use_llm:
+        _print_title(out, "QC 合规扫描（关键词 + LLM 11维评分）")
+        for index, text in enumerate(texts, start=1):
+            result = scan_text_with_llm(text, api_key, model)  # type: ignore[arg-type]
+            dims = result.get("dimensions", {})
+            overall = result.get("overall_compliance_score", "-")
+            review = result.get("supervisor_review_required", False)
+            fallback = result.get("_fallback", False)
+            kw_level = result.get("keyword_risk_level", "clean")
+            summary = result.get("risk_summary", "")
+            print(f"{index}. keyword_risk：{kw_level}  overall_score：{overall}  主管复核：{'是' if review else '否'}{'  [LLM不可用，规则兜底]' if fallback else ''}", file=out)
+            if dims:
+                dim_str = "  ".join(f"{k}={v}" for k, v in dims.items())
+                print(f"   维度：{dim_str}", file=out)
+            if summary:
+                print(f"   {summary}", file=out)
+            alt = result.get("suggested_alternative")
+            if alt:
+                print(f"   建议：{alt}", file=out)
+        print("", file=out)
+        print(f"- 总条数：{len(texts)}", file=out)
+        print("PASS qc-scan (llm)", file=out)
+    else:
+        results = scan_batch(texts)
+        level_counts = {
+            "clean": sum(1 for result in results if result["risk_level"] == "clean"),
+            "medium": sum(1 for result in results if result["risk_level"] == "medium"),
+            "high": sum(1 for result in results if result["risk_level"] == "high"),
+        }
+        _print_title(out, "QC 合规关键词扫描")
+        for index, result in enumerate(results, start=1):
+            print(f"{index}. risk_level：{result['risk_level']}，violation_count：{result['violation_count']}", file=out)
+        print("", file=out)
+        print(f"- 总条数：{len(results)}", file=out)
+        print(f"- clean：{level_counts['clean']}", file=out)
+        print(f"- medium：{level_counts['medium']}", file=out)
+        print(f"- high：{level_counts['high']}", file=out)
+        print("PASS qc-scan", file=out)
 
 
 def _handle_script(args: argparse.Namespace, out: TextIO) -> None:

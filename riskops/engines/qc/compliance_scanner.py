@@ -89,6 +89,19 @@ def generate_qc_report(results: list[dict], output_path: str | Path) -> str:
     return str(path)
 
 
+def scan_text_with_llm(text: str, api_key: str, model: str = "deepseek-chat") -> dict:
+    """Keyword scan + LLM 11-dimension scoring merged with red-line override.
+
+    Returns the merged result dict (see llm_scorer.merge_with_keyword_scan).
+    Falls back gracefully when DeepSeek is unavailable.
+    """
+    from riskops.engines.qc.llm_scorer import merge_with_keyword_scan, score_with_llm  # noqa: PLC0415
+
+    keyword_result = scan_text(text)
+    llm_result = score_with_llm(text, api_key, model)
+    return merge_with_keyword_scan(llm_result, keyword_result)
+
+
 def _normalize_with_position_map(text: str) -> tuple[str, list[int]]:
     normalized_chars = []
     position_map = []
