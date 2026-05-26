@@ -31,6 +31,7 @@ from riskops.engines.report import (
     write_business_report_excel,
     write_business_report_ppt,
 )
+from riskops.engines.script import approve_and_log, check_frequency, generate_script_draft, load_case_context
 from riskops.engines.visualization import (
     build_anomaly_severity_chart,
     build_driver_contribution_chart,
@@ -183,6 +184,13 @@ def build_parser() -> argparse.ArgumentParser:
     qc_input.add_argument("--texts", nargs="+", help="Collection script texts to scan.")
     qc_input.add_argument("--file", type=Path, help="Text file path; one script per line.")
     qc_scan.set_defaults(handler=_handle_qc_scan)
+
+    script = subparsers.add_parser("script", help="Generate a mock compliant collection script draft.")
+    script.add_argument("--case-id", required=True, help="Case id, for example CASE00000001 or CASE-00001.")
+    script.add_argument("--channel", choices=["sms", "ai_call", "manual"], default="sms")
+    script.add_argument("--approve", action="store_true", help="Mock approve and append an audit log record.")
+    script.add_argument("--use-llm", action="store_true", help="Use DeepSeek to polish the deterministic draft.")
+    script.set_defaults(handler=_handle_script)
 
     render_model_lab = subparsers.add_parser("render-model-lab", help="Render M6 strategy eval and ROI outputs.")
     render_model_lab.add_argument("--scenarios", type=Path, default=DEFAULT_STRATEGY_SCENARIOS)
@@ -611,6 +619,68 @@ def _handle_qc_scan(args: argparse.Namespace, out: TextIO) -> None:
     print("PASS qc-scan", file=out)
 
 
+def _handle_script(args: argparse.Namespace, out: TextIO) -> None:
+    try:
+        context = load_case_context(args.case_id)
+        frequency_check = check_frequency(context["case_id"], args.channel, context)
+    except (FileNotFoundError, ValueError, KeyError) as exc:
+        raise CliInputError(exc) from exc
+
+    if not frequency_check["allowed"]:
+        print(f"BLOCKED: {frequency_check['block_reason']}", file=out)
+        return
+
+    api_key = os.getenv("DEEPSEEK_API_KEY") if args.use_llm else None
+    if args.use_llm and not api_key:
+        print("LLM polish skipped: DEEPSEEK_API_KEY not found", file=out)
+
+    try:
+        draft = generate_script_draft(context["case_id"], args.channel, context, api_key=api_key)
+    except Exception as exc:  # noqa: BLE001
+        if api_key:
+            print(f"LLM polish failed ({exc})，falling back to deterministic draft", file=out)
+            draft = generate_script_draft(context["case_id"], args.channel, context, api_key=None)
+        else:
+            raise CliInputError(exc) from exc
+
+    scan = draft["compliance_scan"]
+    freq = draft["frequency_check"]
+    scan_label = "CLEAN" if scan["risk_level"] == "clean" else scan["risk_level"].upper()
+    check_mark = "✓" if freq["allowed"] else "x"
+
+    print("=== 话术草稿 ===", file=out)
+    print(
+        "案件: {} | 渠道: {} | 类型: {}".format(
+            draft["case_id"],
+            _display_channel(draft["channel"]),
+            draft["script_type"],
+        ),
+        file=out,
+    )
+    print("---", file=out)
+    print(draft["draft_content"], file=out)
+    print("---", file=out)
+    print(f"合规扫描: {scan_label}（{scan['violation_count']}个违规）", file=out)
+    print(
+        "频次检查: 今日{}次/上限{}次，本周{}次/上限{}次 {}".format(
+            freq["today_count"],
+            freq["daily_limit"],
+            freq["week_count"],
+            freq["weekly_limit"],
+            check_mark,
+        ),
+        file=out,
+    )
+    print(f"风险等级: {draft['risk_level']}", file=out)
+    print(f"主管复核: {'需要' if draft['supervisor_review_required'] else '不需要'}", file=out)
+    print("---", file=out)
+    if args.approve:
+        approve_and_log(draft)
+        print("Mock 发送已写入日志", file=out)
+    else:
+        print("等待人工确认，使用 --approve 确认发送", file=out)
+
+
 def _handle_render_model_lab(args: argparse.Namespace, out: TextIO) -> None:
     scenarios = _load_scenarios(args.scenarios)
     errors = validate_strategy_scenarios(scenarios)
@@ -813,6 +883,10 @@ def _display_path(path: Path) -> str:
         return str(path.resolve().relative_to(ROOT))
     except ValueError:
         return str(path)
+
+
+def _display_channel(channel: str) -> str:
+    return {"sms": "SMS", "ai_call": "AI外呼", "manual": "人工电话"}.get(channel, channel)
 
 
 def _as_dict(value: Any) -> dict[str, Any]:
