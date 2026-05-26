@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from riskops.tui.app import RiskOpsTUIApp
-
-
 def run() -> None:
+    from riskops.tui.app import RiskOpsTUIApp
+
     app = RiskOpsTUIApp()
     app.run()

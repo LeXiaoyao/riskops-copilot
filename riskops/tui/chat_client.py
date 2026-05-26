@@ -41,16 +41,23 @@ def stream_chat_with_tools(
     messages: list[dict],
     model: str,
     api_key: str,
+    *,
+    system_prompt: str | None = None,
+    tools: list[dict[str, Any]] | None = None,
 ) -> Iterator[str | dict[str, Any]]:
     context = load_context()
+    prompt = system_prompt or SYSTEM_PROMPT_TEMPLATE.format(context=context)
+    if system_prompt:
+        prompt = f"{system_prompt}\n\n当前项目数据摘要：\n{context}"
+    tool_schemas = TOOL_SCHEMAS if tools is None else tools
     working_messages = [
-        {"role": "system", "content": SYSTEM_PROMPT_TEMPLATE.format(context=context)},
+        {"role": "system", "content": prompt},
         *messages,
     ]
     first_payload = {
         "model": model,
         "messages": working_messages,
-        "tools": TOOL_SCHEMAS,
+        "tools": tool_schemas,
         "tool_choice": "auto",
         "stream": True,
     }

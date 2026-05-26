@@ -11,7 +11,7 @@ from textual.containers import Container, VerticalScroll
 from textual.message import Message
 from textual.widgets import Label, Markdown, Static, TextArea
 
-from riskops.tui.chat_client import stream_chat_with_tools
+from riskops.agents.orchestrator import RiskOpsOrchestrator
 from riskops.tui.context_loader import context_summary, read_output
 
 WELCOME_MESSAGE = """欢迎使用 RiskOps Copilot TUI。
@@ -140,6 +140,11 @@ class RiskOpsTUIApp(App[None]):
         margin: 1 0;
     }
 
+    .route-info {
+        color: #3b82f6;
+        margin: 1 0;
+    }
+
     #composer-shell {
         height: 4;
         padding: 0 1;
@@ -219,11 +224,18 @@ class RiskOpsTUIApp(App[None]):
         widget = await self._append_ai("")
         answer = ""
         try:
-            for event in stream_chat_with_tools(self.messages, self.model, self.api_key):
+            orchestrator = RiskOpsOrchestrator(api_key=self.api_key, model=self.model)
+            for event in orchestrator.run(text):
                 if isinstance(event, dict) and event.get("type") == "tool_call":
                     await self._append_tool_call(event)
                     continue
                 token = event if isinstance(event, str) else ""
+                if token.startswith("**[→ "):
+                    await self._append_route_info(token)
+                    continue
+                if token.lstrip().startswith("[工具调用]"):
+                    await self._append_tool_call_text(token.strip())
+                    continue
                 answer += token
                 widget.update(self._ai_renderable(answer))
                 self.query_one("#chat-history", VerticalScroll).scroll_end(animate=False)
@@ -254,6 +266,16 @@ class RiskOpsTUIApp(App[None]):
         row_count = event.get("row_count", 0)
         param_text = ", ".join(f"{key}={value}" for key, value in params.items())
         widget = Static(escape(f"[工具调用] {tool}({param_text}) → 返回 {row_count} 行"), classes="tool-call")
+        await self._mount_message(widget)
+        return widget
+
+    async def _append_tool_call_text(self, text: str) -> Static:
+        widget = Static(escape(text), classes="tool-call")
+        await self._mount_message(widget)
+        return widget
+
+    async def _append_route_info(self, text: str) -> Static:
+        widget = Static(escape(text.strip()), classes="route-info")
         await self._mount_message(widget)
         return widget
 
