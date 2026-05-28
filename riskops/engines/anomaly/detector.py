@@ -58,7 +58,6 @@ class AnomalyDetector:
             self._detect_ai_call_coverage_drop,
             self._detect_reduction_usage_drop,
             self._detect_ptp_keep_drop,
-            self._detect_template_complaint_ratio,
         ]
         for check in checks:
             try:
@@ -220,27 +219,45 @@ class AnomalyDetector:
         if missing:
             raise KeyError(f"dws_customer_status_snapshot_di missing columns: {sorted(missing)}")
         frame = customer.copy()
+        high_balance_threshold = pd.to_numeric(frame["total_outstanding_amount"], errors="coerce").median() * 2
         frame["high_balance_high_risk"] = (
-            (pd.to_numeric(frame["total_outstanding_amount"], errors="coerce") >= 35_000)
-            & frame["risk_level"].isin(["C", "D"])
+            (pd.to_numeric(frame["total_outstanding_amount"], errors="coerce") >= high_balance_threshold)
+            & frame["risk_level"].eq("high")
         )
         daily = frame.groupby("stat_date", as_index=False).agg(
             customer_count=("customer_id", "nunique"),
             high_balance_high_risk_count=("high_balance_high_risk", "sum"),
         )
         daily["high_balance_high_risk_share"] = daily["high_balance_high_risk_count"] / daily["customer_count"].replace(0, pd.NA)
-        return self._window_anomaly(
+        baseline_value, recent_value, recent_window, baseline_window = window_means(
             daily,
+            "stat_date",
+            "high_balance_high_risk_share",
+            self.config.recent_window_days,
+            self.config.baseline_window_days,
+        )
+        absolute_change = recent_value - baseline_value
+        if absolute_change < 0.05:
+            return None
+        rel_change = relative_change(baseline_value, recent_value)
+        severity = "high" if absolute_change >= 0.07 else "medium"
+        return AnomalyResult(
+            anomaly_id="M3A-high_balance_high_risk_share-overall-ALL",
             metric_code="high_balance_high_risk_share",
             metric_name_cn="高余额高风险客群占比",
-            value_col="high_balance_high_risk_share",
-            direction="increase",
             anomaly_type="window_compare",
-            dimension_name="balance_segment+risk_level",
-            dimension_value="HIGH+C/D",
+            severity=severity,
+            dimension_name="overall",
+            dimension_value="ALL",
+            baseline_value=round(baseline_value, 6),
+            recent_value=round(recent_value, 6),
+            absolute_change=round(absolute_change, 6),
+            relative_change=round(rel_change, 6),
+            recent_window=recent_window,
+            baseline_window=baseline_window,
             evidence_table="dws_customer_status_snapshot_di",
-            explanation_template="高余额高风险客群占比从 {baseline_value:.2%} 升至 {recent_value:.2%}。",
-            recommended_next_step="进入 M3-B 后拆分余额段、risk_level 和入案批次，识别结构变化贡献。",
+            explanation=f"高余额高风险客群占比从 {baseline_value:.2%} 升至 {recent_value:.2%}。",
+            recommended_next_step="进入后续归因阶段后拆分余额段、risk_level 和入案批次，识别结构变化贡献。",
         )
 
     def _detect_ai_call_coverage_drop(self) -> AnomalyResult | None:

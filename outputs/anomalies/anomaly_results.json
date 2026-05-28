@@ -1,7 +1,7 @@
 {
-  "anomaly_count": 6,
+  "anomaly_count": 7,
   "severity_counts": {
-    "high": 4,
+    "high": 5,
     "medium": 2,
     "low": 0
   },
@@ -60,6 +60,24 @@
       "evidence_table": "dws_vendor_line_capacity_di",
       "explanation": "华东线路人均案量从 13.54 升至 19.10，产能压力上升。",
       "recommended_next_step": "下钻华东各 line_id 的 active_case_count 与 active_collector_count，评估临时增员或分案转移。"
+    },
+    {
+      "anomaly_id": "M3A-high_balance_high_risk_share-overall-ALL",
+      "metric_code": "high_balance_high_risk_share",
+      "metric_name_cn": "高余额高风险客群占比",
+      "anomaly_type": "window_compare",
+      "severity": "high",
+      "dimension_name": "overall",
+      "dimension_value": "ALL",
+      "baseline_value": 0.119997,
+      "recent_value": 0.200014,
+      "absolute_change": 0.080016,
+      "relative_change": 0.666815,
+      "recent_window": "2026-04-19~2026-05-18",
+      "baseline_window": "2026-03-20~2026-04-18",
+      "evidence_table": "dws_customer_status_snapshot_di",
+      "explanation": "高余额高风险客群占比从 12.00% 升至 20.00%。",
+      "recommended_next_step": "进入后续归因阶段后拆分余额段、risk_level 和入案批次，识别结构变化贡献。"
     },
     {
       "anomaly_id": "M3A-ai_call_coverage-action_type-AI_OUTBOUND",

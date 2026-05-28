@@ -5,6 +5,7 @@ from pathlib import Path
 import pandas as pd
 
 from riskops.engines.anomaly.detector import AnomalyDetector
+from riskops.engines.anomaly.summary import severity_counts
 
 
 def write_table(root: Path, layer: str, table: str, frame: pd.DataFrame) -> None:
@@ -61,14 +62,14 @@ def build_anomaly_fixture(root: Path) -> None:
 
     customer_rows = []
     for idx, date in enumerate(dates):
-        high_count = 1 if idx < 30 else 4
+        high_count = 1 if idx < 30 else 2
         for customer_idx in range(10):
             customer_rows.append(
                 {
                     "stat_date": date,
                     "customer_id": f"C{customer_idx:03d}",
                     "total_outstanding_amount": 40_000 if customer_idx < high_count else 10_000,
-                    "risk_level": "C" if customer_idx < high_count else "B",
+                    "risk_level": "high" if customer_idx < high_count else "medium",
                 }
             )
     customer = pd.DataFrame(customer_rows)
@@ -162,6 +163,27 @@ def test_detects_reduction_usage_rate_drop(tmp_path: Path) -> None:
     build_anomaly_fixture(tmp_path)
     codes = {item.metric_code for item in AnomalyDetector(data_root=tmp_path).detect().results}
     assert "reduction_usage_rate" in codes
+
+
+def test_detects_seven_anomalies_with_high_balance_signal(tmp_path: Path) -> None:
+    build_anomaly_fixture(tmp_path)
+    results = AnomalyDetector(data_root=tmp_path).detect().results
+    anomaly_results = {"anomalies": [item.to_dict() for item in results]}
+    anomaly_ids = {item["anomaly_id"] for item in anomaly_results["anomalies"]}
+    expected_existing_ids = {
+        "M3A-m1_recovery_rate-overall-ALL",
+        "M3A-connect_rate-vendor_id-V_B",
+        "M3A-avg_case_per_collector-region-华东",
+        "M3A-ai_call_coverage-action_type-AI_OUTBOUND",
+        "M3A-reduction_usage_rate-overall-ALL",
+        "M3A-ptp_keep_rate-overall-ALL",
+    }
+    counts = severity_counts(results)
+
+    assert len(anomaly_results["anomalies"]) == 7
+    assert any("high_balance_high_risk_share" in anomaly_id for anomaly_id in anomaly_ids)
+    assert sum(counts.values()) == 7
+    assert expected_existing_ids.issubset(anomaly_ids)
 
 
 def test_severity_is_not_empty(tmp_path: Path) -> None:

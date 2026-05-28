@@ -789,15 +789,37 @@ def make_snapshots(
                     cust["max_dpd"].le(30),
                     cust["max_dpd"].le(60),
                 ],
-                ["A", "B", "C"],
-                default="D",
+                ["low", "low", "medium"],
+                default="medium",
             )
             customer_frames.append(cust[["stat_date", "customer_id", "active_loan_count", "active_case_count", "total_outstanding_amount", "max_dpd", "risk_level"]])
+    customer_snapshot = pd.concat(customer_frames, ignore_index=True)
+    customer_snapshot = embed_high_balance_high_risk_signal(customer_snapshot)
     return {
         "ods_loan_daily_snapshot": pd.concat(loan_frames, ignore_index=True),
         "ods_case_daily_snapshot": pd.concat(case_frames, ignore_index=True),
-        "ods_customer_daily_snapshot": pd.concat(customer_frames, ignore_index=True),
+        "ods_customer_daily_snapshot": customer_snapshot,
     }
+
+
+def embed_high_balance_high_risk_signal(customer_snapshot: pd.DataFrame) -> pd.DataFrame:
+    frame = customer_snapshot.copy()
+    frame["stat_date"] = pd.to_datetime(frame["stat_date"]).dt.date
+    threshold = pd.to_numeric(frame["total_outstanding_amount"], errors="coerce").median() * 2
+    latest_date = pd.to_datetime(frame["stat_date"]).max().date()
+    recent_start = (pd.Timestamp(latest_date) - pd.Timedelta(days=29)).date()
+
+    for stat_date, group in frame.groupby("stat_date", sort=True):
+        target_share = 0.20 if stat_date >= recent_start else 0.12
+        target_count = int(round(len(group) * target_share))
+        high_balance = group[pd.to_numeric(group["total_outstanding_amount"], errors="coerce") >= threshold]
+        selected = (
+            high_balance.sort_values(["total_outstanding_amount", "max_dpd", "customer_id"], ascending=[False, False, True])
+            .head(target_count)
+            .index
+        )
+        frame.loc[selected, "risk_level"] = "high"
+    return frame
 
 
 def write_raw_secure(customers: pd.DataFrame, rng: np.random.Generator, output_format: str) -> None:
