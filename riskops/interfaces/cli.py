@@ -41,6 +41,7 @@ from riskops.engines.visualization import (
     build_complaint_risk_chart,
     build_dpd_structure_chart,
     build_driver_contribution_chart,
+    build_qc_quality_radar_chart,
     build_reduction_roi_chart,
     build_roi_comparison_chart,
     build_vendor_matrix_chart,
@@ -78,6 +79,7 @@ DEFAULT_CAPACITY_HEATMAP_CHART = DEFAULT_VISUALIZATION_DIR / "capacity_heatmap.h
 DEFAULT_DPD_STRUCTURE_CHART = DEFAULT_VISUALIZATION_DIR / "dpd_structure.html"
 DEFAULT_REDUCTION_ROI_CHART = DEFAULT_VISUALIZATION_DIR / "reduction_roi.html"
 DEFAULT_COMPLAINT_RISK_CHART = DEFAULT_VISUALIZATION_DIR / "complaint_risk.html"
+DEFAULT_QC_QUALITY_RADAR_CHART = DEFAULT_VISUALIZATION_DIR / "qc_quality_radar.html"
 RUN_ML_BASELINE = ROOT / "scripts" / "run_ml_baseline.py"
 
 OUTPUT_PATHS = [
@@ -875,6 +877,7 @@ def _handle_render_charts(args: argparse.Namespace, out: TextIO) -> None:
         (output_dir / "dpd_structure.html", build_dpd_structure_chart()),
         (output_dir / "reduction_roi.html", build_reduction_roi_chart()),
         (output_dir / "complaint_risk.html", build_complaint_risk_chart()),
+        (output_dir / "qc_quality_radar.html", build_qc_quality_radar_chart({})),
     ]
     for path, html in outputs:
         path.write_text(html, encoding="utf-8")

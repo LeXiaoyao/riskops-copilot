@@ -11,6 +11,7 @@ from riskops.engines.visualization import (
     build_complaint_risk_chart,
     build_dpd_structure_chart,
     build_driver_contribution_chart,
+    build_qc_quality_radar_chart,
     build_reduction_roi_chart,
     build_roi_comparison_chart,
     build_vendor_matrix_chart,
@@ -70,6 +71,28 @@ def sample_roi_results() -> dict[str, object]:
                 "roi_ratio": 1.5,
             },
         ],
+    }
+
+
+def sample_qc_summary() -> dict[str, object]:
+    return {
+        "rows": [
+            {
+                "stat_date": "2026-05-20",
+                "dimensions": {
+                    "合规红线": 82,
+                    "催收强度": 66,
+                    "账单事实说明": 74,
+                    "金额与日期说明": 78,
+                    "情绪控制": 72,
+                    "客户异议识别": 70,
+                    "开场身份说明": 80,
+                    "PTP确认": 76,
+                    "结束语规范": 84,
+                    "还款方案引导": 73,
+                },
+            }
+        ]
     }
 
 
@@ -153,6 +176,17 @@ def test_build_complaint_risk_chart_returns_html() -> None:
     assert "plotly" in html.lower()
 
 
+def test_build_qc_quality_radar_chart_returns_html() -> None:
+    html = build_qc_quality_radar_chart(sample_qc_summary())
+
+    assert isinstance(html, str)
+    assert html
+    assert "plotly" in html.lower()
+    assert "polar" in html.lower() or "radar" in html.lower()
+    for dimension in ["合规性", "强度", "清晰度", "同理", "完整", "流程"]:
+        assert dimension in html
+
+
 def test_cli_render_charts_can_run(tmp_path: Path) -> None:
     result = subprocess.run(
         [sys.executable, str(CLI), "render-charts", "--output-dir", str(tmp_path)],
@@ -172,4 +206,10 @@ def test_cli_render_charts_can_run(tmp_path: Path) -> None:
     assert (tmp_path / "dpd_structure.html").exists()
     assert (tmp_path / "reduction_roi.html").exists()
     assert (tmp_path / "complaint_risk.html").exists()
+    radar_html = tmp_path / "qc_quality_radar.html"
+    assert radar_html.exists()
+    radar_content = radar_html.read_text(encoding="utf-8")
+    assert "polar" in radar_content.lower() or "radar" in radar_content.lower()
+    for dimension in ["合规性", "强度", "清晰度", "同理", "完整", "流程"]:
+        assert dimension in radar_content
     assert "PASS render-charts" in result.stdout

@@ -21,6 +21,60 @@ SEVERITY_COLORS = {
     "low": "#8c8c8c",
 }
 
+QC_RADAR_DIMENSIONS = ["合规性", "强度", "清晰度", "同理", "完整", "流程"]
+QC_RADAR_ALIASES = {
+    "合规性": ["合规性", "合规", "合规红线", "overall_compliance_score", "compliance_score"],
+    "强度": ["强度", "催收强度", "pressure_score", "intensity_score"],
+    "清晰度": ["清晰度", "清晰", "账单事实说明", "金额与日期说明", "clarity_score"],
+    "同理": ["同理", "同理心", "情绪控制", "客户异议识别", "empathy_score"],
+    "完整": ["完整", "完整性", "开场身份说明", "PTP确认", "结束语规范", "completeness_score"],
+    "流程": ["流程", "流程规范", "还款方案引导", "PTP确认", "process_score"],
+}
+
+
+def build_qc_quality_radar_chart(qc_summary: dict) -> str:
+    payload = qc_summary or _load_json(ROOT / "outputs" / "qc" / "qc_summary.json") or _mock_qc_summary()
+    scores = _extract_qc_radar_scores(payload) or _extract_qc_radar_scores(_mock_qc_summary())
+
+    labels = [*QC_RADAR_DIMENSIONS, QC_RADAR_DIMENSIONS[0]]
+    values = [_clip_score(scores[dimension]) for dimension in QC_RADAR_DIMENSIONS]
+    values.append(values[0])
+
+    fig = go.Figure(
+        data=[
+            go.Scatterpolar(
+                r=values,
+                theta=labels,
+                fill="toself",
+                name="最近一期均值",
+                line={"color": "#2563eb", "width": 3},
+                fillcolor="rgba(37, 99, 235, 0.18)",
+                hovertemplate="%{theta}<br>评分=%{r:.1f}<extra></extra>",
+            )
+        ]
+    )
+    fig.update_layout(
+        title="话术质检雷达图（最近一期均值）",
+        width=CHART_WIDTH,
+        height=CHART_HEIGHT,
+        paper_bgcolor="#ffffff",
+        plot_bgcolor="#ffffff",
+        font={"color": "#0f172a"},
+        polar={
+            "bgcolor": "#ffffff",
+            "radialaxis": {
+                "range": [0, 100],
+                "tickvals": [0, 20, 40, 60, 80, 100],
+                "gridcolor": "#dbeafe",
+                "linecolor": "#94a3b8",
+            },
+            "angularaxis": {"gridcolor": "#dbeafe", "linecolor": "#94a3b8"},
+        },
+        margin={"l": 90, "r": 90, "t": 80, "b": 60},
+        showlegend=False,
+    )
+    return _to_html(fig)
+
 
 def build_anomaly_severity_chart(m3_summary: dict) -> str:
     rows = [
@@ -592,6 +646,109 @@ def _as_list(value: Any) -> list[Any]:
 
 def _is_number(value: Any) -> bool:
     return isinstance(value, int | float) and not isinstance(value, bool)
+
+
+def _extract_qc_radar_scores(payload: dict[str, Any]) -> dict[str, float]:
+    records = _latest_qc_records(payload)
+    values_by_dimension: dict[str, list[float]] = {dimension: [] for dimension in QC_RADAR_DIMENSIONS}
+    for record in records:
+        source = _flatten_qc_score_record(record)
+        for dimension, aliases in QC_RADAR_ALIASES.items():
+            values = [_to_score_value(source.get(alias)) for alias in aliases]
+            valid_values = [value for value in values if value is not None]
+            if valid_values:
+                values_by_dimension[dimension].append(sum(valid_values) / len(valid_values))
+
+    scores = {
+        dimension: sum(values) / len(values)
+        for dimension, values in values_by_dimension.items()
+        if values
+    }
+    if len(scores) != len(QC_RADAR_DIMENSIONS):
+        return {}
+    return scores
+
+
+def _latest_qc_records(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    for key in ["recent_period", "latest_period", "latest", "current", "dimension_means", "scores", "dimensions"]:
+        value = payload.get(key)
+        if isinstance(value, dict):
+            return [value]
+
+    for key in ["summary", "quality_summary"]:
+        value = payload.get(key)
+        if isinstance(value, dict):
+            records = _latest_qc_records(value)
+            if records:
+                return records
+
+    rows = payload.get("rows") or payload.get("data") or payload.get("records") or payload.get("results")
+    if isinstance(rows, list):
+        dict_rows = [row for row in rows if isinstance(row, dict)]
+        if not dict_rows:
+            return []
+        date_key = _select_qc_date_key(dict_rows)
+        if not date_key:
+            return dict_rows
+        dated = pd.DataFrame(dict_rows)
+        parsed_dates = pd.to_datetime(dated[date_key], errors="coerce")
+        if parsed_dates.notna().any():
+            latest_date = parsed_dates.max()
+            return [
+                row
+                for row, parsed_date in zip(dict_rows, parsed_dates, strict=False)
+                if pd.notna(parsed_date) and parsed_date == latest_date
+            ]
+        return dict_rows
+
+    return [payload] if payload else []
+
+
+def _select_qc_date_key(records: list[dict[str, Any]]) -> str | None:
+    for key in ["stat_date", "score_date", "batch_date", "period", "date"]:
+        if any(key in record for record in records):
+            return key
+    return None
+
+
+def _flatten_qc_score_record(record: dict[str, Any]) -> dict[str, Any]:
+    source: dict[str, Any] = {}
+    for key in ["dimensions", "dimension_scores", "avg_scores", "quality_scores", "scores"]:
+        value = record.get(key)
+        if isinstance(value, dict):
+            source.update(value)
+    source.update(record)
+    return source
+
+
+def _to_score_value(value: Any) -> float | None:
+    if isinstance(value, bool) or value is None:
+        return None
+    if isinstance(value, int | float):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError:
+            return None
+    return None
+
+
+def _clip_score(value: float) -> float:
+    return max(0.0, min(100.0, float(value)))
+
+
+def _mock_qc_summary() -> dict[str, Any]:
+    return {
+        "latest_period": {
+            "合规性": 84,
+            "强度": 68,
+            "清晰度": 78,
+            "同理": 74,
+            "完整": 80,
+            "流程": 76,
+        }
+    }
 
 
 def _first_present(item: dict[str, Any], *keys: str) -> Any:
