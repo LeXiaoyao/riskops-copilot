@@ -69,4 +69,4 @@
 
 - **conclusion**：vintage_month shows artifact risk in at least one with-vintage model, but removing it leaves performance close; the synthetic data signal is weak and the baseline should be presented as a diagnostic demo.
 
-_Generated at 2026-05-25T06:38:52+00:00_
+_Generated at 2026-05-28T11:39:44+00:00_

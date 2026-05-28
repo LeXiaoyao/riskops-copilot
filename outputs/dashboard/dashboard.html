@@ -687,7 +687,7 @@
       <span class="lang-cn">把贷后风控运营里散落在 SQL / Excel / PPT 的工作流，沉淀成可复现的 AI / Data workflow：识别异常 → 解释驱动 → 生成经营报告 → 估算策略 ROI。</span>
     </div>
     <div class="meta">
-      <span><strong>报告生成时间</strong>：2026-05-25 14:38:56</span>
+      <span><strong>报告生成时间</strong>：2026-05-28 19:39:48</span>
       <span><strong>基线窗口</strong>：2026-03-20~2026-04-18</span>
       <span><strong>最近窗口</strong>：2026-04-19~2026-05-18</span>
       <span><strong>M3 报告版本</strong>：m3-c-v1</span>
@@ -721,14 +721,14 @@
       <div class="portfolio-card" data-portfolio-card="anomaly_signals">
         <div class="eyebrow">03 · Anomaly Signals</div>
         <div class="title">结构化异常事件，而非散点告警</div>
-        <div class="stat">6 anomalies · 4 high · 2 medium</div>
+        <div class="stat">7 anomalies · 5 high · 2 medium</div>
         <div class="desc-en">Rule + ML signals across recovery, AI outbound, manual capacity, PTP, settlement use and complaint risk are folded into typed events with severity.</div>
         <div class="desc-cn">回收率、AI 外呼覆盖、产能压力、PTP、减免使用、投诉风险等信号统一结构化为带 severity 的事件。</div>
       </div>
       <div class="portfolio-card" data-portfolio-card="attribution">
         <div class="eyebrow">04 · Attribution</div>
         <div class="title">排序好的 Top drivers，可解释</div>
-        <div class="stat">Top driver: risk_level=B (6.02%)</div>
+        <div class="stat">Top driver: product_code=P_CONS (5.59%)</div>
         <div class="desc-en">Decompose the headline drop into ranked drivers across channel, region, customer segment and vendor / line, with process evidence (contact / fulfill / settlement / compliance / capacity) attached.</div>
         <div class="desc-cn">把整体下降拆成可排序的驱动因素，并附触达 / 履约 / 减免 / 合规 / 产能五条证据链。</div>
       </div>
@@ -823,11 +823,11 @@
     <div class="card-grid">
       <div class="stat-card tone-neutral">
         <div class="label">异常总数</div>
-        <div class="value">6</div>
+        <div class="value">7</div>
       </div>
       <div class="stat-card tone-high">
         <div class="label">high 级</div>
-        <div class="value">4</div>
+        <div class="value">5</div>
       </div>
       <div class="stat-card tone-medium">
         <div class="label">medium 级</div>
@@ -848,11 +848,11 @@
     <div class="eyebrow">Executive Summary</div>
     <h2>本期一句话结论</h2>
     <ol>
-      <li>本期共识别 6 个异常，其中 4 个 high、2 个 medium、0 个 low。</li>
+      <li>本期共识别 7 个异常，其中 5 个 high、2 个 medium、0 个 low。</li>
       <li>核心问题是 D7 回收率（recovery_rate_d7）下降，历史基准 24.57% → 最近窗口 10.27%，相对变化 -58.20%。</li>
       <li>伴随 PTP 履约上升、产能压力上升。</li>
-      <li>初步归因指向 risk_level=B、product_code=P_CONS、balance_segment=NORMAL。</li>
-      <li>建议优先下钻 risk_level=B × vendor / line / score_band，并结合触达和合规证据复核。</li>
+      <li>初步归因指向 product_code=P_CONS、balance_segment=NORMAL、risk_level=high。</li>
+      <li>建议优先下钻 product_code=P_CONS × vendor / line / score_band，并结合触达和合规证据复核。</li>
     </ol>
   </section>
 
@@ -922,6 +922,22 @@
         </tr>
         <tr>
           <td>
+            <strong>高余额高风险客群占比</strong><br/>
+            <span style="color: var(--muted); font-size: 12px;">high_balance_high_risk_share</span>
+          </td>
+          <td>
+            <span class="severity-pill high">high</span>
+          </td>
+          <td>overall = ALL</td>
+          <td>12.00%</td>
+          <td>20.00%</td>
+          <td>
+              <span class="delta-positive">+66.68%</span>
+          </td>
+          <td>进入后续归因阶段后拆分余额段、risk_level 和入案批次，识别结构变化贡献。</td>
+        </tr>
+        <tr>
+          <td>
             <strong>AI 外呼覆盖率</strong><br/>
             <span style="color: var(--muted); font-size: 12px;">ai_call_coverage</span>
           </td>
@@ -975,38 +991,14 @@
         <div class="driver-head">
           <div>
             <span class="driver-rank">#1</span>
-            <span class="driver-title">risk_level = B</span>
-            <span class="driver-role">客群风险结构</span>
-          </div>
-          <div class="contribution-wrap">
-            <div class="label">贡献度 contribution</div>
-            <div class="driver-contribution">6.02%</div>
-            <div class="contribution-bar" aria-label="贡献度进度条">
-              <span class="fill" style="width: 100.0%;"></span>
-            </div>
-          </div>
-        </div>
-        <div class="driver-meta">
-          <span><strong>历史基准</strong>：25.17%</span>
-          <span><strong>最近窗口</strong>：9.94%</span>
-          <span><strong>confidence</strong>：medium</span>
-        </div>
-        <p class="role-explanation"><strong>维度解读</strong>：风险层信号，结合余额段与入案策略综合判断。</p>
-        <p><strong>业务解释</strong>：B 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。</p>
-        <p><strong>推荐动作</strong>：对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。</p>
-      </div>
-      <div class="driver-card">
-        <div class="driver-head">
-          <div>
-            <span class="driver-rank">#2</span>
             <span class="driver-title">product_code = P_CONS</span>
             <span class="driver-role">维度切片</span>
           </div>
           <div class="contribution-wrap">
             <div class="label">贡献度 contribution</div>
-            <div class="driver-contribution">5.57%</div>
+            <div class="driver-contribution">5.59%</div>
             <div class="contribution-bar" aria-label="贡献度进度条">
-              <span class="fill" style="width: 92.6%;"></span>
+              <span class="fill" style="width: 100.0%;"></span>
             </div>
           </div>
         </div>
@@ -1022,15 +1014,15 @@
       <div class="driver-card">
         <div class="driver-head">
           <div>
-            <span class="driver-rank">#3</span>
+            <span class="driver-rank">#2</span>
             <span class="driver-title">balance_segment = NORMAL</span>
             <span class="driver-role">余额结构</span>
           </div>
           <div class="contribution-wrap">
             <div class="label">贡献度 contribution</div>
-            <div class="driver-contribution">5.27%</div>
+            <div class="driver-contribution">5.28%</div>
             <div class="contribution-bar" aria-label="贡献度进度条">
-              <span class="fill" style="width: 87.5%;"></span>
+              <span class="fill" style="width: 94.5%;"></span>
             </div>
           </div>
         </div>
@@ -1046,15 +1038,39 @@
       <div class="driver-card">
         <div class="driver-head">
           <div>
+            <span class="driver-rank">#3</span>
+            <span class="driver-title">risk_level = high</span>
+            <span class="driver-role">客群风险结构</span>
+          </div>
+          <div class="contribution-wrap">
+            <div class="label">贡献度 contribution</div>
+            <div class="driver-contribution">4.94%</div>
+            <div class="contribution-bar" aria-label="贡献度进度条">
+              <span class="fill" style="width: 88.3%;"></span>
+            </div>
+          </div>
+        </div>
+        <div class="driver-meta">
+          <span><strong>历史基准</strong>：23.56%</span>
+          <span><strong>最近窗口</strong>：5.44%</span>
+          <span><strong>confidence</strong>：medium</span>
+        </div>
+        <p class="role-explanation"><strong>维度解读</strong>：风险层信号，结合余额段与入案策略综合判断。</p>
+        <p><strong>业务解释</strong>：high 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。</p>
+        <p><strong>推荐动作</strong>：对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。</p>
+      </div>
+      <div class="driver-card">
+        <div class="driver-head">
+          <div>
             <span class="driver-rank">#4</span>
             <span class="driver-title">channel_code = ECOM</span>
             <span class="driver-role">渠道结构</span>
           </div>
           <div class="contribution-wrap">
             <div class="label">贡献度 contribution</div>
-            <div class="driver-contribution">4.88%</div>
+            <div class="driver-contribution">4.90%</div>
             <div class="contribution-bar" aria-label="贡献度进度条">
-              <span class="fill" style="width: 81.1%;"></span>
+              <span class="fill" style="width: 87.6%;"></span>
             </div>
           </div>
         </div>
@@ -1076,9 +1092,9 @@
           </div>
           <div class="contribution-wrap">
             <div class="label">贡献度 contribution</div>
-            <div class="driver-contribution">4.17%</div>
+            <div class="driver-contribution">4.18%</div>
             <div class="contribution-bar" aria-label="贡献度进度条">
-              <span class="fill" style="width: 69.2%;"></span>
+              <span class="fill" style="width: 74.8%;"></span>
             </div>
           </div>
         </div>
@@ -1103,7 +1119,7 @@
           <span>触达证据</span>
           <span class="tone-tag">正向改善</span>
         </div>
-        <div class="headline">risk_level=B 的 AI 外呼覆盖率 上升：历史基准 8.70% → 最近窗口 19.05%（变化 +10.35%）。</div>
+        <div class="headline">risk_level=high 的 AI 外呼覆盖率 上升：历史基准 25.00% → 最近窗口 37.50%（变化 +12.50%）。</div>
         <div style="font-size: 12px; color: var(--muted);">主指标：AI 外呼覆盖率</div>
       </div>
       <div class="evidence-card tone-positive">
@@ -1111,7 +1127,7 @@
           <span>履约证据</span>
           <span class="tone-tag">正向改善</span>
         </div>
-        <div class="headline">risk_level=B 的 PTP 履约率 上升：历史基准 33.33% → 最近窗口 100.00%（变化 +66.67%）。</div>
+        <div class="headline">risk_level=high 的 PTP 履约率 上升：历史基准 0.00% → 最近窗口 100.00%（变化 +100.00%）。</div>
         <div style="font-size: 12px; color: var(--muted);">主指标：PTP 履约率</div>
       </div>
       <div class="evidence-card tone-neutral">
@@ -1155,15 +1171,6 @@
           </thead>
           <tbody>
             <tr>
-              <td>risk_level=B</td>
-              <td>PTP 履约率</td>
-              <td>33.33%</td>
-              <td>100.00%</td>
-              <td>
-                  <span class="delta-positive">+66.67%</span>
-              </td>
-            </tr>
-            <tr>
               <td>product_code=P_CONS</td>
               <td>PTP 履约率</td>
               <td>0.00%</td>
@@ -1179,6 +1186,15 @@
               <td>66.67%</td>
               <td>
                   <span class="delta-positive">+41.67%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>risk_level=high</td>
+              <td>PTP 履约率</td>
+              <td>0.00%</td>
+              <td>100.00%</td>
+              <td>
+                  <span class="delta-positive">+100.00%</span>
               </td>
             </tr>
             <tr>
@@ -1216,24 +1232,6 @@
           </thead>
           <tbody>
             <tr>
-              <td>risk_level=B</td>
-              <td>AI 外呼覆盖率</td>
-              <td>8.70%</td>
-              <td>19.05%</td>
-              <td>
-                  <span class="delta-positive">+10.35%</span>
-              </td>
-            </tr>
-            <tr>
-              <td>risk_level=B</td>
-              <td>人工触达占比</td>
-              <td>91.30%</td>
-              <td>80.95%</td>
-              <td>
-                  <span class="delta-negative">-10.35%</span>
-              </td>
-            </tr>
-            <tr>
               <td>product_code=P_CONS</td>
               <td>AI 外呼覆盖率</td>
               <td>21.43%</td>
@@ -1267,6 +1265,24 @@
               <td>86.96%</td>
               <td>
                   <span class="delta-positive">+9.54%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>risk_level=high</td>
+              <td>AI 外呼覆盖率</td>
+              <td>25.00%</td>
+              <td>37.50%</td>
+              <td>
+                  <span class="delta-positive">+12.50%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>risk_level=high</td>
+              <td>人工触达占比</td>
+              <td>75.00%</td>
+              <td>62.50%</td>
+              <td>
+                  <span class="delta-negative">-12.50%</span>
               </td>
             </tr>
             <tr>
@@ -1322,15 +1338,6 @@
           </thead>
           <tbody>
             <tr>
-              <td>risk_level=B</td>
-              <td>减免使用率</td>
-              <td>0.00%</td>
-              <td>0.00%</td>
-              <td>
-                  <span class="delta-neutral">+0.00%</span>
-              </td>
-            </tr>
-            <tr>
               <td>product_code=P_CONS</td>
               <td>减免使用率</td>
               <td>0.00%</td>
@@ -1341,6 +1348,15 @@
             </tr>
             <tr>
               <td>balance_segment=NORMAL</td>
+              <td>减免使用率</td>
+              <td>0.00%</td>
+              <td>0.00%</td>
+              <td>
+                  <span class="delta-neutral">+0.00%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>risk_level=high</td>
               <td>减免使用率</td>
               <td>0.00%</td>
               <td>0.00%</td>
@@ -1383,15 +1399,6 @@
           </thead>
           <tbody>
             <tr>
-              <td>risk_level=B</td>
-              <td>投诉率</td>
-              <td>0.00%</td>
-              <td>0.00%</td>
-              <td>
-                  <span class="delta-neutral">+0.00%</span>
-              </td>
-            </tr>
-            <tr>
               <td>product_code=P_CONS</td>
               <td>投诉率</td>
               <td>0.00%</td>
@@ -1402,6 +1409,15 @@
             </tr>
             <tr>
               <td>balance_segment=NORMAL</td>
+              <td>投诉率</td>
+              <td>0.00%</td>
+              <td>0.00%</td>
+              <td>
+                  <span class="delta-neutral">+0.00%</span>
+              </td>
+            </tr>
+            <tr>
+              <td>risk_level=high</td>
               <td>投诉率</td>
               <td>0.00%</td>
               <td>0.00%</td>
@@ -1601,10 +1617,10 @@
     <div class="section-hint">本轮异常与归因驱动的可执行建议（来自 M3-C 报告）。</div>
     <ul class="next-steps-list">
       <li>
-        <span class="source-tag">attribution</span>对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。
+        <span class="source-tag">attribution</span>继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。
       </li>
       <li>
-        <span class="source-tag">attribution</span>继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。
+        <span class="source-tag">attribution</span>对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。
       </li>
       <li>
         <span class="source-tag">anomaly</span>进入 M3-B 后按供应商、线路、客群结构、AI 覆盖和减免策略下钻归因。
@@ -1614,6 +1630,9 @@
       </li>
       <li>
         <span class="source-tag">anomaly</span>下钻华东各 line_id 的 active_case_count 与 active_collector_count，评估临时增员或分案转移。
+      </li>
+      <li>
+        <span class="source-tag">anomaly</span>进入后续归因阶段后拆分余额段、risk_level 和入案批次，识别结构变化贡献。
       </li>
       <li>
         <span class="source-tag">anomaly</span>检查 AI 外呼线路容量、分案策略和人工替代触达占比。

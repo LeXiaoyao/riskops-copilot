@@ -6,9 +6,9 @@
   },
   "demo_disclaimer": "本报告基于 synthetic_data / 合成数据生成，仅用于 M3 Demo 展示，不代表真实业务结论。",
   "anomaly_overview": {
-    "anomaly_count": 6,
+    "anomaly_count": 7,
     "severity_counts": {
-      "high": 4,
+      "high": 5,
       "medium": 2,
       "low": 0
     },
@@ -72,6 +72,24 @@
       "recommended_next_step": "下钻华东各 line_id 的 active_case_count 与 active_collector_count，评估临时增员或分案转移。"
     },
     {
+      "anomaly_id": "M3A-high_balance_high_risk_share-overall-ALL",
+      "metric_code": "high_balance_high_risk_share",
+      "metric_name_cn": "高余额高风险客群占比",
+      "anomaly_type": "window_compare",
+      "severity": "high",
+      "dimension_name": "overall",
+      "dimension_value": "ALL",
+      "baseline_value": 0.119997,
+      "recent_value": 0.200014,
+      "absolute_change": 0.080016,
+      "relative_change": 0.666815,
+      "recent_window": "2026-04-19~2026-05-18",
+      "baseline_window": "2026-03-20~2026-04-18",
+      "evidence_table": "dws_customer_status_snapshot_di",
+      "explanation": "高余额高风险客群占比从 12.00% 升至 20.00%。",
+      "recommended_next_step": "进入后续归因阶段后拆分余额段、risk_level 和入案批次，识别结构变化贡献。"
+    },
+    {
       "anomaly_id": "M3A-ai_call_coverage-action_type-AI_OUTBOUND",
       "metric_code": "ai_call_coverage",
       "metric_name_cn": "AI 外呼覆盖率",
@@ -118,25 +136,25 @@
     "primary_driver": {
       "attribution_id": "M3B-recovery_rate_d7-01",
       "rank": 1,
-      "dimension_name": "risk_level",
-      "dimension_value": "B",
-      "baseline_value": 0.25171,
-      "recent_value": 0.099414,
-      "contribution_score": 0.060159,
-      "business_interpretation": "B 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。",
-      "recommended_action": "对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。",
+      "dimension_name": "product_code",
+      "dimension_value": "P_CONS",
+      "baseline_value": 0.333963,
+      "recent_value": 0.112999,
+      "contribution_score": 0.055887,
+      "business_interpretation": "P_CONS 分组的回收率下降对整体异常有可量化贡献。",
+      "recommended_action": "继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。",
       "confidence": "medium",
       "segment_evidence": [
         {
           "method": "segment_delta",
-          "baseline_value": 0.25171,
-          "recent_value": 0.099414,
-          "delta": -0.152296,
-          "baseline_loan_count": 244,
-          "recent_loan_count": 228,
-          "baseline_denominator": 276776.25,
-          "recent_denominator": 271997.28,
-          "recent_weight": 0.630716
+          "baseline_value": 0.333963,
+          "recent_value": 0.112999,
+          "delta": -0.220964,
+          "baseline_loan_count": 135,
+          "recent_loan_count": 138,
+          "baseline_denominator": 153029.58,
+          "recent_denominator": 173617.88,
+          "recent_weight": 0.402591
         }
       ],
       "driver_linkage": [
@@ -144,33 +162,33 @@
           "method": "driver_linkage",
           "metric_code": "connect_rate",
           "metric_name_cn": "接通率",
-          "baseline_value": 0.304348,
-          "recent_value": 0.428571,
-          "delta": 0.124224
+          "baseline_value": 0.357143,
+          "recent_value": 0.416667,
+          "delta": 0.059524
         },
         {
           "method": "driver_linkage",
           "metric_code": "ai_call_coverage",
           "metric_name_cn": "AI 外呼覆盖率",
-          "baseline_value": 0.086957,
-          "recent_value": 0.190476,
-          "delta": 0.10352
+          "baseline_value": 0.214286,
+          "recent_value": 0.166667,
+          "delta": -0.047619
         },
         {
           "method": "driver_linkage",
           "metric_code": "manual_call_coverage",
           "metric_name_cn": "人工触达占比",
-          "baseline_value": 0.913043,
-          "recent_value": 0.809524,
-          "delta": -0.10352
+          "baseline_value": 0.785714,
+          "recent_value": 0.833333,
+          "delta": 0.047619
         },
         {
           "method": "driver_linkage",
           "metric_code": "ptp_keep_rate",
           "metric_name_cn": "PTP 履约率",
-          "baseline_value": 0.333333,
-          "recent_value": 1.0,
-          "delta": 0.666667
+          "baseline_value": 0.0,
+          "recent_value": 0.0,
+          "delta": 0.0
         },
         {
           "method": "driver_linkage",
@@ -197,89 +215,11 @@
       {
         "attribution_id": "M3B-recovery_rate_d7-01",
         "rank": 1,
-        "dimension_name": "risk_level",
-        "dimension_value": "B",
-        "baseline_value": 0.25171,
-        "recent_value": 0.099414,
-        "contribution_score": 0.060159,
-        "business_interpretation": "B 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。",
-        "recommended_action": "对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。",
-        "confidence": "medium",
-        "segment_evidence": [
-          {
-            "method": "segment_delta",
-            "baseline_value": 0.25171,
-            "recent_value": 0.099414,
-            "delta": -0.152296,
-            "baseline_loan_count": 244,
-            "recent_loan_count": 228,
-            "baseline_denominator": 276776.25,
-            "recent_denominator": 271997.28,
-            "recent_weight": 0.630716
-          }
-        ],
-        "driver_linkage": [
-          {
-            "method": "driver_linkage",
-            "metric_code": "connect_rate",
-            "metric_name_cn": "接通率",
-            "baseline_value": 0.304348,
-            "recent_value": 0.428571,
-            "delta": 0.124224
-          },
-          {
-            "method": "driver_linkage",
-            "metric_code": "ai_call_coverage",
-            "metric_name_cn": "AI 外呼覆盖率",
-            "baseline_value": 0.086957,
-            "recent_value": 0.190476,
-            "delta": 0.10352
-          },
-          {
-            "method": "driver_linkage",
-            "metric_code": "manual_call_coverage",
-            "metric_name_cn": "人工触达占比",
-            "baseline_value": 0.913043,
-            "recent_value": 0.809524,
-            "delta": -0.10352
-          },
-          {
-            "method": "driver_linkage",
-            "metric_code": "ptp_keep_rate",
-            "metric_name_cn": "PTP 履约率",
-            "baseline_value": 0.333333,
-            "recent_value": 1.0,
-            "delta": 0.666667
-          },
-          {
-            "method": "driver_linkage",
-            "metric_code": "reduction_usage_rate",
-            "metric_name_cn": "减免使用率",
-            "baseline_value": 0.0,
-            "recent_value": 0.0,
-            "delta": 0.0
-          },
-          {
-            "method": "driver_linkage",
-            "metric_code": "complaint_rate",
-            "metric_name_cn": "投诉率",
-            "baseline_value": 0.0,
-            "recent_value": 0.0,
-            "delta": 0.0
-          }
-        ],
-        "notes": [
-          "按 M1 dpd_bucket 过滤后解释 recovery_rate_d7，未重新定义指标口径。"
-        ]
-      },
-      {
-        "attribution_id": "M3B-recovery_rate_d7-02",
-        "rank": 2,
         "dimension_name": "product_code",
         "dimension_value": "P_CONS",
         "baseline_value": 0.333963,
         "recent_value": 0.112999,
-        "contribution_score": 0.055715,
+        "contribution_score": 0.055887,
         "business_interpretation": "P_CONS 分组的回收率下降对整体异常有可量化贡献。",
         "recommended_action": "继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。",
         "confidence": "medium",
@@ -351,13 +291,13 @@
         ]
       },
       {
-        "attribution_id": "M3B-recovery_rate_d7-03",
-        "rank": 3,
+        "attribution_id": "M3B-recovery_rate_d7-02",
+        "rank": 2,
         "dimension_name": "balance_segment",
         "dimension_value": "NORMAL",
         "baseline_value": 0.234533,
         "recent_value": 0.109047,
-        "contribution_score": 0.052655,
+        "contribution_score": 0.052818,
         "business_interpretation": "NORMAL 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。",
         "recommended_action": "对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。",
         "confidence": "medium",
@@ -429,13 +369,91 @@
         ]
       },
       {
+        "attribution_id": "M3B-recovery_rate_d7-03",
+        "rank": 3,
+        "dimension_name": "risk_level",
+        "dimension_value": "high",
+        "baseline_value": 0.235646,
+        "recent_value": 0.054391,
+        "contribution_score": 0.049375,
+        "business_interpretation": "high 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。",
+        "recommended_action": "对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。",
+        "confidence": "medium",
+        "segment_evidence": [
+          {
+            "method": "segment_delta",
+            "baseline_value": 0.235646,
+            "recent_value": 0.054391,
+            "delta": -0.181255,
+            "baseline_loan_count": 41,
+            "recent_loan_count": 92,
+            "baseline_denominator": 89388.47,
+            "recent_denominator": 186991.37,
+            "recent_weight": 0.433602
+          }
+        ],
+        "driver_linkage": [
+          {
+            "method": "driver_linkage",
+            "metric_code": "connect_rate",
+            "metric_name_cn": "接通率",
+            "baseline_value": 0.5,
+            "recent_value": 0.625,
+            "delta": 0.125
+          },
+          {
+            "method": "driver_linkage",
+            "metric_code": "ai_call_coverage",
+            "metric_name_cn": "AI 外呼覆盖率",
+            "baseline_value": 0.25,
+            "recent_value": 0.375,
+            "delta": 0.125
+          },
+          {
+            "method": "driver_linkage",
+            "metric_code": "manual_call_coverage",
+            "metric_name_cn": "人工触达占比",
+            "baseline_value": 0.75,
+            "recent_value": 0.625,
+            "delta": -0.125
+          },
+          {
+            "method": "driver_linkage",
+            "metric_code": "ptp_keep_rate",
+            "metric_name_cn": "PTP 履约率",
+            "baseline_value": 0.0,
+            "recent_value": 1.0,
+            "delta": 1.0
+          },
+          {
+            "method": "driver_linkage",
+            "metric_code": "reduction_usage_rate",
+            "metric_name_cn": "减免使用率",
+            "baseline_value": 0.0,
+            "recent_value": 0.0,
+            "delta": 0.0
+          },
+          {
+            "method": "driver_linkage",
+            "metric_code": "complaint_rate",
+            "metric_name_cn": "投诉率",
+            "baseline_value": 0.0,
+            "recent_value": 0.0,
+            "delta": 0.0
+          }
+        ],
+        "notes": [
+          "按 M1 dpd_bucket 过滤后解释 recovery_rate_d7，未重新定义指标口径。"
+        ]
+      },
+      {
         "attribution_id": "M3B-recovery_rate_d7-04",
         "rank": 4,
         "dimension_name": "channel_code",
         "dimension_value": "ECOM",
         "baseline_value": 0.286619,
         "recent_value": 0.069048,
-        "contribution_score": 0.048812,
+        "contribution_score": 0.048962,
         "business_interpretation": "ECOM 分组的回收率下降对整体异常有可量化贡献。",
         "recommended_action": "继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。",
         "confidence": "medium",
@@ -513,7 +531,7 @@
         "dimension_value": "B",
         "baseline_value": 0.249589,
         "recent_value": 0.095595,
-        "contribution_score": 0.041657,
+        "contribution_score": 0.041786,
         "business_interpretation": "B 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。",
         "recommended_action": "对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。",
         "confidence": "medium",
@@ -589,66 +607,6 @@
   "process_evidence": [
     {
       "attribution_id": "M3B-recovery_rate_d7-01",
-      "driver": "risk_level=B",
-      "metric_code": "connect_rate",
-      "metric_name_cn": "接通率",
-      "baseline_value": 0.304348,
-      "recent_value": 0.428571,
-      "delta": 0.124224,
-      "method": "driver_linkage"
-    },
-    {
-      "attribution_id": "M3B-recovery_rate_d7-01",
-      "driver": "risk_level=B",
-      "metric_code": "ai_call_coverage",
-      "metric_name_cn": "AI 外呼覆盖率",
-      "baseline_value": 0.086957,
-      "recent_value": 0.190476,
-      "delta": 0.10352,
-      "method": "driver_linkage"
-    },
-    {
-      "attribution_id": "M3B-recovery_rate_d7-01",
-      "driver": "risk_level=B",
-      "metric_code": "manual_call_coverage",
-      "metric_name_cn": "人工触达占比",
-      "baseline_value": 0.913043,
-      "recent_value": 0.809524,
-      "delta": -0.10352,
-      "method": "driver_linkage"
-    },
-    {
-      "attribution_id": "M3B-recovery_rate_d7-01",
-      "driver": "risk_level=B",
-      "metric_code": "ptp_keep_rate",
-      "metric_name_cn": "PTP 履约率",
-      "baseline_value": 0.333333,
-      "recent_value": 1.0,
-      "delta": 0.666667,
-      "method": "driver_linkage"
-    },
-    {
-      "attribution_id": "M3B-recovery_rate_d7-01",
-      "driver": "risk_level=B",
-      "metric_code": "reduction_usage_rate",
-      "metric_name_cn": "减免使用率",
-      "baseline_value": 0.0,
-      "recent_value": 0.0,
-      "delta": 0.0,
-      "method": "driver_linkage"
-    },
-    {
-      "attribution_id": "M3B-recovery_rate_d7-01",
-      "driver": "risk_level=B",
-      "metric_code": "complaint_rate",
-      "metric_name_cn": "投诉率",
-      "baseline_value": 0.0,
-      "recent_value": 0.0,
-      "delta": 0.0,
-      "method": "driver_linkage"
-    },
-    {
-      "attribution_id": "M3B-recovery_rate_d7-02",
       "driver": "product_code=P_CONS",
       "metric_code": "connect_rate",
       "metric_name_cn": "接通率",
@@ -658,7 +616,7 @@
       "method": "driver_linkage"
     },
     {
-      "attribution_id": "M3B-recovery_rate_d7-02",
+      "attribution_id": "M3B-recovery_rate_d7-01",
       "driver": "product_code=P_CONS",
       "metric_code": "ai_call_coverage",
       "metric_name_cn": "AI 外呼覆盖率",
@@ -668,7 +626,7 @@
       "method": "driver_linkage"
     },
     {
-      "attribution_id": "M3B-recovery_rate_d7-02",
+      "attribution_id": "M3B-recovery_rate_d7-01",
       "driver": "product_code=P_CONS",
       "metric_code": "manual_call_coverage",
       "metric_name_cn": "人工触达占比",
@@ -678,7 +636,7 @@
       "method": "driver_linkage"
     },
     {
-      "attribution_id": "M3B-recovery_rate_d7-02",
+      "attribution_id": "M3B-recovery_rate_d7-01",
       "driver": "product_code=P_CONS",
       "metric_code": "ptp_keep_rate",
       "metric_name_cn": "PTP 履约率",
@@ -688,7 +646,7 @@
       "method": "driver_linkage"
     },
     {
-      "attribution_id": "M3B-recovery_rate_d7-02",
+      "attribution_id": "M3B-recovery_rate_d7-01",
       "driver": "product_code=P_CONS",
       "metric_code": "reduction_usage_rate",
       "metric_name_cn": "减免使用率",
@@ -698,7 +656,7 @@
       "method": "driver_linkage"
     },
     {
-      "attribution_id": "M3B-recovery_rate_d7-02",
+      "attribution_id": "M3B-recovery_rate_d7-01",
       "driver": "product_code=P_CONS",
       "metric_code": "complaint_rate",
       "metric_name_cn": "投诉率",
@@ -708,7 +666,7 @@
       "method": "driver_linkage"
     },
     {
-      "attribution_id": "M3B-recovery_rate_d7-03",
+      "attribution_id": "M3B-recovery_rate_d7-02",
       "driver": "balance_segment=NORMAL",
       "metric_code": "connect_rate",
       "metric_name_cn": "接通率",
@@ -718,7 +676,7 @@
       "method": "driver_linkage"
     },
     {
-      "attribution_id": "M3B-recovery_rate_d7-03",
+      "attribution_id": "M3B-recovery_rate_d7-02",
       "driver": "balance_segment=NORMAL",
       "metric_code": "ai_call_coverage",
       "metric_name_cn": "AI 外呼覆盖率",
@@ -728,7 +686,7 @@
       "method": "driver_linkage"
     },
     {
-      "attribution_id": "M3B-recovery_rate_d7-03",
+      "attribution_id": "M3B-recovery_rate_d7-02",
       "driver": "balance_segment=NORMAL",
       "metric_code": "manual_call_coverage",
       "metric_name_cn": "人工触达占比",
@@ -738,7 +696,7 @@
       "method": "driver_linkage"
     },
     {
-      "attribution_id": "M3B-recovery_rate_d7-03",
+      "attribution_id": "M3B-recovery_rate_d7-02",
       "driver": "balance_segment=NORMAL",
       "metric_code": "ptp_keep_rate",
       "metric_name_cn": "PTP 履约率",
@@ -748,7 +706,7 @@
       "method": "driver_linkage"
     },
     {
-      "attribution_id": "M3B-recovery_rate_d7-03",
+      "attribution_id": "M3B-recovery_rate_d7-02",
       "driver": "balance_segment=NORMAL",
       "metric_code": "reduction_usage_rate",
       "metric_name_cn": "减免使用率",
@@ -758,8 +716,68 @@
       "method": "driver_linkage"
     },
     {
-      "attribution_id": "M3B-recovery_rate_d7-03",
+      "attribution_id": "M3B-recovery_rate_d7-02",
       "driver": "balance_segment=NORMAL",
+      "metric_code": "complaint_rate",
+      "metric_name_cn": "投诉率",
+      "baseline_value": 0.0,
+      "recent_value": 0.0,
+      "delta": 0.0,
+      "method": "driver_linkage"
+    },
+    {
+      "attribution_id": "M3B-recovery_rate_d7-03",
+      "driver": "risk_level=high",
+      "metric_code": "connect_rate",
+      "metric_name_cn": "接通率",
+      "baseline_value": 0.5,
+      "recent_value": 0.625,
+      "delta": 0.125,
+      "method": "driver_linkage"
+    },
+    {
+      "attribution_id": "M3B-recovery_rate_d7-03",
+      "driver": "risk_level=high",
+      "metric_code": "ai_call_coverage",
+      "metric_name_cn": "AI 外呼覆盖率",
+      "baseline_value": 0.25,
+      "recent_value": 0.375,
+      "delta": 0.125,
+      "method": "driver_linkage"
+    },
+    {
+      "attribution_id": "M3B-recovery_rate_d7-03",
+      "driver": "risk_level=high",
+      "metric_code": "manual_call_coverage",
+      "metric_name_cn": "人工触达占比",
+      "baseline_value": 0.75,
+      "recent_value": 0.625,
+      "delta": -0.125,
+      "method": "driver_linkage"
+    },
+    {
+      "attribution_id": "M3B-recovery_rate_d7-03",
+      "driver": "risk_level=high",
+      "metric_code": "ptp_keep_rate",
+      "metric_name_cn": "PTP 履约率",
+      "baseline_value": 0.0,
+      "recent_value": 1.0,
+      "delta": 1.0,
+      "method": "driver_linkage"
+    },
+    {
+      "attribution_id": "M3B-recovery_rate_d7-03",
+      "driver": "risk_level=high",
+      "metric_code": "reduction_usage_rate",
+      "metric_name_cn": "减免使用率",
+      "baseline_value": 0.0,
+      "recent_value": 0.0,
+      "delta": 0.0,
+      "method": "driver_linkage"
+    },
+    {
+      "attribution_id": "M3B-recovery_rate_d7-03",
+      "driver": "risk_level=high",
       "metric_code": "complaint_rate",
       "metric_name_cn": "投诉率",
       "baseline_value": 0.0,
@@ -892,14 +910,14 @@
     {
       "source": "attribution",
       "source_id": "M3B-recovery_rate_d7-01",
-      "driver": "risk_level=B",
-      "recommendation": "对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。"
+      "driver": "product_code=P_CONS",
+      "recommendation": "继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。"
     },
     {
       "source": "attribution",
       "source_id": "M3B-recovery_rate_d7-02",
-      "driver": "product_code=P_CONS",
-      "recommendation": "继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。"
+      "driver": "balance_segment=NORMAL",
+      "recommendation": "对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。"
     },
     {
       "source": "anomaly",
@@ -918,6 +936,12 @@
       "source_id": "M3A-avg_case_per_collector-region-华东",
       "driver": "avg_case_per_collector:region=华东",
       "recommendation": "下钻华东各 line_id 的 active_case_count 与 active_collector_count，评估临时增员或分案转移。"
+    },
+    {
+      "source": "anomaly",
+      "source_id": "M3A-high_balance_high_risk_share-overall-ALL",
+      "driver": "high_balance_high_risk_share:overall=ALL",
+      "recommendation": "进入后续归因阶段后拆分余额段、risk_level 和入案批次，识别结构变化贡献。"
     },
     {
       "source": "anomaly",
@@ -944,12 +968,12 @@
     {
       "source": "attribution",
       "source_id": "M3B-recovery_rate_d7-01",
-      "next_step": "对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。"
+      "next_step": "继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。"
     },
     {
       "source": "attribution",
       "source_id": "M3B-recovery_rate_d7-02",
-      "next_step": "继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。"
+      "next_step": "对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。"
     },
     {
       "source": "anomaly",
@@ -965,6 +989,11 @@
       "source": "anomaly",
       "source_id": "M3A-avg_case_per_collector-region-华东",
       "next_step": "下钻华东各 line_id 的 active_case_count 与 active_collector_count，评估临时增员或分案转移。"
+    },
+    {
+      "source": "anomaly",
+      "source_id": "M3A-high_balance_high_risk_share-overall-ALL",
+      "next_step": "进入后续归因阶段后拆分余额段、risk_level 和入案批次，识别结构变化贡献。"
     },
     {
       "source": "anomaly",

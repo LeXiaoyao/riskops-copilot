@@ -632,13 +632,32 @@
 - 说明：贷后核心经营汇总
 - 字段：
   - `stat_date`：统计日期，DATE，非空，主键，隐私 P0
-  - `m1_due_amount`：M1 应还金额，DOUBLE，非空，隐私 P0
-  - `m1_repaid_amount_d7`：M1 D7 回款金额，DOUBLE，非空，隐私 P0
-  - `m1_recovery_rate_d7`：M1 D7 回收率，DOUBLE，非空，隐私 P0
+  - `due_account_count`：到期账户数，INTEGER，非空，隐私 P0
+  - `due_loan_count`：到期借据数，INTEGER，非空，隐私 P0
+  - `due_total_amount`：到期应还金额，DOUBLE，非空，隐私 P0
+  - `collection_entry_rate`：入催率，DOUBLE，非空，隐私 P0
+  - `recovery_rate_d7`：D7 回收率，DOUBLE，非空，隐私 P0
+  - `recovery_rate_d15`：D15 回收率，DOUBLE，非空，隐私 P0
+  - `recovery_rate_d30`：D30 回收率，DOUBLE，非空，隐私 P0
+  - `m1_recovery_rate`：M1 回收率，DOUBLE，非空，隐私 P0
+  - `call_coverage_rate`：拨打覆盖率，DOUBLE，非空，隐私 P0
+  - `valid_coverage_rate`：有效覆盖率，DOUBLE，非空，隐私 P0
   - `connect_rate`：接通率，DOUBLE，非空，隐私 P0
-  - `ai_coverage_rate`：AI 外呼覆盖率，DOUBLE，非空，隐私 P0
-  - `ptp_fulfillment_rate`：PTP 履约率，DOUBLE，非空，隐私 P0
-  - `high_balance_case_share`：高余额案件占比，DOUBLE，非空，隐私 P0
+  - `valid_contact_rate`：有效沟通率，DOUBLE，非空，隐私 P0
+  - `first_contact_hours`：首触达时效，DOUBLE，非空，隐私 P0
+  - `ptp_rate`：PTP 率，DOUBLE，非空，隐私 P0
+  - `ptp_keep_rate`：PTP 履约率，DOUBLE，非空，隐私 P0
+  - `avg_call_duration_per_call`：单通平均时长，DOUBLE，非空，隐私 P0
+  - `avg_call_duration_per_collector`：人均日通话时长，DOUBLE，非空，隐私 P0
+  - `collector_productivity`：作业人效，DOUBLE，非空，隐私 P0
+  - `complaint_rate`：投诉率，DOUBLE，非空，隐私 P0
+  - `complaint_per_10k_cases`：万案投诉率，DOUBLE，非空，隐私 P0
+  - `risk_phrase_hit_rate`：高风险话术命中率，DOUBLE，非空，隐私 P0
+  - `qa_fail_rate`：质检不合格率，DOUBLE，非空，隐私 P0
+  - `over_frequency_contact_rate`：超频触达率，DOUBLE，非空，隐私 P0
+  - `reduction_usage_rate`：减免使用率，DOUBLE，非空，隐私 P0
+  - `reduction_recovery_rate`：减免回收率，DOUBLE，非空，隐私 P0
+  - `reduction_roi`：减免 ROI，DOUBLE，非空，隐私 P0
 
 ### ads_recovery_attribution_di
 - 中文名：回收率归因日切
@@ -663,8 +682,10 @@
   - `stat_date`：统计日期，DATE，非空，主键，隐私 P0
   - `vendor_id`：供应商编号，VARCHAR，非空，主键，隐私 P1
   - `action_count`：动作数，INTEGER，非空，隐私 P0
+  - `call_coverage_rate`：拨打覆盖率，DOUBLE，非空，隐私 P0
   - `connect_rate`：接通率，DOUBLE，非空，隐私 P0
   - `ptp_rate`：PTP 率，DOUBLE，非空，隐私 P0
+  - `ptp_keep_rate`：PTP 履约率，DOUBLE，非空，隐私 P0
   - `complaint_rate`：投诉率，DOUBLE，非空，隐私 P0
 
 ### ads_collector_performance_di
@@ -679,7 +700,11 @@
   - `vendor_id`：供应商编号，VARCHAR，非空，隐私 P1
   - `action_count`：动作数，INTEGER，非空，隐私 P0
   - `connect_rate`：接通率，DOUBLE，非空，隐私 P0
-  - `ptp_fulfillment_rate`：PTP 履约率，DOUBLE，非空，隐私 P0
+  - `ptp_keep_rate`：PTP 履约率，DOUBLE，非空，隐私 P0
+  - `first_contact_hours`：首触达时效，DOUBLE，非空，隐私 P0
+  - `avg_call_duration_per_call`：单通平均时长，DOUBLE，非空，隐私 P0
+  - `avg_call_duration_per_collector`：人均日通话时长，DOUBLE，非空，隐私 P0
+  - `collector_productivity`：作业人效，DOUBLE，非空，隐私 P0
   - `complaint_count`：投诉数，INTEGER，非空，隐私 P0
 
 ### ads_reduction_roi_di
@@ -692,8 +717,8 @@
   - `stat_date`：统计日期，DATE，非空，主键，隐私 P0
   - `reduction_case_count`：减免案件数，INTEGER，非空，隐私 P0
   - `approved_reduction_amount`：审批减免金额，DOUBLE，非空，隐私 P0
-  - `repaid_amount`：回款金额，DOUBLE，非空，隐私 P0
   - `reduction_usage_rate`：减免使用率，DOUBLE，非空，隐私 P0
+  - `reduction_recovery_rate`：减免回收率，DOUBLE，非空，隐私 P0
   - `reduction_roi`：减免 ROI，DOUBLE，非空，隐私 P0
 
 ### ads_compliance_qc_di
@@ -705,6 +730,10 @@
 - 字段：
   - `stat_date`：统计日期，DATE，非空，主键，隐私 P0
   - `template_id`：模板 ID，VARCHAR，非空，主键，隐私 P1
-  - `send_count`：发送数，INTEGER，非空，隐私 P0
+  - `active_case_count`：在催案件数，INTEGER，非空，隐私 P0
   - `complaint_count`：投诉数，INTEGER，非空，隐私 P0
   - `complaint_rate`：投诉率，DOUBLE，非空，隐私 P0
+  - `complaint_per_10k_cases`：万案投诉率，DOUBLE，非空，隐私 P0
+  - `risk_phrase_hit_rate`：高风险话术命中率，DOUBLE，非空，隐私 P0
+  - `qa_fail_rate`：质检不合格率，DOUBLE，非空，隐私 P0
+  - `over_frequency_contact_rate`：超频触达率，DOUBLE，非空，隐私 P0

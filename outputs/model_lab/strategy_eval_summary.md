@@ -76,7 +76,7 @@
 - **strategy_type**：segmentation_strategy
 - **目标指标**：recovery_rate_d7 / M1 D7 recovery_rate_d7
 - **target_anomaly_id**：M3B-recovery_rate_d7-03
-- **baseline / scenario / estimated delta**：10.9047% / 11.1047% / 0.2000%
+- **baseline / scenario / estimated delta**：5.4391% / 5.6391% / 0.2000%
 - **estimated_direction**：monitor
 - **confidence**：medium
 - **影响客群**：score_band=D, dpd_bucket=M1

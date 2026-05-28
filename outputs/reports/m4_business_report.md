@@ -4,7 +4,7 @@
 
 ## 1. 执行摘要
 
-- **本期异常发现**：共发现 6 个异常，其中 high 4 个、medium 2 个、low 0 个。
+- **本期异常发现**：共发现 7 个异常，其中 high 5 个、medium 2 个、low 0 个。
 - **核心问题**：M1 D7 回收率下降。M1 回收率 从 24.57% 降至 10.27%，relative change 为 -58.20%。
 - **初步归因方向**：Top drivers 指向 channel_code=ECOM、province=山东 / 上海、score_band=D / A，说明问题更像渠道、区域、客群结构与作业资源共同变化，而不是单个字段异常。
 - **建议优先动作**：优先下钻 ECOM x vendor x line x score_band，并同步复核 AI 外呼覆盖、PTP 履约、减免使用率、投诉率和人均案量。
@@ -14,7 +14,7 @@
 
 ### 2.1 按 severity 汇总
 
-- **high**：4 个
+- **high**：5 个
 - **medium**：2 个
 - **low**：0 个
 - **基线窗口**：2026-03-20~2026-04-18
@@ -43,6 +43,13 @@
   - relative change：41.13%
   - 业务解释：人均案量上升意味着催员负荷变重，是 capacity pressure signal，可能影响触达节奏和承诺还款跟进，但不是最终根因。
   - 建议动作：下钻华东各 line_id 的 active_case_count 与 active_collector_count，评估临时增员或分案转移。
+- **高余额高风险客群占比（high_balance_high_risk_share）**
+  - severity：high
+  - dimension：overall=ALL
+  - baseline / recent：12.00% / 20.00%
+  - relative change：66.68%
+  - 业务解释：高余额高风险客群占比上升会抬高贷后管理难度，可能加剧回收率和产能压力。
+  - 建议动作：进入后续归因阶段后拆分余额段、risk_level 和入案批次，识别结构变化贡献。
 - **AI 外呼覆盖率（ai_call_coverage）**
   - severity：high
   - dimension：action_type=AI_OUTBOUND
@@ -63,40 +70,40 @@
 
 ## 4. Top drivers 解释
 
-### 1. risk_level=B
-
-- **baseline / recent**：25.17% / 9.94%
-- **contribution_score**：6.02%
-- **confidence**：medium
-- **业务含义**：risk_level=B 分组回收表现低于基线，是需要下钻验证的业务切片。
-- **可解释边界**：该 driver 是统计切片信号，不单独构成最终根因。
-- **下一步下钻建议**：继续按 vendor、line_id、score_band 和时间窗口下钻验证。
-- **M3 原始解释**：B 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。
-
-### 2. product_code=P_CONS
+### 1. product_code=P_CONS
 
 - **baseline / recent**：33.40% / 11.30%
-- **contribution_score**：5.57%
+- **contribution_score**：5.59%
 - **confidence**：medium
 - **业务含义**：product_code=P_CONS 分组回收表现低于基线，是需要下钻验证的业务切片。
 - **可解释边界**：该 driver 是统计切片信号，不单独构成最终根因。
 - **下一步下钻建议**：继续按 vendor、line_id、score_band 和时间窗口下钻验证。
 - **M3 原始解释**：P_CONS 分组的回收率下降对整体异常有可量化贡献。
 
-### 3. balance_segment=NORMAL
+### 2. balance_segment=NORMAL
 
 - **baseline / recent**：23.45% / 10.90%
-- **contribution_score**：5.27%
+- **contribution_score**：5.28%
 - **confidence**：medium
 - **业务含义**：balance_segment=NORMAL 分组回收表现低于基线，是需要下钻验证的业务切片。
 - **可解释边界**：该 driver 是统计切片信号，不单独构成最终根因。
 - **下一步下钻建议**：继续按 vendor、line_id、score_band 和时间窗口下钻验证。
 - **M3 原始解释**：NORMAL 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。
 
+### 3. risk_level=high
+
+- **baseline / recent**：23.56% / 5.44%
+- **contribution_score**：4.94%
+- **confidence**：medium
+- **业务含义**：risk_level=high 分组回收表现低于基线，是需要下钻验证的业务切片。
+- **可解释边界**：该 driver 是统计切片信号，不单独构成最终根因。
+- **下一步下钻建议**：继续按 vendor、line_id、score_band 和时间窗口下钻验证。
+- **M3 原始解释**：high 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。
+
 ### 4. channel_code=ECOM
 
 - **baseline / recent**：28.66% / 6.90%
-- **contribution_score**：4.88%
+- **contribution_score**：4.90%
 - **confidence**：medium
 - **业务含义**：ECOM 代表电商渠道来源客群。该分组最近窗口 D7 回收率明显低于基线，说明问题可能集中在渠道客群质量、分案策略或触达资源匹配上。
 - **可解释边界**：这是切片贡献信号，不等于 ECOM 是唯一根因；channel、province、score_band 之间可能存在样本重叠。
@@ -106,7 +113,7 @@
 ### 5. score_band=B
 
 - **baseline / recent**：24.96% / 9.56%
-- **contribution_score**：4.17%
+- **contribution_score**：4.18%
 - **confidence**：medium
 - **业务含义**：score_band=B 分组回收表现低于基线，是需要下钻验证的业务切片。
 - **可解释边界**：该 driver 是统计切片信号，不单独构成最终根因。
@@ -125,16 +132,6 @@
 
 - **证据链口径**：以下指标属于 process evidence，用于解释异常发生前后的过程变化，不单独构成根因。
 - **AI 外呼覆盖（ai_call_coverage）**
-  - driver：risk_level=B
-  - baseline / recent：8.70% / 19.05%
-  - delta：+10.35%
-  - 解释：process evidence，用于解释过程链路变化，不能单独视为最终根因。
-- **PTP 履约（ptp_keep_rate）**
-  - driver：risk_level=B
-  - baseline / recent：33.33% / 100.00%
-  - delta：+66.67%
-  - 解释：process evidence，用于解释过程链路变化，不能单独视为最终根因。
-- **AI 外呼覆盖（ai_call_coverage）**
   - driver：product_code=P_CONS
   - baseline / recent：21.43% / 16.67%
   - delta：-4.76%
@@ -148,6 +145,16 @@
   - driver：balance_segment=NORMAL
   - baseline / recent：25.00% / 66.67%
   - delta：+41.67%
+  - 解释：process evidence，用于解释过程链路变化，不能单独视为最终根因。
+- **AI 外呼覆盖（ai_call_coverage）**
+  - driver：risk_level=high
+  - baseline / recent：25.00% / 37.50%
+  - delta：+12.50%
+  - 解释：process evidence，用于解释过程链路变化，不能单独视为最终根因。
+- **PTP 履约（ptp_keep_rate）**
+  - driver：risk_level=high
+  - baseline / recent：0.00% / 100.00%
+  - delta：+100.00%
   - 解释：process evidence，用于解释过程链路变化，不能单独视为最终根因。
 - **AI 外呼覆盖（ai_call_coverage）**
   - driver：channel_code=ECOM

@@ -41,6 +41,8 @@ run_step "Briefing CLI" python scripts/riskops_cli.py briefing
 run_step "Render dashboard CLI" python scripts/riskops_cli.py render-dashboard
 run_step "Render report CLI" python scripts/riskops_cli.py render-report
 run_step "Render Excel report" python scripts/riskops_cli.py render-excel
+run_step "Render PPT report" python scripts/riskops_cli.py render-ppt
+run_step "Render Word draft" python scripts/riskops_cli.py render-word
 run_step "Render Plotly charts" python scripts/riskops_cli.py render-charts
 run_step "QC scan demo" python scripts/riskops_cli.py qc-scan --texts "你赶快还钱" "我是法院，马上起诉你" "请尽快联系我们安排还款"
 run_step "Script generation demo" python scripts/riskops_cli.py script --case-id CASE00000001 --channel sms

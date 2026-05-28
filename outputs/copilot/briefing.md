@@ -9,8 +9,8 @@
 
 ## What Happened
 
-- **anomaly_count**：6
-- **severity_counts**：high=4, medium=2, low=0
+- **anomaly_count**：7
+- **severity_counts**：high=5, medium=2, low=0
 - **window**：baseline=2026-03-20~2026-04-18, recent=2026-04-19~2026-05-18
 - **target_metric**：M1 回收率（m1_recovery_rate）
 - **target_relative_change**：-58.20%
@@ -18,18 +18,18 @@
 ## Why It May Be Happening
 
 - Top drivers are directional attribution signals, not final root cause.
-- **risk_level=B**：contribution=6.02%; action=对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。
-- **product_code=P_CONS**：contribution=5.57%; action=继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。
-- **balance_segment=NORMAL**：contribution=5.27%; action=对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。
-- **channel_code=ECOM**：contribution=4.88%; action=继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。
-- **score_band=B**：contribution=4.17%; action=对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。
+- **product_code=P_CONS**：contribution=5.59%; action=继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。
+- **balance_segment=NORMAL**：contribution=5.28%; action=对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。
+- **risk_level=high**：contribution=4.94%; action=对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。
+- **channel_code=ECOM**：contribution=4.90%; action=继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。
+- **score_band=B**：contribution=4.18%; action=对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。
 
 ## What To Check
 
 - Validate whether top attribution segments remain abnormal at vendor, line, and customer segment cuts.
 - Check process evidence around AI coverage, manual capacity, connect rate, PTP, complaints, and reduction usage before action.
 - Review offline assumptions behind scenario `increase_ai_call_coverage` before treating ROI as directional.
-- Start drilldown from `risk_level=B` because it has the highest contribution score.
+- Start drilldown from `product_code=P_CONS` because it has the highest contribution score.
 
 ## Strategy Lab Signal
 
@@ -63,4 +63,4 @@
 - Use model baseline only as a ranking diagnostics demo; keep production-model claims out of the narrative.
 - Document any unresolved metric or timing ambiguity before expanding ML targets.
 
-_Generated at 2026-05-25T06:38:55+00:00_
+_Generated at 2026-05-28T11:39:47+00:00_

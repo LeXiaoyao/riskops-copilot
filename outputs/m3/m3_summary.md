@@ -4,8 +4,8 @@
 
 ## 1. 异常总览
 
-- 异常数量：6
-- high：4
+- 异常数量：7
+- high：5
 - medium：2
 - low：0
 - 基线窗口：2026-03-20~2026-04-18
@@ -47,7 +47,17 @@
 - explanation：华东线路人均案量从 13.54 升至 19.10，产能压力上升。
 - recommended_next_step：下钻华东各 line_id 的 active_case_count 与 active_collector_count，评估临时增员或分案转移。
 
-### 4. AI 外呼覆盖率（ai_call_coverage）
+### 4. 高余额高风险客群占比（high_balance_high_risk_share）
+- severity：high
+- dimension：overall=ALL
+- baseline：12.00%
+- recent：20.00%
+- change：8.00% / 66.68%
+- evidence_table：dws_customer_status_snapshot_di
+- explanation：高余额高风险客群占比从 12.00% 升至 20.00%。
+- recommended_next_step：进入后续归因阶段后拆分余额段、risk_level 和入案批次，识别结构变化贡献。
+
+### 5. AI 外呼覆盖率（ai_call_coverage）
 - severity：high
 - dimension：action_type=AI_OUTBOUND
 - baseline：30.25%
@@ -62,38 +72,38 @@
 - target_metric：D7 回收率（recovery_rate_d7）
 - target_anomaly_id：M3A-m1_recovery_rate-overall-ALL
 - attribution_count：10
-- 主因：risk_level=B
-- 贡献度：6.02%
-- 业务解释：B 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。
+- 主因：product_code=P_CONS
+- 贡献度：5.59%
+- 业务解释：P_CONS 分组的回收率下降对整体异常有可量化贡献。
 
 ## 5. Top 5 drivers
 
-### 1. risk_level=B
-- contribution_score：6.02%
-- baseline：25.17%
-- recent：9.94%
-- confidence：medium
-- business_interpretation：B 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。
-- recommended_action：对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。
-
-### 2. product_code=P_CONS
-- contribution_score：5.57%
+### 1. product_code=P_CONS
+- contribution_score：5.59%
 - baseline：33.40%
 - recent：11.30%
 - confidence：medium
 - business_interpretation：P_CONS 分组的回收率下降对整体异常有可量化贡献。
 - recommended_action：继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。
 
-### 3. balance_segment=NORMAL
-- contribution_score：5.27%
+### 2. balance_segment=NORMAL
+- contribution_score：5.28%
 - baseline：23.45%
 - recent：10.90%
 - confidence：medium
 - business_interpretation：NORMAL 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。
 - recommended_action：对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。
 
+### 3. risk_level=high
+- contribution_score：4.94%
+- baseline：23.56%
+- recent：5.44%
+- confidence：medium
+- business_interpretation：high 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。
+- recommended_action：对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。
+
 ### 4. channel_code=ECOM
-- contribution_score：4.88%
+- contribution_score：4.90%
 - baseline：28.66%
 - recent：6.90%
 - confidence：medium
@@ -101,7 +111,7 @@
 - recommended_action：继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。
 
 ### 5. score_band=B
-- contribution_score：4.17%
+- contribution_score：4.18%
 - baseline：24.96%
 - recent：9.56%
 - confidence：medium
@@ -110,16 +120,7 @@
 
 ## 6. 每个 driver 的 evidence
 
-### 1. risk_level=B
-- segment_delta：baseline 25.17%，recent 9.94%，delta -15.23%，baseline_loan_count 244，recent_loan_count 228，recent_weight 63.07%。
-- driver_linkage：接通率（connect_rate），baseline 30.43%，recent 42.86%，delta 12.42%。
-- driver_linkage：AI 外呼覆盖率（ai_call_coverage），baseline 8.70%，recent 19.05%，delta 10.35%。
-- driver_linkage：人工触达占比（manual_call_coverage），baseline 91.30%，recent 80.95%，delta -10.35%。
-- driver_linkage：PTP 履约率（ptp_keep_rate），baseline 33.33%，recent 100.00%，delta 66.67%。
-- driver_linkage：减免使用率（reduction_usage_rate），baseline 0.00%，recent 0.00%，delta 0.00%。
-- driver_linkage：投诉率（complaint_rate），baseline 0.00%，recent 0.00%，delta 0.00%。
-
-### 2. product_code=P_CONS
+### 1. product_code=P_CONS
 - segment_delta：baseline 33.40%，recent 11.30%，delta -22.10%，baseline_loan_count 135，recent_loan_count 138，recent_weight 40.26%。
 - driver_linkage：接通率（connect_rate），baseline 35.71%，recent 41.67%，delta 5.95%。
 - driver_linkage：AI 外呼覆盖率（ai_call_coverage），baseline 21.43%，recent 16.67%，delta -4.76%。
@@ -128,12 +129,21 @@
 - driver_linkage：减免使用率（reduction_usage_rate），baseline 0.00%，recent 0.00%，delta 0.00%。
 - driver_linkage：投诉率（complaint_rate），baseline 0.00%，recent 0.00%，delta 0.00%。
 
-### 3. balance_segment=NORMAL
+### 2. balance_segment=NORMAL
 - segment_delta：baseline 23.45%，recent 10.90%，delta -12.55%，baseline_loan_count 314，recent_loan_count 252，recent_weight 67.00%。
 - driver_linkage：接通率（connect_rate），baseline 41.94%，recent 52.17%，delta 10.24%。
 - driver_linkage：AI 外呼覆盖率（ai_call_coverage），baseline 22.58%，recent 13.04%，delta -9.54%。
 - driver_linkage：人工触达占比（manual_call_coverage），baseline 77.42%，recent 86.96%，delta 9.54%。
 - driver_linkage：PTP 履约率（ptp_keep_rate），baseline 25.00%，recent 66.67%，delta 41.67%。
+- driver_linkage：减免使用率（reduction_usage_rate），baseline 0.00%，recent 0.00%，delta 0.00%。
+- driver_linkage：投诉率（complaint_rate），baseline 0.00%，recent 0.00%，delta 0.00%。
+
+### 3. risk_level=high
+- segment_delta：baseline 23.56%，recent 5.44%，delta -18.13%，baseline_loan_count 41，recent_loan_count 92，recent_weight 43.36%。
+- driver_linkage：接通率（connect_rate），baseline 50.00%，recent 62.50%，delta 12.50%。
+- driver_linkage：AI 外呼覆盖率（ai_call_coverage），baseline 25.00%，recent 37.50%，delta 12.50%。
+- driver_linkage：人工触达占比（manual_call_coverage），baseline 75.00%，recent 62.50%，delta -12.50%。
+- driver_linkage：PTP 履约率（ptp_keep_rate），baseline 0.00%，recent 100.00%，delta 100.00%。
 - driver_linkage：减免使用率（reduction_usage_rate），baseline 0.00%，recent 0.00%，delta 0.00%。
 - driver_linkage：投诉率（complaint_rate），baseline 0.00%，recent 0.00%，delta 0.00%。
 
@@ -157,12 +167,6 @@
 
 ## 7. process evidence / driver_linkage
 
-- risk_level=B：接通率（connect_rate），baseline 30.43%，recent 42.86%，delta 12.42%。
-- risk_level=B：AI 外呼覆盖率（ai_call_coverage），baseline 8.70%，recent 19.05%，delta 10.35%。
-- risk_level=B：人工触达占比（manual_call_coverage），baseline 91.30%，recent 80.95%，delta -10.35%。
-- risk_level=B：PTP 履约率（ptp_keep_rate），baseline 33.33%，recent 100.00%，delta 66.67%。
-- risk_level=B：减免使用率（reduction_usage_rate），baseline 0.00%，recent 0.00%，delta 0.00%。
-- risk_level=B：投诉率（complaint_rate），baseline 0.00%，recent 0.00%，delta 0.00%。
 - product_code=P_CONS：接通率（connect_rate），baseline 35.71%，recent 41.67%，delta 5.95%。
 - product_code=P_CONS：AI 外呼覆盖率（ai_call_coverage），baseline 21.43%，recent 16.67%，delta -4.76%。
 - product_code=P_CONS：人工触达占比（manual_call_coverage），baseline 78.57%，recent 83.33%，delta 4.76%。
@@ -175,6 +179,12 @@
 - balance_segment=NORMAL：PTP 履约率（ptp_keep_rate），baseline 25.00%，recent 66.67%，delta 41.67%。
 - balance_segment=NORMAL：减免使用率（reduction_usage_rate），baseline 0.00%，recent 0.00%，delta 0.00%。
 - balance_segment=NORMAL：投诉率（complaint_rate），baseline 0.00%，recent 0.00%，delta 0.00%。
+- risk_level=high：接通率（connect_rate），baseline 50.00%，recent 62.50%，delta 12.50%。
+- risk_level=high：AI 外呼覆盖率（ai_call_coverage），baseline 25.00%，recent 37.50%，delta 12.50%。
+- risk_level=high：人工触达占比（manual_call_coverage），baseline 75.00%，recent 62.50%，delta -12.50%。
+- risk_level=high：PTP 履约率（ptp_keep_rate），baseline 0.00%，recent 100.00%，delta 100.00%。
+- risk_level=high：减免使用率（reduction_usage_rate），baseline 0.00%，recent 0.00%，delta 0.00%。
+- risk_level=high：投诉率（complaint_rate），baseline 0.00%，recent 0.00%，delta 0.00%。
 - channel_code=ECOM：接通率（connect_rate），baseline 54.55%，recent 50.00%，delta -4.55%。
 - channel_code=ECOM：AI 外呼覆盖率（ai_call_coverage），baseline 18.18%，recent 25.00%，delta 6.82%。
 - channel_code=ECOM：人工触达占比（manual_call_coverage），baseline 81.82%，recent 75.00%，delta -6.82%。
@@ -190,11 +200,12 @@
 
 ## 8. 业务建议
 
-- risk_level=B：对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。
 - product_code=P_CONS：继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。
+- balance_segment=NORMAL：对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。
 - m1_recovery_rate:overall=ALL：进入 M3-B 后按供应商、线路、客群结构、AI 覆盖和减免策略下钻归因。
 - connect_rate:vendor_id=V_B：下钻供应商 B 的线路、催员和触达时段，验证执行资源或号码质量问题。
 - avg_case_per_collector:region=华东：下钻华东各 line_id 的 active_case_count 与 active_collector_count，评估临时增员或分案转移。
+- high_balance_high_risk_share:overall=ALL：进入后续归因阶段后拆分余额段、risk_level 和入案批次，识别结构变化贡献。
 - ai_call_coverage:action_type=AI_OUTBOUND：检查 AI 外呼线路容量、分案策略和人工替代触达占比。
 
 ## 9. 数据局限
@@ -205,9 +216,10 @@
 
 ## 10. 下一步建议
 
-- 对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。
 - 继续按该维度下钻到供应商、线路和客群组合，验证是否存在集中异常。
+- 对该客群单独设定触达、减免和 PTP 跟进策略，不改变指标口径。
 - 进入 M3-B 后按供应商、线路、客群结构、AI 覆盖和减免策略下钻归因。
 - 下钻供应商 B 的线路、催员和触达时段，验证执行资源或号码质量问题。
 - 下钻华东各 line_id 的 active_case_count 与 active_collector_count，评估临时增员或分案转移。
+- 进入后续归因阶段后拆分余额段、risk_level 和入案批次，识别结构变化贡献。
 - 检查 AI 外呼线路容量、分案策略和人工替代触达占比。

@@ -24,7 +24,7 @@
 <blockquote>Demo Disclaimer: 本报告基于 synthetic_data / 合成数据生成，仅用于 M3 Demo 展示，不代表真实业务结论。</blockquote>
 <h2>1. 执行摘要</h2>
 <ul>
-<li><strong>本期异常发现</strong>：共发现 6 个异常，其中 high 4 个、medium 2 个、low 0 个。</li>
+<li><strong>本期异常发现</strong>：共发现 7 个异常，其中 high 5 个、medium 2 个、low 0 个。</li>
 <li><strong>核心问题</strong>：M1 D7 回收率下降。M1 回收率 从 24.57% 降至 10.27%，relative change 为 -58.20%。</li>
 <li><strong>初步归因方向</strong>：Top drivers 指向 channel_code=ECOM、province=山东 / 上海、score_band=D / A，说明问题更像渠道、区域、客群结构与作业资源共同变化，而不是单个字段异常。</li>
 <li><strong>建议优先动作</strong>：优先下钻 ECOM x vendor x line x score_band，并同步复核 AI 外呼覆盖、PTP 履约、减免使用率、投诉率和人均案量。</li>
@@ -33,7 +33,7 @@
 <h2>2. 异常总览</h2>
 <h3>2.1 按 severity 汇总</h3>
 <ul>
-<li><strong>high</strong>：4 个</li>
+<li><strong>high</strong>：5 个</li>
 <li><strong>medium</strong>：2 个</li>
 <li><strong>low</strong>：0 个</li>
 <li><strong>基线窗口</strong>：2026-03-20~2026-04-18</li>
@@ -68,6 +68,15 @@
 <p>  - 业务解释：人均案量上升意味着催员负荷变重，是 capacity pressure signal，可能影响触达节奏和承诺还款跟进，但不是最终根因。</p>
 <p>  - 建议动作：下钻华东各 line_id 的 active_case_count 与 active_collector_count，评估临时增员或分案转移。</p>
 <ul>
+<li><strong>高余额高风险客群占比（high_balance_high_risk_share）</strong></li>
+</ul>
+<p>  - severity：high</p>
+<p>  - dimension：overall=ALL</p>
+<p>  - baseline / recent：12.00% / 20.00%</p>
+<p>  - relative change：66.68%</p>
+<p>  - 业务解释：高余额高风险客群占比上升会抬高贷后管理难度，可能加剧回收率和产能压力。</p>
+<p>  - 建议动作：进入后续归因阶段后拆分余额段、risk_level 和入案批次，识别结构变化贡献。</p>
+<ul>
 <li><strong>AI 外呼覆盖率（ai_call_coverage）</strong></li>
 </ul>
 <p>  - severity：high</p>
@@ -87,40 +96,40 @@
 <li><strong>当前边界</strong>：本专题不重新定义指标口径，只解释 M3 已输出的 D7 回收率异常与 attribution 结果。</li>
 </ul>
 <h2>4. Top drivers 解释</h2>
-<h3>1. risk_level=B</h3>
-<ul>
-<li><strong>baseline / recent</strong>：25.17% / 9.94%</li>
-<li><strong>contribution_score</strong>：6.02%</li>
-<li><strong>confidence</strong>：medium</li>
-<li><strong>业务含义</strong>：risk_level=B 分组回收表现低于基线，是需要下钻验证的业务切片。</li>
-<li><strong>可解释边界</strong>：该 driver 是统计切片信号，不单独构成最终根因。</li>
-<li><strong>下一步下钻建议</strong>：继续按 vendor、line_id、score_band 和时间窗口下钻验证。</li>
-<li><strong>M3 原始解释</strong>：B 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。</li>
-</ul>
-<h3>2. product_code=P_CONS</h3>
+<h3>1. product_code=P_CONS</h3>
 <ul>
 <li><strong>baseline / recent</strong>：33.40% / 11.30%</li>
-<li><strong>contribution_score</strong>：5.57%</li>
+<li><strong>contribution_score</strong>：5.59%</li>
 <li><strong>confidence</strong>：medium</li>
 <li><strong>业务含义</strong>：product_code=P_CONS 分组回收表现低于基线，是需要下钻验证的业务切片。</li>
 <li><strong>可解释边界</strong>：该 driver 是统计切片信号，不单独构成最终根因。</li>
 <li><strong>下一步下钻建议</strong>：继续按 vendor、line_id、score_band 和时间窗口下钻验证。</li>
 <li><strong>M3 原始解释</strong>：P_CONS 分组的回收率下降对整体异常有可量化贡献。</li>
 </ul>
-<h3>3. balance_segment=NORMAL</h3>
+<h3>2. balance_segment=NORMAL</h3>
 <ul>
 <li><strong>baseline / recent</strong>：23.45% / 10.90%</li>
-<li><strong>contribution_score</strong>：5.27%</li>
+<li><strong>contribution_score</strong>：5.28%</li>
 <li><strong>confidence</strong>：medium</li>
 <li><strong>业务含义</strong>：balance_segment=NORMAL 分组回收表现低于基线，是需要下钻验证的业务切片。</li>
 <li><strong>可解释边界</strong>：该 driver 是统计切片信号，不单独构成最终根因。</li>
 <li><strong>下一步下钻建议</strong>：继续按 vendor、line_id、score_band 和时间窗口下钻验证。</li>
 <li><strong>M3 原始解释</strong>：NORMAL 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。</li>
 </ul>
+<h3>3. risk_level=high</h3>
+<ul>
+<li><strong>baseline / recent</strong>：23.56% / 5.44%</li>
+<li><strong>contribution_score</strong>：4.94%</li>
+<li><strong>confidence</strong>：medium</li>
+<li><strong>业务含义</strong>：risk_level=high 分组回收表现低于基线，是需要下钻验证的业务切片。</li>
+<li><strong>可解释边界</strong>：该 driver 是统计切片信号，不单独构成最终根因。</li>
+<li><strong>下一步下钻建议</strong>：继续按 vendor、line_id、score_band 和时间窗口下钻验证。</li>
+<li><strong>M3 原始解释</strong>：high 客群组内回收表现恶化，是资产结构或客户风险迁徙层面的重要信号。</li>
+</ul>
 <h3>4. channel_code=ECOM</h3>
 <ul>
 <li><strong>baseline / recent</strong>：28.66% / 6.90%</li>
-<li><strong>contribution_score</strong>：4.88%</li>
+<li><strong>contribution_score</strong>：4.90%</li>
 <li><strong>confidence</strong>：medium</li>
 <li><strong>业务含义</strong>：ECOM 代表电商渠道来源客群。该分组最近窗口 D7 回收率明显低于基线，说明问题可能集中在渠道客群质量、分案策略或触达资源匹配上。</li>
 <li><strong>可解释边界</strong>：这是切片贡献信号，不等于 ECOM 是唯一根因；channel、province、score_band 之间可能存在样本重叠。</li>
@@ -130,7 +139,7 @@
 <h3>5. score_band=B</h3>
 <ul>
 <li><strong>baseline / recent</strong>：24.96% / 9.56%</li>
-<li><strong>contribution_score</strong>：4.17%</li>
+<li><strong>contribution_score</strong>：4.18%</li>
 <li><strong>confidence</strong>：medium</li>
 <li><strong>业务含义</strong>：score_band=B 分组回收表现低于基线，是需要下钻验证的业务切片。</li>
 <li><strong>可解释边界</strong>：该 driver 是统计切片信号，不单独构成最终根因。</li>
@@ -150,20 +159,6 @@
 <li><strong>证据链口径</strong>：以下指标属于 process evidence，用于解释异常发生前后的过程变化，不单独构成根因。</li>
 <li><strong>AI 外呼覆盖（ai_call_coverage）</strong></li>
 </ul>
-<p>  - driver：risk_level=B</p>
-<p>  - baseline / recent：8.70% / 19.05%</p>
-<p>  - delta：+10.35%</p>
-<p>  - 解释：process evidence，用于解释过程链路变化，不能单独视为最终根因。</p>
-<ul>
-<li><strong>PTP 履约（ptp_keep_rate）</strong></li>
-</ul>
-<p>  - driver：risk_level=B</p>
-<p>  - baseline / recent：33.33% / 100.00%</p>
-<p>  - delta：+66.67%</p>
-<p>  - 解释：process evidence，用于解释过程链路变化，不能单独视为最终根因。</p>
-<ul>
-<li><strong>AI 外呼覆盖（ai_call_coverage）</strong></li>
-</ul>
 <p>  - driver：product_code=P_CONS</p>
 <p>  - baseline / recent：21.43% / 16.67%</p>
 <p>  - delta：-4.76%</p>
@@ -181,6 +176,20 @@
 <p>  - driver：balance_segment=NORMAL</p>
 <p>  - baseline / recent：25.00% / 66.67%</p>
 <p>  - delta：+41.67%</p>
+<p>  - 解释：process evidence，用于解释过程链路变化，不能单独视为最终根因。</p>
+<ul>
+<li><strong>AI 外呼覆盖（ai_call_coverage）</strong></li>
+</ul>
+<p>  - driver：risk_level=high</p>
+<p>  - baseline / recent：25.00% / 37.50%</p>
+<p>  - delta：+12.50%</p>
+<p>  - 解释：process evidence，用于解释过程链路变化，不能单独视为最终根因。</p>
+<ul>
+<li><strong>PTP 履约（ptp_keep_rate）</strong></li>
+</ul>
+<p>  - driver：risk_level=high</p>
+<p>  - baseline / recent：0.00% / 100.00%</p>
+<p>  - delta：+100.00%</p>
 <p>  - 解释：process evidence，用于解释过程链路变化，不能单独视为最终根因。</p>
 <ul>
 <li><strong>AI 外呼覆盖（ai_call_coverage）</strong></li>
