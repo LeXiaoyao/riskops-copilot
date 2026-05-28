@@ -27,9 +27,11 @@ from riskops.engines.model_lab.strategy_evaluator import run_strategy_evaluation
 from riskops.engines.qc import scan_batch, scan_text_with_llm
 from riskops.engines.report import (
     BusinessReportInputError,
+    WordReportInputError,
     write_business_report,
     write_business_report_excel,
     write_business_report_ppt,
+    write_business_report_word,
 )
 from riskops.engines.script import approve_and_log, check_frequency, generate_script_draft, load_case_context
 from riskops.engines.visualization import (
@@ -52,6 +54,7 @@ DEFAULT_REPORT_MD = ROOT / "outputs" / "reports" / "m4_business_report.md"
 DEFAULT_REPORT_HTML = ROOT / "outputs" / "reports" / "m4_business_report.html"
 DEFAULT_REPORT_XLSX = ROOT / "outputs" / "reports" / "m4_business_report.xlsx"
 DEFAULT_REPORT_PPTX = ROOT / "outputs" / "reports" / "m4_business_report.pptx"
+DEFAULT_REPORT_DOCX = ROOT / "outputs" / "reports" / "m4_business_report.docx"
 DEFAULT_STRATEGY_SCENARIOS = ROOT / "configs" / "strategy_scenarios.yaml"
 DEFAULT_STRATEGY_EVAL_JSON = ROOT / "outputs" / "model_lab" / "strategy_eval_results.json"
 DEFAULT_STRATEGY_EVAL_MD = ROOT / "outputs" / "model_lab" / "strategy_eval_summary.md"
@@ -82,6 +85,7 @@ OUTPUT_PATHS = [
     DEFAULT_REPORT_HTML,
     DEFAULT_REPORT_XLSX,
     DEFAULT_REPORT_PPTX,
+    DEFAULT_REPORT_DOCX,
     ROOT / "outputs" / "m3" / "m3_summary.md",
     DEFAULT_M3_SUMMARY,
     DEFAULT_STRATEGY_EVAL_JSON,
@@ -122,6 +126,7 @@ COMMON_COMMANDS = [
     "python scripts/riskops_cli.py render-report",
     "python scripts/riskops_cli.py render-excel",
     "python scripts/riskops_cli.py render-ppt",
+    "python scripts/riskops_cli.py render-word",
     "python scripts/riskops_cli.py render-charts",
     "python scripts/riskops_cli.py script --case-id CASE00000001 --channel sms",
     "python scripts/riskops_cli.py tui",
@@ -294,6 +299,25 @@ def build_parser() -> argparse.ArgumentParser:
         help="Business report PowerPoint output path.",
     )
     render_ppt.set_defaults(handler=_handle_render_ppt)
+
+    render_word = subparsers.add_parser(
+        "render-word",
+        help="Render outputs/reports/m4_business_report.docx.",
+    )
+    _add_input_arg(render_word)
+    render_word.add_argument(
+        "--roi-input",
+        type=Path,
+        default=DEFAULT_ROI_JSON,
+        help="Path to ROI results JSON.",
+    )
+    render_word.add_argument(
+        "--output",
+        type=Path,
+        default=DEFAULT_REPORT_DOCX,
+        help="Business report Word output path.",
+    )
+    render_word.set_defaults(handler=_handle_render_word)
 
     render_charts = subparsers.add_parser("render-charts", help="Render offline Plotly charts to outputs/visualization/*.html.")
     render_charts.add_argument("--m3-summary", type=Path, default=DEFAULT_M3_SUMMARY)
@@ -811,6 +835,18 @@ def _handle_render_ppt(args: argparse.Namespace, out: TextIO) -> None:
     print("input：{}".format(_display_path(args.input)), file=out)
     print("roi input：{}".format(_display_path(args.roi_input)), file=out)
     print("slides：{}".format(_safe_int(result.get("slide_count"))), file=out)
+
+
+def _handle_render_word(args: argparse.Namespace, out: TextIO) -> None:
+    try:
+        result = write_business_report_word(args.input, args.output, args.roi_input)
+    except (BusinessReportInputError, WordReportInputError) as exc:
+        raise CliInputError(exc) from exc
+    print("business report word：{}".format(_display_path(args.output)), file=out)
+    print("input：{}".format(_display_path(args.input)), file=out)
+    print("roi input：{}".format(_display_path(args.roi_input)), file=out)
+    print("paragraphs：{}".format(_safe_int(result.get("paragraph_count"))), file=out)
+    print("PASS render-word", file=out)
 
 
 def _handle_render_charts(args: argparse.Namespace, out: TextIO) -> None:

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from pathlib import Path
 
-from riskops.engines.report import BusinessReportInputError, write_business_report, write_business_report_excel
+from riskops.engines.report import BusinessReportInputError, write_business_report, write_business_report_excel, write_business_report_word
 
 try:
     from riskops.engines.report.ppt_renderer import render_ppt
@@ -46,6 +46,11 @@ class ReportWriterAgent:
                 yield "正在生成 PPT...\n"
                 render_ppt(M3_SUMMARY, output, ROI_RESULTS)
                 yield f"PPT 已生成：{_display_path(output)}\n"
+            elif any(k in msg for k in ["word", "docx", "word草稿", "word报告"]):
+                output = REPORT_DIR / "m4_business_report.docx"
+                yield "正在生成 Word 草稿...\n"
+                write_business_report_word(M3_SUMMARY, output, ROI_RESULTS)
+                yield f"Word 草稿已生成：{_display_path(output)}\n"
             else:
                 output_md = REPORT_DIR / "m4_business_report.md"
                 output_html = REPORT_DIR / "m4_business_report.html"
