@@ -90,6 +90,7 @@ def test_outputs_can_run_and_marks_file_status() -> None:
         "outputs/dashboard/dashboard.html",
         "outputs/reports/m4_business_report.md",
         "outputs/reports/m4_business_report.html",
+        "outputs/reports/weekly_report.feishu.md",
         "outputs/reports/m4_business_report.xlsx",
         "outputs/reports/m4_business_report.pptx",
         "outputs/m3/m3_summary.md",
@@ -244,6 +245,7 @@ def test_render_dashboard_can_run_and_generate_dashboard_html(tmp_path: Path) ->
 def test_render_report_can_run_and_generate_business_report(tmp_path: Path) -> None:
     output_md = tmp_path / "m4_business_report.md"
     output_html = tmp_path / "m4_business_report.html"
+    output_feishu = tmp_path / "weekly_report.feishu.md"
 
     result = run_cli(
         "render-report",
@@ -251,13 +253,17 @@ def test_render_report_can_run_and_generate_business_report(tmp_path: Path) -> N
         str(output_md),
         "--html-output",
         str(output_html),
+        "--feishu-output",
+        str(output_feishu),
     )
 
     assert result.returncode == 0, result.stderr
     assert output_md.exists()
     assert output_html.exists()
+    assert output_feishu.exists()
     assert "business report markdown" in result.stdout
     assert "business report html" in result.stdout
+    assert "business report feishu markdown" in result.stdout
 
 
 def test_missing_input_file_returns_clear_error(tmp_path: Path) -> None:

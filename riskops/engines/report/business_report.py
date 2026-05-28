@@ -174,7 +174,12 @@ def render_business_report_html(markdown: str, *, title: str = "RiskOps Copilot 
 """
 
 
-def write_business_report(input_path: Path, output_md: Path, output_html: Path | None = None) -> dict[str, Any]:
+def write_business_report(
+    input_path: Path,
+    output_md: Path,
+    output_html: Path | None = None,
+    output_feishu: Path | None = None,
+) -> dict[str, Any]:
     summary = load_m3_summary(input_path)
     context = build_business_report_context(summary, source_path=input_path)
     markdown = render_business_report_markdown(context)
@@ -183,6 +188,10 @@ def write_business_report(input_path: Path, output_md: Path, output_html: Path |
     if output_html is not None:
         output_html.parent.mkdir(parents=True, exist_ok=True)
         output_html.write_text(render_business_report_html(markdown), encoding="utf-8")
+    if output_feishu is not None:
+        from riskops.engines.report.feishu_md_renderer import render_feishu_markdown
+
+        render_feishu_markdown(summary, output_feishu)
     return context
 
 

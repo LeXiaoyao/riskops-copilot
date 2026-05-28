@@ -37,6 +37,12 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Only render Markdown and skip the lightweight HTML output.",
     )
+    parser.add_argument(
+        "--feishu-output",
+        type=Path,
+        default=ROOT / "outputs" / "reports" / "weekly_report.feishu.md",
+        help="Path for Feishu-friendly Markdown report (default: outputs/reports/weekly_report.feishu.md).",
+    )
     return parser
 
 
@@ -44,7 +50,7 @@ def main() -> int:
     args = build_parser().parse_args()
     html_output = None if args.no_html else args.html_output
     try:
-        context = write_business_report(args.input, args.output, html_output)
+        context = write_business_report(args.input, args.output, html_output, args.feishu_output)
     except BusinessReportInputError as exc:
         print(f"render_business_report failed: {exc}", file=sys.stderr)
         return 2
@@ -53,6 +59,7 @@ def main() -> int:
     print(f"business report markdown: {args.output}")
     if html_output is not None:
         print(f"business report html: {html_output}")
+    print(f"business report feishu markdown: {args.feishu_output}")
     print(f"input: {args.input}")
     print(f"anomalies: {overview['anomaly_count']}")
     print(f"top drivers: {len(context['top_drivers'])}")

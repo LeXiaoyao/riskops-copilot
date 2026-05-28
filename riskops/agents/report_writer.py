@@ -54,10 +54,12 @@ class ReportWriterAgent:
             else:
                 output_md = REPORT_DIR / "m4_business_report.md"
                 output_html = REPORT_DIR / "m4_business_report.html"
+                output_feishu = REPORT_DIR / "weekly_report.feishu.md"
                 yield "正在生成 Markdown/HTML 报告...\n"
-                write_business_report(M3_SUMMARY, output_md, output_html)
+                write_business_report(M3_SUMMARY, output_md, output_html, output_feishu)
                 yield f"报告已生成：{_display_path(output_md)}\n"
                 yield f"HTML 报告已生成：{_display_path(output_html)}\n"
+                yield f"飞书友好 Markdown 已生成：{_display_path(output_feishu)}\n"
         except BusinessReportInputError as exc:
             yield f"报告生成失败：{exc}\n"
 

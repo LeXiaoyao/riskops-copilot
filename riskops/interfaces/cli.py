@@ -52,6 +52,7 @@ DEFAULT_M3_SUMMARY = ROOT / "outputs" / "m3" / "m3_summary.json"
 DEFAULT_DASHBOARD = ROOT / "outputs" / "dashboard" / "dashboard.html"
 DEFAULT_REPORT_MD = ROOT / "outputs" / "reports" / "m4_business_report.md"
 DEFAULT_REPORT_HTML = ROOT / "outputs" / "reports" / "m4_business_report.html"
+DEFAULT_REPORT_FEISHU_MD = ROOT / "outputs" / "reports" / "weekly_report.feishu.md"
 DEFAULT_REPORT_XLSX = ROOT / "outputs" / "reports" / "m4_business_report.xlsx"
 DEFAULT_REPORT_PPTX = ROOT / "outputs" / "reports" / "m4_business_report.pptx"
 DEFAULT_REPORT_DOCX = ROOT / "outputs" / "reports" / "m4_business_report.docx"
@@ -83,6 +84,7 @@ OUTPUT_PATHS = [
     DEFAULT_DASHBOARD,
     DEFAULT_REPORT_MD,
     DEFAULT_REPORT_HTML,
+    DEFAULT_REPORT_FEISHU_MD,
     DEFAULT_REPORT_XLSX,
     DEFAULT_REPORT_PPTX,
     DEFAULT_REPORT_DOCX,
@@ -245,7 +247,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     render_report = subparsers.add_parser(
         "render-report",
-        help="Render outputs/reports/m4_business_report.md and .html.",
+        help="Render business report Markdown, HTML, and Feishu-friendly Markdown.",
     )
     _add_input_arg(render_report)
     render_report.add_argument(
@@ -259,6 +261,12 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=DEFAULT_REPORT_HTML,
         help="Business report HTML output path.",
+    )
+    render_report.add_argument(
+        "--feishu-output",
+        type=Path,
+        default=DEFAULT_REPORT_FEISHU_MD,
+        help="Feishu-friendly Markdown output path.",
     )
     render_report.set_defaults(handler=_handle_render_report)
 
@@ -804,12 +812,13 @@ def _handle_render_dashboard(args: argparse.Namespace, out: TextIO) -> None:
 
 def _handle_render_report(args: argparse.Namespace, out: TextIO) -> None:
     try:
-        context = write_business_report(args.input, args.output, args.html_output)
+        context = write_business_report(args.input, args.output, args.html_output, args.feishu_output)
     except BusinessReportInputError as exc:
         raise CliInputError(exc) from exc
     overview = _as_dict(context.get("overview"))
     print("business report markdown：{}".format(_display_path(args.output)), file=out)
     print("business report html：{}".format(_display_path(args.html_output)), file=out)
+    print("business report feishu markdown：{}".format(_display_path(args.feishu_output)), file=out)
     print("input：{}".format(_display_path(args.input)), file=out)
     print("anomalies：{}".format(_safe_int(overview.get("anomaly_count"))), file=out)
     print("top drivers：{}".format(len(_as_list(context.get("top_drivers")))), file=out)
