@@ -22,11 +22,15 @@ def test_write_business_report_excel_generates_expected_workbook(tmp_path: Path)
 
     assert output_path.exists()
     workbook = load_workbook(output_path)
-    assert workbook.sheetnames == ["概览", "异常信号", "归因 Top5", "策略ROI"]
+    assert len(workbook.sheetnames) >= 6
+    assert workbook.sheetnames[:4] == ["概览", "异常信号", "归因 Top5", "策略ROI"]
+    assert "明细_案件" in workbook.sheetnames
+    assert "维度透视_供应商×线路" in workbook.sheetnames
     assert workbook["异常信号"].max_row > 1
     assert workbook["异常信号"]["A1"].font.bold is True
     assert workbook["异常信号"]["A1"].fill.fgColor.rgb == "001F4E79"
     assert workbook["异常信号"]["A1"].font.color.rgb == "00FFFFFF"
+    assert workbook["明细_案件"].max_row >= 201
 
 
 def test_excel_anomaly_row_count_matches_m3_summary(tmp_path: Path) -> None:
@@ -38,6 +42,22 @@ def test_excel_anomaly_row_count_matches_m3_summary(tmp_path: Path) -> None:
 
     workbook = load_workbook(output_path)
     assert workbook["异常信号"].max_row - 1 == expected_rows
+
+
+def test_excel_vendor_region_pivot_contains_sum_formulas(tmp_path: Path) -> None:
+    output_path = tmp_path / "m4_business_report.xlsx"
+
+    write_business_report_excel(M3_SUMMARY, output_path, ROI_RESULTS)
+
+    sheet = load_workbook(output_path, data_only=False)["维度透视_供应商×线路"]
+    assert sheet["A1"].value
+
+    last_row = sheet.max_row
+    last_column = sheet.max_column
+    total_row_values = [sheet.cell(row=last_row, column=column).value for column in range(1, last_column + 1)]
+    total_column_values = [sheet.cell(row=row, column=last_column).value for row in range(1, last_row + 1)]
+    formulas = [*total_row_values, *total_column_values]
+    assert any(isinstance(value, str) and value.startswith("=SUM(") for value in formulas)
 
 
 def test_render_excel_cli_can_run(tmp_path: Path) -> None:
