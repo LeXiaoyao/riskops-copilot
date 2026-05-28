@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 import os
+from pathlib import Path
 
 from rich.align import Align
 from rich.markup import escape
@@ -13,6 +15,8 @@ from textual.widgets import Label, Markdown, Static, TextArea
 
 from riskops.agents.orchestrator import RiskOpsOrchestrator
 from riskops.tui.context_loader import context_summary, read_output
+
+ROOT = Path(__file__).resolve().parents[2]
 
 WELCOME_MESSAGE = """欢迎使用 RiskOps Copilot TUI。
 当前已加载：M3 异常报告 / 归因摘要 / 策略 ROI / Briefing。
@@ -27,7 +31,11 @@ HELP_TEXT = """可用命令：
 - /drivers：展示 outputs/attribution/attribution_summary.md
 - /roi：展示 outputs/model_lab/roi_summary.md
 - /briefing：展示 outputs/copilot/briefing.md
-- /model：切换模型 deepseek-chat / deepseek-reasoner"""
+- /model：切换模型 deepseek-chat / deepseek-reasoner
+- /qc：展示 outputs/qc/qc_summary.md（新增）
+- /script：展示 outputs/script/script_summary.md（新增）
+- /report：异步导出 outputs/reports/ 周报产物（新增）
+- /vendor：展示 outputs/vendor_review.xlsx 的概览 sheet（新增）"""
 
 SLASH_COMMANDS = {
     "/help",
@@ -39,7 +47,112 @@ SLASH_COMMANDS = {
     "/roi",
     "/briefing",
     "/model",
+    "/qc",
+    "/script",
+    "/report",
+    "/vendor",
 }
+
+
+def read_qc_summary(root: Path | None = None) -> str:
+    return _read_markdown_output(root, Path("outputs/qc/qc_summary.md"), "质检摘要")
+
+
+def read_script_summary(root: Path | None = None) -> str:
+    return _read_markdown_output(root, Path("outputs/script/script_summary.md"), "话术摘要")
+
+
+def read_vendor_overview(root: Path | None = None) -> str:
+    base = root or ROOT
+    relative_path = Path("outputs/vendor_review.xlsx")
+    path = base / relative_path
+    if not path.exists():
+        return f"未找到 {relative_path}，请先跑 run_all.sh"
+
+    try:
+        from openpyxl import load_workbook
+
+        workbook = load_workbook(path, read_only=True, data_only=True)
+    except Exception as exc:
+        return f"读取 {relative_path} 失败：{exc}"
+
+    if "概览" not in workbook.sheetnames:
+        workbook.close()
+        return f"未找到 {relative_path} 的「概览」sheet，请先重新生成供应商绩效文件"
+
+    sheet = workbook["概览"]
+    rows = list(sheet.iter_rows(values_only=True))
+    workbook.close()
+    if not rows:
+        return f"{relative_path} 的「概览」sheet 为空"
+
+    headers = [str(value).strip() if value is not None else "" for value in rows[0]]
+    body_rows = rows[1:]
+    lines = [f"## 供应商绩效概览\n\n来源：{relative_path}"]
+    for row_index, row in enumerate(body_rows, start=1):
+        values = list(row)
+        if not any(value is not None and str(value).strip() for value in values):
+            continue
+        lines.append(f"\n### 记录 {row_index}")
+        for header, value in zip(headers, values, strict=False):
+            if not header:
+                continue
+            display_value = "" if value is None else str(value)
+            lines.append(f"- **{header}**：{display_value}")
+
+    if len(lines) == 1:
+        lines.append("\n「概览」sheet 没有可展示的数据行")
+    return "\n".join(lines)
+
+
+def run_report_export(root: Path | None = None) -> str:
+    from riskops.engines.report import (
+        BusinessReportInputError,
+        write_business_report,
+        write_business_report_excel,
+        write_business_report_ppt,
+        write_business_report_word,
+    )
+
+    base = root or ROOT
+    m3_summary = base / "outputs" / "m3" / "m3_summary.json"
+    roi_results = base / "outputs" / "model_lab" / "roi_results.json"
+    report_dir = base / "outputs" / "reports"
+    output_md = report_dir / "m4_business_report.md"
+    output_html = report_dir / "m4_business_report.html"
+    output_feishu = report_dir / "weekly_report.feishu.md"
+    output_xlsx = report_dir / "m4_business_report.xlsx"
+    output_pptx = report_dir / "m4_business_report.pptx"
+    output_docx = report_dir / "m4_business_report.docx"
+
+    try:
+        write_business_report(m3_summary, output_md, output_html, output_feishu)
+        write_business_report_excel(m3_summary, output_xlsx, roi_results)
+        write_business_report_ppt(m3_summary, output_pptx, roi_results)
+        write_business_report_word(m3_summary, output_docx, roi_results)
+    except BusinessReportInputError as exc:
+        return f"报告导出失败：{exc}"
+
+    generated = sorted(path for path in report_dir.iterdir() if path.is_file())
+    lines = ["报告导出完成。outputs/reports/ 当前产物："]
+    lines.extend(f"- {_display_path(path, base)}" for path in generated)
+    return "\n".join(lines)
+
+
+def _read_markdown_output(root: Path | None, relative_path: Path, title: str) -> str:
+    base = root or ROOT
+    path = base / relative_path
+    if not path.exists():
+        return f"未找到 {relative_path}，请先跑 run_all.sh"
+    return f"## {title}\n\n{path.read_text(encoding='utf-8').strip()}"
+
+
+def _display_path(path: Path, root: Path) -> str:
+    try:
+        return str(path.relative_to(root))
+    except ValueError:
+        return str(path)
+
 
 class Composer(TextArea):
     """Three-line composer that sends on Enter and inserts newline on Shift+Enter."""
@@ -209,11 +322,28 @@ class RiskOpsTUIApp(App[None]):
         if command in {"/summary", "/anomaly", "/drivers", "/roi", "/briefing"}:
             await self._append_markdown(read_output(command.removeprefix("/")))
             return
+        if command == "/qc":
+            await self._append_markdown(read_qc_summary())
+            return
+        if command == "/script":
+            await self._append_markdown(read_script_summary())
+            return
+        if command == "/vendor":
+            await self._append_markdown(read_vendor_overview())
+            return
+        if command == "/report":
+            await self._handle_report_export()
+            return
         if command == "/model":
             self._switch_model()
             await self._append_command(f"当前模型：{self.model}")
             return
         await self._append_command("未知命令。输入 /help 查看可用命令。")
+
+    async def _handle_report_export(self) -> None:
+        status = await self._append_command("导出中...")
+        result = await asyncio.to_thread(run_report_export)
+        status.update(escape(result))
 
     async def _ask_deepseek(self, text: str) -> None:
         if not self.api_key:
