@@ -14,6 +14,27 @@
 
 ---
 
+## [0.9.0] — M9 Phase 1 Must 收口
+
+### Added
+- M9-A 异常埋点补齐到 7 条：合成数据最近 30 天显式埋入「高余额高风险客群 +8pct」结构性偏移；`anomaly/detector.py` 注册 `high_balance_high_risk_share` 因子，severity ≥ medium；短信模板投诉信号继续由 QC 11 维评分覆盖，不重复建设。
+- M9-B PPT 周报扩到 9 页：`ppt_renderer.py` 每页含「标题 + 结论 + 图表建议 + 讲稿备注」，notes_slide 全覆盖、无占位符。
+- M9-C Excel 周报新增「明细_案件」（201 行抽样）与「维度透视_供应商×线路」（行 vendor × 列 region，含 SUM 公式）两个 sheet，从 4 sheet 扩到 6 sheet。
+- M9-D TUI 命令集补齐到 13 条：新增 `/qc`、`/script`、`/vendor`、`/report`；`/report` 通过 `asyncio.to_thread` 异步触发周报全量导出，不阻塞主循环；文件缺失返回友好提示。
+- M9-E 话术质检雷达图：`chart_builder.py` 新增 `build_qc_quality_radar_chart`，输出 `outputs/visualization/qc_quality_radar.html`，六维评分（合规/强度/清晰/同理/完整/流程）；必做 10 张图最后一张补齐；双主题切换不在本期范围。
+- M9-F 飞书友好 Markdown 导出：`feishu_md_renderer.py` 输出 `outputs/reports/weekly_report.feishu.md`，去除 GFM 删除线、相对化图片路径、保留表格 + emoji + 行内代码，可直接粘贴飞书文档 / 群消息；不调真实飞书 API。
+- M9-G 5 分钟 Demo 脚本：`docs/demo_script.md` 5 段分镜，按真实 TUI 13 条命令和 outputs 路径编排；README 增加 demo 入口链接。
+
+### Notes
+- 周报 6 种格式齐备：HTML / 通用 Markdown / 飞书 MD / Excel（6 sheet 含透视）/ PPT（9 页含讲稿）/ Word 草稿。
+- 异常引擎统计规则与 QC 引擎合规评分边界清晰，不重复建设。
+- ml-baseline 仍限定为 readiness baseline，不作为生产模型，不参与策略决策。
+- 全测试集 229 passed（v0.8.0 的 216 + 新增 13）。
+
+<!-- C5 DONE -->
+
+---
+
 ## [0.8.0] — M8 AI Agent + 话术引擎 + 合规 LLM
 
 ### Added

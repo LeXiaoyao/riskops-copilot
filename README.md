@@ -4,6 +4,8 @@
 
 > Public demo only：本项目只使用 synthetic data / 合成数据；不包含真实客户数据；不产生真实催收动作；不发送短信、语音或 WhatsApp；不做真实金融结论或 LLM 自动决策。
 
+> 🎬 5 分钟体验本项目：见 [docs/demo_script.md](docs/demo_script.md)。
+
 ## Why This Project
 
 贷后运营团队面对的典型问题不是"没有数据"，而是数据、指标、异常、归因和动作评估分散在不同工具里：
@@ -65,7 +67,7 @@ python scripts/riskops_cli.py drivers
 python scripts/riskops_cli.py model-lab
 python scripts/riskops_cli.py render-dashboard
 python scripts/riskops_cli.py render-report
-python scripts/riskops_cli.py render-charts       # 输出 10 张 Plotly 图表
+python scripts/riskops_cli.py render-charts       # 输出 11 张 Plotly 图表
 
 # 合规质检（关键词扫描，无需 API Key）
 python scripts/riskops_cli.py qc-scan --texts "你赶快还钱" "我是法院，马上起诉你"
@@ -96,23 +98,25 @@ pytest
 - **anomalies**：查看高优先级异常列表。
 - **drivers**：查看 M1 D7 回收率下降 Top 5 drivers 和业务解释边界。
 - **model-lab**：查看 M6 Strategy Evaluation / ROI 总览和 demo boundary。
-- **render-charts**：输出 10 张 Plotly 交互图表（异常强度 / 归因贡献 / ROI 对比 / 催收漏斗 / 瀑布图 / 供应商矩阵 / 产能热图 / DPD 结构 / 减免 ROI / 投诉风险）。
+- **render-charts**：输出 11 张 Plotly 交互图表（异常强度 / 归因贡献 / ROI 对比 / 催收漏斗 / 瀑布图 / 供应商矩阵 / 产能热图 / DPD 结构 / 减免 ROI / 投诉风险 / 话术质检雷达图）。
 - **qc-scan**：合规关键词扫描，加 `--use-llm` 启用 DeepSeek 11 维评分。
 - **script**：根据案件 ID 生成合规话术草稿，加 `--use-llm` 启用 DeepSeek 润色，加 `--approve` 写入 Mock 审批日志。
 - **tui**：启动 Textual 对话终端，AI Agent 可动态查询 Parquet 底层数据并流式输出分析结论。
 - **run_all.sh**：从合成数据生成到全部输出一键重跑，任意步骤失败即 exit。
-- **pytest**：运行当前 216 个测试，验证数据质量、隐私边界和 CLI 主链路。
+- **pytest**：运行当前 229 个测试，验证数据质量、隐私边界和 CLI 主链路。
 
 ## Key Outputs
 
 - **Dashboard**：`outputs/dashboard/dashboard.html`
   - 首屏 Portfolio at a Glance（Business Problem / Data & Metric Layer / Anomaly Signals / Attribution / Strategy ROI Lab）、AI+ML Fusion 职责分层表与术语 glossary，便于无消费金融背景的访客 30 秒读懂。
-- **Business Report**：`outputs/reports/m4_business_report.md` / `.html`
-  - 面向经营复盘的异常、归因、过程证据和管理动作建议。
-- **Excel Report**：`outputs/reports/m4_business_report.xlsx`
-  - 4 个 Sheet：概览 / 异常信号 / 归因 Top5 / 策略ROI。
+- **Business Report**：`outputs/reports/m4_business_report.md` / `.html` / `weekly_report.feishu.md`
+  - 面向经营复盘的异常、归因、过程证据和管理动作建议，含飞书友好 Markdown 版本。
+- **Excel Report**：`outputs/reports/weekly_report.xlsx`
+  - 6 个 Sheet：概览 / 异常信号 / 归因 Top5 / 策略ROI / 明细_案件 / 维度透视_供应商×线路。
 - **PPT Report**：`outputs/reports/m4_business_report.pptx`
-  - 管理层汇报用 PowerPoint，`python scripts/riskops_cli.py render-ppt` 生成。
+  - 管理层汇报用 9 页 PowerPoint，含讲稿备注，`python scripts/riskops_cli.py render-ppt` 生成。
+- **Word Draft**：`outputs/reports/m4_business_report.docx`
+  - 管理层周报 Word 草稿，`python scripts/riskops_cli.py render-word` 生成。
 - **Strategy Evaluation**：`outputs/model_lab/strategy_eval_summary.md`
   - 5 个离线策略情景的 baseline / scenario / delta / caveats。
 - **ROI Summary**：`outputs/model_lab/roi_summary.md`
@@ -120,7 +124,7 @@ pytest
 - **AI Briefing**（可选，需 DeepSeek API Key）：`outputs/copilot/briefing.md`
   - `briefing --use-llm` 生成中文管理层 AI 摘要；不加 `--use-llm` 则为确定性规则模板。
 - **Visualization Charts**：`outputs/visualization/`
-  - 10 张 Plotly 交互图表，`render-charts` 生成。
+  - 11 张 Plotly 交互图表，`render-charts` 生成。
 - **话术草稿**（需案件数据）：`outputs/script/approval_log.jsonl`
   - `script --approve` 将 Mock 审批记录追加到日志。
 - **QC 质检报告**：CLI 实时输出或 `generate_qc_report` 写 Markdown；`--use-llm` 模式包含 11 维得分。
@@ -203,6 +207,19 @@ pytest
   - M8-F PPT 报告（`m4_business_report.pptx`，`render-ppt` 命令）
 - **状态**：已发布。
 
+### v0.9.0 Phase 1 Must 收口（M9）
+
+- **阶段**：M9 Phase 1 Must 收口
+- **交付**：
+  - M9-A 异常埋点扩到 7 条（含高余额高风险客群结构变化）
+  - M9-B PPT 周报扩到 9 页 + 讲稿备注
+  - M9-C Excel 周报新增明细表与供应商×线路透视表
+  - M9-D TUI 命令集补齐到 13 条（新增 /qc /script /vendor /report）
+  - M9-E 话术质检雷达图（必做 10 张图收口）
+  - M9-F 飞书友好 Markdown 导出
+  - M9-G 5 分钟 Demo 脚本
+- **测试集**：229 passed
+
 ## Boundaries
 
 本项目的边界是公开 Demo 可信度的一部分：
@@ -233,15 +250,16 @@ pytest
 - **pandas / DuckDB / Parquet**：合成数据生成、五层数仓与 ADS 宽表。
 - **PyYAML**：`metadata/` 单一权威源（表、列、指标、隐私分级）。
 - **scikit-learn**：Model Lab D7 any-payment baseline 与 leakage-safe 特征流程。
-- **Jinja2 + static HTML / Plotly**：Dashboard、Business Report 渲染与 10 张交互图表。
+- **Jinja2 + static HTML / Plotly**：Dashboard、Business Report 渲染与 11 张交互图表。
 - **Textual**：TUI 对话终端，流式渲染 Agent 输出与工具调用事件。
 - **DeepSeek API**：Function Calling 动态查询、LLM 管理层摘要、话术润色和 11 维合规评分。
 - **CLI（`scripts/riskops_cli.py`）**：demo 统一入口，覆盖分析 / 渲染 / 质检 / 话术 / TUI 所有命令。
-- **pytest**：数据质量校验、跨层一致性、隐私边界、LLM mock 测试与 CLI 回归（216 个测试）。
+- **pytest**：数据质量校验、跨层一致性、隐私边界、LLM mock 测试与 CLI 回归（229 个测试）。
 
 ## Project Entry Points
 
 - **Architecture**：[docs/architecture.md](docs/architecture.md)
+- **5-Minute Demo**：[docs/demo_script.md](docs/demo_script.md)
 - **Interview Pitch**：[docs/interview_pitch.md](docs/interview_pitch.md)（5 分钟结构化讲稿 + 12 节追问）
 - **ML Lab**：D7 any-payment baseline + leakage guard + score_date guard + vintage robustness
 - **State Recovery**：feasibility guard only, not a production cure model
@@ -249,4 +267,4 @@ pytest
 ## Product Baseline
 
 - **当前 PRD**：`docs/prd/PRD_v6.md`
-- **当前发布**：v0.8.0（M8 AI Agent + 话术引擎 + 合规 LLM）
+- **当前发布**：v0.9.0（M9 Phase 1 Must 收口）
