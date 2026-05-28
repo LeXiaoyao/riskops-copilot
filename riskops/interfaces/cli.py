@@ -123,6 +123,9 @@ COMMON_COMMANDS = [
     "python scripts/riskops_cli.py render-excel",
     "python scripts/riskops_cli.py render-ppt",
     "python scripts/riskops_cli.py render-charts",
+    "python scripts/riskops_cli.py script --case-id CASE00000001 --channel sms",
+    "python scripts/riskops_cli.py tui",
+    # C3 DONE
 ]
 
 

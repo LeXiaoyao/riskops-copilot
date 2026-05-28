@@ -11,6 +11,12 @@
 ## [Unreleased]
 
 ### Added
+
+---
+
+## [0.8.0] — M8 AI Agent + 话术引擎 + 合规 LLM
+
+### Added
 - M7-A State Recovery 目标可行性 guard：在 leakage / 时间窗 / 状态可观测性三个维度做诊断性检查，不是 production cure baseline。
 - 公开 demo 导航与 architecture 文档梳理：README、`docs/architecture.md`、CLI summary、Model Lab 文案 demo boundary 措辞统一。
 - M7-B Dashboard Portfolio 加层：Hero 双语 positioning 块、Portfolio at a Glance 5 模块导览卡、AI+ML Fusion 职责分层表、术语 glossary，面向无消金背景访客 30 秒读懂 demo。
@@ -21,6 +27,14 @@
 - M7-G 面试讲稿：`docs/interview_pitch.md`，5 分钟结构化讲稿 + 12 节常见追问，中文为主。
 - M7-H Plotly 可视化图表导出：`riskops/engines/visualization/chart_builder.py`，生成异常信号强度图 / 归因贡献图 / 策略ROI对比图（`outputs/visualization/`）；CLI `render-charts`。
 - M7-I QC 合规关键词扫描：`riskops/engines/qc/compliance_scanner.py`，5 类违规词典（威胁恐吓/冒充司法/骚扰第三方/诱导新贷/辱骂）扫描催收话术，输出 risk_level / violations / Markdown 报告；CLI `qc-scan`。
+- M8-A DeepSeek Function Calling 动态数据查询：`riskops/tui/tools.py`（10个pandas查询工具）+ `riskops/tui/tool_schemas.py`（JSON Schema）+ `riskops/tui/chat_client.py` 新增 `stream_chat_with_tools`（多轮 FC，工具执行结果回传，流式输出工具调用事件）。
+- M8-B Textual TUI 对话终端：`riskops/tui/app.py` 接入 Agent Orchestrator，工具调用事件以橙色高亮显示，Agent 路由以蓝色加粗显示；CLI `tui` 命令。
+- M8-C Agent Orchestrator + 4 专家 Agent：`riskops/agents/orchestrator.py`（关键词路由）+ `risk_analyst.py`（10工具 FC）+ `collection_strategy.py`（话术推荐链路）+ `compliance_qa.py`（本地关键词质检，无需 API Key）+ `report_writer.py`（报告路由）。
+- M8-D 话术推荐引擎：`riskops/engines/script/`，含 `case_context.py`（P0-P2 字段加载）/ `frequency_checker.py`（SMS 日≤2/周≤5 等频次规则）/ `script_engine.py`（10种话术模板 + 合规扫描 + LLM 润色）/ `mock_approval.py`（审批日志追加 jsonl）；CLI `script` 命令。
+- M8-E QC LLM 11维合规评分：`riskops/engines/qc/llm_scorer.py`（DeepSeek 11维评分 + `_fallback_score`）+ `merge_with_keyword_scan`（关键词红线强制覆盖：合规红线≤20，high风险总分≤30）+ `compliance_scanner.scan_text_with_llm`；CLI `qc-scan --use-llm`。
+- M8-F PPT 报告：`riskops/engines/report/ppt_renderer.py`，生成 `m4_business_report.pptx`；CLI `render-ppt`。
+
+<!-- C1 DONE -->
 
 ### Notes
 - 当前 trainable baseline 仍是 D7 any-payment response；state recovery 仅作为 feasibility / leakage guard 存在。
@@ -100,9 +114,3 @@
 - PRD v1–v5 归档至 `docs/prd/history/`。
 - 中英文双语 README、MIT 协议、项目目录骨架、`.gitignore`。
 - ADR-001 ~ ADR-010：技术栈、隐私边界、Phase 范围等关键决策固化。
-
----
-
-## 关于未交付能力
-
-PRD v6 描述了 Phase 1 完整范围（含催收质检、话术推荐、TUI 控制台、飞书草稿、PPT / Word 报告等）。当前公开 demo **仅交付** README 顶部 Milestone Status 与本 CHANGELOG 中列出的项；PRD 中其余条目视为 **planned but not delivered**，不构成当前公开仓库的能力承诺。
