@@ -72,8 +72,7 @@ Roles around front-line collectors, compliance QA, and document copilots appear 
 | [PRD v6](docs/prd/PRD_v6.md) | Internal master requirements (includes planned-but-not-delivered scope) |
 | [PRD v6 English](docs/prd/en/PRD_v6.en.md) | English mirror of PRD v6 (partial) |
 | [PRD History](docs/prd/history/) | v1–v5 archive — historical context only |
-| [CHANGELOG](CHANGELOG.md) | Release log, M1–M7 milestones |
-| [docs/internal/](docs/internal/) | Engineering notes — not the public demo entry point |
+| [CHANGELOG](CHANGELOG.md) | Release log, M1–M9 milestones |
 
 ---
 
